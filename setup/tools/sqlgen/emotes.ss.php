@@ -26,8 +26,9 @@ CLISetup::registerSetup("sql", new class extends SetupScript
 
         if ($x = array_diff_key(CLISetup::$locales, $locPath))
         {
-            $locs = array_intersect_key(CLISetup::$locales, $x);
-            CLI::write('[emotes] '.sprintf($globStrPath, '[' . Lang::concat($locs, callback: fn($x) => CLI::bold(implode('/, ', $x->gameDirs()) . '/')) . ']') . ' not found!', CLI::LOG_WARN);
+            $locs     = array_intersect_key(CLISetup::$locales, $x);
+            $locNames = implode('/, ', array_map(fn($l) => implode('/, ', $l->gameDirs()) . '/', $locs));
+            CLI::write('[emotes] '.sprintf($globStrPath, '[' . $locNames . ']') . ' not found!', CLI::LOG_WARN);
             CLI::write('         Emote aliasses can not be generated for affected locales!', CLI::LOG_WARN);
         }
 
@@ -111,7 +112,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
 
         $this->reapplyCCFlags('emotes', Type::EMOTE);
 
-        return $allOK;
+        return true;
     }
 
     private function mergeGenderedStrings(int $maleTextId, int $femaleTextId, Locale $loc) : string
