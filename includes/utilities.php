@@ -133,6 +133,7 @@ abstract class CLI
 
     private static $logHandle   = null;
     private static $hasReadline = null;
+    public  static $bell        = false;
 
     private static $overwriteLast = false;
 
@@ -417,7 +418,8 @@ abstract class CLI
                 {
                     if (count($ordinals) == 1)
                     {
-                        fwrite(STDOUT, chr(self::CHR_BELL));
+                        if (self::$bell)
+                            fwrite(STDOUT, chr(self::CHR_BELL));
                         return false;
                     }
                     else
@@ -463,7 +465,8 @@ abstract class CLI
             }
         }
 
-        fwrite(STDOUT, chr(self::CHR_BELL));
+        if (self::$bell)
+            fwrite(STDOUT, chr(self::CHR_BELL));
 
         foreach ($userInput as $ui)
             if (strlen($ui))

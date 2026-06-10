@@ -44,6 +44,7 @@ class CLISetup
         'force'   => [self::OPT_GRP_MISC, ['f'], self::ARGV_NONE,                        'Force existing files to be overwritten.',                                                                   ''               ],
         'locales' => [self::OPT_GRP_MISC, [],    self::ARGV_ARRAY | self::ARGV_OPTIONAL, 'Limit setup to enUS, frFR, deDE, zhCN, esES and/or ruRU. (does not override config settings)',              '=<regionCodes,>'],
         'datasrc' => [self::OPT_GRP_MISC, [],    self::ARGV_OPTIONAL,                    'Manually point to directory with extracted mpq files. This is limited to setup/ (default: setup/mpqdata/)', '=path/'         ],
+        'beep'    => [self::OPT_GRP_MISC, [],    self::ARGV_NONE,                        'Enable terminal bell after each input prompt.',                                                              ''               ],
     );
 
     private static $utilScriptRefs  = [];
@@ -185,6 +186,10 @@ class CLISetup
         // optional logging
         if (isset(self::$opts['log']))
             CLI::initLogFile(trim(self::$opts['log']));
+
+        // optional terminal bell after input prompts
+        if (isset(self::$opts['beep']))
+            CLI::$bell = true;
 
         // alternative data source (no quotes, use forward slash)
         if (isset(self::$opts['datasrc']))
