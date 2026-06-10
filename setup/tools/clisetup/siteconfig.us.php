@@ -20,7 +20,7 @@ CLISetup::registerUtility(new class extends UtilityScript
     public const COMMAND      = 'configure';
     public const APPENDIX     = ' [action<E|R|N|D> cfgName [newValue]]';
     public const DESCRIPTION  = 'Configure site variables.';
-    public const PROMPT       = 'SITE_HOST and STATIC_HOST *must* be set. Also enable FORCE_SSL if needed. You may also want to change other variables such as NAME, NAME_SHORT or LOCALES.';
+    public const PROMPT       = '';
     public const NOTE_ERROR   = 'could not access:';
 
     public const REQUIRED_DB = [DB_AOWOW];
@@ -66,9 +66,26 @@ CLISetup::registerUtility(new class extends UtilityScript
 
     private function showConfigList() : void
     {
+        CLI::write('SITE_HOST and STATIC_HOST *must* be set. Also enable FORCE_SSL if needed. You may also want to change other variables such as NAME, NAME_SHORT or LOCALES.');
+        CLI::write(CLI::red('<empty>').' = required   '.CLI::grey('<empty>').' = optional', -1, false);
+        CLI::write();
+
+        // offer localhost defaults on first run when SITE_HOST is still empty
+        if (!Cfg::get('SITE_HOST'))
+        {
+            CLI::read(['useLocal' => ['Set up for local use? (localhost) [Y/N]', false, true, '/y|n/i']], $answer);
+            if (empty($answer['useLocal']) || strtolower($answer['useLocal']) === 'y')
+            {
+                Cfg::set('site_host',   'localhost/aowow');
+                Cfg::set('static_host', 'localhost/aowow/static');
+                CLI::write('SITE_HOST and STATIC_HOST set to localhost.', CLI::LOG_OK);
+                CLI::write();
+            }
+        }
+
         while (true)
         {
-            CLI::write('select a numerical index or name to use the corresponding entry', -1, false);
+            CLI::write('Select a numerical index or name to use the corresponding entry', -1, false);
             CLI::write();
 
             $sumNum   = 0;
@@ -111,6 +128,7 @@ CLISetup::registerUtility(new class extends UtilityScript
                 CLI::write('please configure the required empty settings', CLI::LOG_WARN);
                 CLI::write();
             }
+
 
             if (CLI::read(['idx' => ['', false, false, Cfg::PATTERN_CONF_KEY]], $uiIndex) && $uiIndex && $uiIndex['idx'] !== '')
             {
