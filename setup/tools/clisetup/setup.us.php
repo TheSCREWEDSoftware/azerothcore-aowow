@@ -116,7 +116,7 @@ CLISetup::registerUtility(new class extends UtilityScript
 
             while (true)
             {
-                CLI::write('[setup] step '.($idx + 1).' / '.count($this->steps));
+                CLI::write('[setup] step '.($idx + 1).' / '.count($this->steps).' ('.round(($idx + 1) / count($this->steps) * 100).'%)');
                 if (CLISetup::run($usName, $param))
                 {
                     $this->saveProgress($idx);
