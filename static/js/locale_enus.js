@@ -1038,7 +1038,9 @@ var mn_tools = [
         ]],
         [5,"Unrated Comments","?unrated-comments"],
         [13,"Missing Screenshots","?missing-screenshots"],
-        [4,"Random Page","?random"]
+        [4,"Random Page","?random"],
+        [,"Debug"],
+        [14,"Error Log","?errors"]
     ]]
 ];
 var mn_reputation = [

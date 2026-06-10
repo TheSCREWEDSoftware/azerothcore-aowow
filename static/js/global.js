@@ -413,6 +413,7 @@ var PageTemplate = new function()
         initTopTabs();
         initTopBar();
         initBreadcrumb();
+        initPageAccessLabel();                              // aowow: custom (show who is allowed to view this page)
 
         inited = true;
     }
@@ -816,6 +817,20 @@ var PageTemplate = new function()
         }
 
         $WH.ae(d, a);
+        $WH.ae(_, d);
+    }
+
+    function initPageAccessLabel()                          // aowow: custom (show who is allowed to view this page)
+    {
+        var _ = $WH.ge('header');
+        if (!_ || typeof g_pageAccess == 'undefined' || !g_pageAccess.text)
+            return;
+
+        var d = $WH.ce('div');
+        d.id = 'page-access-label';
+        d.title = 'Yes, this is intended.';
+        d.style.cssText = 'position: absolute; top: 6px; right: 10px; font-size: 12px; color: #aaa; cursor: help; z-index: 10;';
+        $WH.ae(d, $WH.ct(g_pageAccess.text));
         $WH.ae(_, d);
     }
 

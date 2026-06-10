@@ -160,6 +160,7 @@ switch ($pageCall)
     case 'missing-screenshots':
     case 'most-comments':
     case 'random':
+    case 'errors':                                          // tool: error log viewer
         (new UtilityPage($pageCall, $pageParam))->display();
         break;
     default:                                                // unk parameter given -> ErrorPage

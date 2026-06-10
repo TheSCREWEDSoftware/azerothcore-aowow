@@ -97,7 +97,8 @@ $lang = array(
         'mostComments'  => ["Yesterday", "Past %d Days"],
         'utilities'     => array(
             "Latest Additions",                     "Latest Articles",                      "Latest Comments",                      "Latest Screenshots",                   null,
-            "Unrated Comments",                     11 => "Latest Videos",                  12 => "Most Comments",                  13 => "Missing Screenshots"
+            "Unrated Comments",                     11 => "Latest Videos",                  12 => "Most Comments",                  13 => "Missing Screenshots",
+            14 => "Error Log"
         ),
 
         // article & infobox

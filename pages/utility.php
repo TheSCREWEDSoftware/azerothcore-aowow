@@ -16,9 +16,11 @@ class UtilityPage extends GenericPage
     protected $path          = [1, 8];
     protected $tabId         = 1;
     protected $mode          = CACHE_TYPE_NONE;
+    protected $forceTabs     = false;
     protected $validPages    = array(
         null,                     null,                    'latest-comments',       'latest-screenshots',  'random',
-        'unrated-comments', 11 => 'latest-videos',   12 => 'most-comments',   13 => 'missing-screenshots'
+        'unrated-comments', 11 => 'latest-videos',   12 => 'most-comments',   13 => 'missing-screenshots',
+        14 => 'errors'
     );
 
     protected $_get          = ['rss' => ['filter' => FILTER_CALLBACK, 'options' => 'GenericPage::checkEmptySet']];
@@ -202,6 +204,43 @@ class UtilityPage extends GenericPage
                         $this->lvTabs[] = [$typeObj::$brickFile, ['data' => array_values($typeObj->getListviewData())]];
                     }
                 }
+                break;
+            case 'errors':
+                $this->forceTabs = true;
+
+                $errors = DB::Aowow()->select('SELECT * FROM ?_errors ORDER BY `date` DESC');
+
+                $root = dirname(__DIR__);                   // aowow root directory (no trailing slash)
+
+                $disclaimer = '<p>This is an easier way to see error registries without needing to go to the DB and/or finding the page randomly.</p>';
+
+                $head = '<tr><th>[YYYY-MM-DD HH:MM:SS]</th><th>path</th><th>query</th><th>error</th></tr>';
+                $body = '';
+                foreach ($errors as $e)
+                {
+                    $file = str_replace($root.DIRECTORY_SEPARATOR, '', $e['file']);
+                    $file = 'aowow/'.str_replace('\\', '/', $file).':'.$e['line'];
+
+                    $link = $e['query'] && $e['query'] != 'CLI' ? '?'.$e['query'] : '';
+                    $path = $link ? '<a href="'.Util::htmlEscape($link).'">'.Util::htmlEscape($file).'</a>' : Util::htmlEscape($file);
+
+                    $body .= '<tr>'.
+                        '<td>'.($e['date'] ? date('Y-m-d H:i:s', $e['date']) : '').'</td>'.
+                        '<td>'.$path.'</td>'.
+                        '<td>'.Util::htmlEscape($e['query']).'</td>'.
+                        '<td>'.nl2br(Util::htmlEscape($e['message'])).'</td>'.
+                        '</tr>';
+                }
+
+                if (!$body)
+                    $body = '<tr><td colspan="4">No errors logged.</td></tr>';
+
+                $this->lvTabs[] = [null, array(
+                    'data' => $disclaimer.'<table class="grid">'.$head.$body.'</table>',
+                    'name' => $this->name,
+                    'id'   => 'errors'
+                )];
+
                 break;
             case 'most-comments':                           // rss
                 if ($this->category && !in_array($this->category[0], [1, 7, 30]))

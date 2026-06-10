@@ -665,6 +665,20 @@ class GenericPage
         header('Location: ?account=signin'.$next, true, 302);
     }
 
+    // aowow: custom - small header label stating which group(s) may view this page
+    protected function getAccessLabel() : string
+    {
+        if (!$this->reqUGroup)
+            return $this->reqAuth ? 'Anyone with an account can see this page' : 'Everyone can see this page';
+
+        $names = [];
+        foreach (Lang::account('groups') as $idx => $_)
+            if ($idx >= 0 && $this->reqUGroup & (1 << $idx))
+                $names[] = Lang::account('groups', $idx);
+
+        return ($names ? implode(' or ', $names) : 'Nobody').' can see this page';
+    }
+
     protected function sumSQLStats() : void
     {
         Util::arraySumByKey($this->mysql, DB::Aowow()->getStatistics(), DB::World()->getStatistics());
