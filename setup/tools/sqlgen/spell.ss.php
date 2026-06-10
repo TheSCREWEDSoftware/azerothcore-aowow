@@ -643,7 +643,8 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             $world = array_merge($world, array_filter(explode(' ', $a)));
         }
 
-        DB::Aowow()->query('UPDATE ?_spell s SET s.typeCat = -8 WHERE s.typeCat = 0 AND s.id IN (?a)', $world);
+        foreach (array_chunk($world, 1000) as $chunk)
+            DB::Aowow()->query('UPDATE ?_spell s SET s.typeCat = -8 WHERE s.typeCat = 0 AND s.id IN (?a)', $chunk);
 
 
         /**********/
