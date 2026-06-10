@@ -680,7 +680,10 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             58271 => 1120,                                  // Drain Soul
             58281 => 34428,                                 // Victory Rush
             58397 => 23922,                                 // Shield Slam
-            63949 => 50720                                  // Vigilance
+            63949 => 50720,                                 // Vigilance
+            54292 => 5487,                                  // White Bear (cosmetic - Bear Form)
+            58132 => 5487,                                  // Black Bear (cosmetic - Bear Form)
+            58686 => 46584                                  // Ghoul (cosmetic - Raise Dead)
         );
 
         $queryIcons =
