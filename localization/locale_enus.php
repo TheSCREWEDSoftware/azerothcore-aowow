@@ -835,7 +835,7 @@ $lang = array(
             SmartAction::ACTION_VORTEX_SUMMON                      => ['Summon [npc=%1$d] in a vortex.(%2$d)? (disappears after %11$s):;', ''],
             SmartAction::ACTION_CU_ENCOUNTER_START                 => ['Reset encounter (cooldowns + Heroism debuffs).', ''],
             SmartAction::ACTION_AC_DO_ACTION                       => ['Do action #[b]%1$d[/b].', ''],
-            SmartAction::ACTION_ATTACK_STOP                        => ['#target# stops attacking.', ''],
+            SmartAction::ACTION_AC_ATTACK_STOP                     => ['#target# stops attacking.', ''],
 /*225*/     SmartAction::ACTION_SET_GUID                           => ['Send GUID of invoker/base-object to #target#.', ''],
             SmartAction::ACTION_SCRIPTED_SPAWN                     => ['Scripted spawn.', ''],
             SmartAction::ACTION_SET_SCALE                          => ['Set scale of #target# to [b]%1$d[/b].', ''],

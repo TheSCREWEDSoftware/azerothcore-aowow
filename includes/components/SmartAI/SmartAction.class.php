@@ -184,7 +184,7 @@ class SmartAction
     public const ACTION_VORTEX_SUMMON                      = 221; //  entry, duration, spiral scaling, spiral appearance, range max, phi_delta
     public const ACTION_CU_ENCOUNTER_START                 = 222; //  Resets cooldowns on all targets and removes Heroism debuff(s)
     public const ACTION_AC_DO_ACTION                       = 223; //  ActionId
-    public const ACTION_ATTACK_STOP                        = 224; //  none
+    public const ACTION_AC_ATTACK_STOP                     = 224; //  none
     public const ACTION_SET_GUID                           = 225; //  Sends invoker's or base object's ObjectGuid to target
     public const ACTION_SCRIPTED_SPAWN                     = 226; //  state, spawnTimerMin, spawnTimerMax, respawnDelay, corpseDelay, dontDespawn
     public const ACTION_SET_SCALE                          = 227; //  scale
@@ -385,7 +385,7 @@ class SmartAction
         self::ACTION_VORTEX_SUMMON                      => [Type::NPC, ['formatTime', 10, false], null, null, null, null, 0],  // entry, duration, spiral scaling, spiral appearance, range max, phi_delta
         self::ACTION_CU_ENCOUNTER_START                 => [null, null, null, null, null, null, 0],  // none
         self::ACTION_AC_DO_ACTION                       => [null, null, null, null, null, null, 0],  // ActionId
-        self::ACTION_ATTACK_STOP                        => [null, null, null, null, null, null, 0],  // none
+        self::ACTION_AC_ATTACK_STOP                     => [null, null, null, null, null, null, 0],  // none
         self::ACTION_SET_GUID                           => [null, null, null, null, null, null, 0],  // none
         self::ACTION_SCRIPTED_SPAWN                     => [null, ['formatTime', 10, true], ['formatTime', 11, true], ['formatTime', 12, true], null, null, 0],  // state, spawnTimerMin, spawnTimerMax, respawnDelay, corpseDelay, dontDespawn
         self::ACTION_SET_SCALE                          => [null, null, null, null, null, null, 0],  // scale
