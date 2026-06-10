@@ -161,7 +161,12 @@ set_error_handler(function ($errNo, $errStr, $errFile, $errLine) {
         );
 
     if (CLI)
-        CLI::write($errName . ' - ' . $errStr . ' @ ' . $errFile . ':' . $errLine, $logLevel);
+    {
+        $stripBase = dirname(__DIR__) . DIRECTORY_SEPARATOR;
+        $cliFile   = str_replace($stripBase, '', $errFile);
+        $cliStr    = str_replace($stripBase, '', $errStr);
+        CLI::write($errName . ' - ' . $cliStr . ' @ ' . $cliFile . ':' . $errLine, $logLevel);
+    }
     else if (Cfg::get('DEBUG') >= $logLevel)
         Util::addNote($errName . ' - ' . $errStr . ' @ ' . $errFile . ':' . $errLine, U_GROUP_EMPLOYEE, $logLevel);
 
