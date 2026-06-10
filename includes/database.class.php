@@ -82,6 +82,10 @@ class DB
         // make number sensible again
         $data['code'] = abs($data['code']);
 
+        // INSERT IGNORE / REPLACE intentionally provoke duplicate-key warnings (1062) - not worth logging
+        if (!$isError && $data['code'] == 1062 && preg_match('/^\s*(?:INSERT|REPLACE)\s+(?:IGNORE\s+)?INTO/i', $data['query'] ?? '') && stripos($data['query'], 'IGNORE') !== false)
+            return;
+
         if (Cfg::get('DEBUG') >= CLI::LOG_INFO)
         {
             echo "\nDB ERROR\n";

@@ -127,7 +127,7 @@ switch ($pageCall)
         catch (Exception $e)                                // no, apparently not..
         {
             $class = $cleanName.'Page';
-            $classInstance = new $class($pageCall, $pageParam);
+            $classInstance = class_exists($class) ? new $class($pageCall, $pageParam) : null;
 
             if (is_callable([$classInstance, 'display']))
                 $classInstance->display();

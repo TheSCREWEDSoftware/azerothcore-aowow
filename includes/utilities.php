@@ -452,8 +452,11 @@ abstract class CLI
                     continue;
 
                 // stream_get_contents is always blocking under WIN - fgets should work similary as php always receives a terminated line of text
-                $chars    = str_split(OS_WIN ? fgets(STDIN) : stream_get_contents(STDIN));
+                $chars    = str_split((OS_WIN ? fgets(STDIN) : stream_get_contents(STDIN)) ?: '');
                 $ordinals = array_map('ord', $chars);
+
+                if (!$ordinals)
+                    continue;
 
                 if ($ordinals[0] == self::CHR_ESC)
                 {
