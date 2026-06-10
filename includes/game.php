@@ -215,7 +215,7 @@ class Game
 
         // note: omits required spell and chance in skill_discovery_template
         $data = array_merge(
-            DB::Aowow()->selectCol('SELECT spellId FROM spell_learn_spell WHERE entry IN (?a)', $lookup),
+            DB::Aowow()->selectCol('SELECT spellId FROM ?_spell_learn_spell WHERE entry IN (?a)', $lookup),
             DB::World()->selectCol('SELECT spellId FROM skill_discovery_template WHERE reqSpell IN (?a)', $lookup),
             $extraIds
         );
