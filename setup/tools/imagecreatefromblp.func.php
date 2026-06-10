@@ -48,7 +48,7 @@
         $fileSize = fileSize($fileName);
         if ($fileSize < 16)
         {
-            CLI::write('file '.$fileName.' is too small for a BLP file', CLI::LOG_ERROR);
+            CLI::write('file '.$fileName.' is too small for a BLP file — skipping', CLI::LOG_WARN);
             return;
         }
 

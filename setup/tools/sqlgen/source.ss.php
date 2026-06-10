@@ -265,8 +265,14 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             GROUP BY  `refOrItem`, ct.`entry`'
         );
 
-        $spawns = DB::Aowow()->select('SELECT `typeId` AS ARRAY_KEY, IF(COUNT(DISTINCT s.`areaId`) > 1, 0, s.`areaId`) AS `areaId`, z.`type` FROM ?_spawns s JOIN ?_zones z ON z.`id` = s.`areaId` WHERE s.`type` = ?d AND `typeId`IN (?a) GROUP BY `typeId`', Type::NPC, array_filter(array_column($creatureLoot, 'entry')));
-        $bosses = DB::Aowow()->selectCol('SELECT `id` AS ARRAY_KEY, IF(`cuFlags` & ?d, 1, IF(`typeFlags` & 0x4 AND `rank` > 0, 1, 0)) FROM ?_creature WHERE `id` IN (?a)', NPC_CU_INSTANCE_BOSS, array_filter(array_column($creatureLoot, 'entry')));
+        $spawns  = [];
+        $bosses  = [];
+        $entries = array_values(array_filter(array_column($creatureLoot, 'entry')));
+        foreach (array_chunk($entries, CLISetup::$SQL_BATCH) as $chunk)
+        {
+            $spawns += DB::Aowow()->select('SELECT `typeId` AS ARRAY_KEY, IF(COUNT(DISTINCT s.`areaId`) > 1, 0, s.`areaId`) AS `areaId`, z.`type` FROM ?_spawns s JOIN ?_zones z ON z.`id` = s.`areaId` WHERE s.`type` = ?d AND `typeId`IN (?a) GROUP BY `typeId`', Type::NPC, $chunk);
+            $bosses += DB::Aowow()->selectCol('SELECT `id` AS ARRAY_KEY, IF(`cuFlags` & ?d, 1, IF(`typeFlags` & 0x4 AND `rank` > 0, 1, 0)) FROM ?_creature WHERE `id` IN (?a)', NPC_CU_INSTANCE_BOSS, $chunk);
+        }
 
         foreach ($creatureLoot as $l)
         {
@@ -397,8 +403,10 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             $this->pushBuffer(Type::ITEM, $roi, SRC_DROP, 1, $l['qty'] > 1 ? 0 : Type::ITEM, $l['entry'], 0, $l['qty']);
         }
 
-        DB::Aowow()->query('UPDATE ?_items SET `cuFLags` = `cuFlags` | ?d WHERE `id` IN (?a)', ITEM_CU_OT_ITEMLOOT,   $itemOT);
-        DB::Aowow()->query('UPDATE ?_items SET `cuFLags` = `cuFlags` | ?d WHERE `id` IN (?a)', ITEM_CU_OT_OBJECTLOOT, $objectOT);
+        foreach (array_chunk($itemOT,   CLISetup::$SQL_BATCH) as $chunk)
+            DB::Aowow()->query('UPDATE ?_items SET `cuFLags` = `cuFlags` | ?d WHERE `id` IN (?a)', ITEM_CU_OT_ITEMLOOT,   $chunk);
+        foreach (array_chunk($objectOT, CLISetup::$SQL_BATCH) as $chunk)
+            DB::Aowow()->query('UPDATE ?_items SET `cuFLags` = `cuFlags` | ?d WHERE `id` IN (?a)', ITEM_CU_OT_OBJECTLOOT, $chunk);
     }
 
     private function itemPvP() : void

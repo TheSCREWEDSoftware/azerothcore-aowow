@@ -256,7 +256,12 @@ trait TrImageProcessor
         {
             $file = $path.'.blp';
             if (CLISetup::fileExists($file))
-                $result = imagecreatefromblp($file);
+            {
+                if (file_exists($file))
+                    $result = imagecreatefromblp($file);
+                else
+                    $noSrc = true;                          // stale cache entry — file was deleted after indexing
+            }
             else
                 $noSrc = true;
         }
