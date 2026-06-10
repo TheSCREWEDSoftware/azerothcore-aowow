@@ -227,9 +227,7 @@ CLISetup::registerUtility(new class extends UtilityScript
                         break;
                     case DB_WORLD:
                         if (!DB::World()->selectCell('SHOW TABLES LIKE ?', 'version'))
-                            $error[] = ' * '.$what.': doesn\'t seem to contain TrinityCore world tables!';
-                        else if (DB::World()->selectCell('SELECT `cache_id` FROM `version`') < TDB_WORLD_MINIMUM_VER)
-                            $error[] = ' * '.$what.': TDB world db is structurally outdated! (min rev.: '.CLI::bold(TDB_WORLD_MINIMUM_VER).')';
+                            $error[] = ' * '.$what.': doesn\'t seem to contain world tables!';
                         break;
                     default:
                        // no further checks at this time
@@ -276,22 +274,13 @@ CLISetup::registerUtility(new class extends UtilityScript
                         if (DB::World()->selectCell('SHOW TABLES LIKE ?', 'version'))
                         {
                             [$vString, $vNo] = DB::World()->selectRow('SELECT `db_version` AS "0", `cache_id` AS "1" FROM `version`');
-                            if (strpos($vString, 'TDB') === 0)
+                            if (strpos($vString, 'ACDB') === 0)
                             {
-                                if ($vNo < TDB_WORLD_MINIMUM_VER)
-                                    $note = CLI::yellow('DB test found TrinityDB version older than rev. ').CLI::bold(TDB_WORLD_MINIMUM_VER).CLI::yellow('. Please update to at least rev. ').CLI::bold(TDB_WORLD_MINIMUM_VER);
-                                else if ($vNo > TDB_WORLD_EXPECTED_VER)
-                                    $note = CLI::yellow('DB test found TrinityDB version newer than rev. ').CLI::bold(TDB_WORLD_EXPECTED_VER).CLI::yellow('. Be advised! DB structure may diverge!');
-                                else
-                                {
-                                    $note = 'TrinityDB version @ ' . $vString;
-                                    $ok   = true;
-                                }
+                                $note = 'AzerothCore DB version @ ' . $vString;
+                                $ok   = true;
                             }
-                            else if (strpos($vString, 'ACDB') === 0)
-                                $note = CLI::yellow('DB test found AzerothCore DB version. AzerothCore DB structure is not supported!');
                             else
-                                $note = CLI::yellow('DB test found unexpected vendor in expected version table. Uhh.. Good Luck..!?');
+                                $note = CLI::yellow('DB test found unexpected version string. Is this an AzerothCore world database?');
                         }
                         else if (DB::World()->selectCell('SHOW TABLES LIKE ?', 'db_version'))
                             $note = CLI::yellow('DB test found MaNGOS styled version table. MaNGOS DB structure is not supported!');
