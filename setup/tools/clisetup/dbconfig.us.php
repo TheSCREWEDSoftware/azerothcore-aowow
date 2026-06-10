@@ -49,9 +49,15 @@ CLISetup::registerUtility(new class extends UtilityScript
             unset($AoWoWconf);
         }
 
+        $defaults = [                                           // [hostname, username, password, database name, table prefix]
+            'aowow'  => ['localhost', 'acore', 'acore', 'acore_aowow', 'aowow_'],  // mandatory
+            'world'  => ['localhost', 'acore', 'acore', 'acore_world', ''],         // mandatory
+            'auth'   => ['localhost', 'acore', 'acore', 'acore_auth',  ''],         // optional - leave host empty to skip
+        ];
+
         foreach ($this->databases as $idx => $name)
-            if (empty($this->config[$name]) && $name != 'characters' )
-                $this->config[$name] = array_combine(array_keys($this->dbFields), ['', '', '', '', '']);
+            if (empty($this->config[$name]) && $name != 'characters')
+                $this->config[$name] = array_combine(array_keys($this->dbFields), $defaults[$name] ?? ['', '', '', '', '']);
 
         while (true)
         {
