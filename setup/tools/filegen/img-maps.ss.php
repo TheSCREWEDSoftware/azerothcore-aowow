@@ -567,8 +567,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
                 $srcPath = $mapSrcDir.DIRECTORY_SEPARATOR.$textureStr;
                 if (!CLISetup::fileExists($srcPath))
                 {
-                    CLI::write('[img-maps] - WorldMap file path '.$srcPath.' missing for selected locale '.CLI::bold($loc->name), CLI::LOG_ERROR);
-                    $this->success = false;
+                    CLI::write('[img-maps] - WorldMap file path '.$srcPath.' missing for selected locale '.CLI::bold($loc->name), CLI::LOG_WARN);
                     continue;
                 }
 
@@ -714,6 +713,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
             if (isset($zoneAreas[$lId][4494]))
                 $zoneAreas[$lId][4494][2] = Lang::maps('floorN', [2]);
 
+            $zoneAreas[$lId] ??= [];
             foreach ($zoneAreas[$lId] as $zoneId => $floorData)
             {
                 $nStrings = count($floorData);
