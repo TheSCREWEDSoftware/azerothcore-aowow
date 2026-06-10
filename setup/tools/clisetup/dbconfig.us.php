@@ -18,7 +18,7 @@ CLISetup::registerUtility(new class extends UtilityScript
 
     public const COMMAND     = 'database';
     public const DESCRIPTION = 'Set up DB connection.';
-    public const PROMPT      = 'Please enter your database credentials.';
+    public const PROMPT      = '';
     public const NOTE_ERROR  = 'could not establish connection to:';
 
     private const CONFIG_FILE = 'config/config.php';
@@ -42,7 +42,9 @@ CLISetup::registerUtility(new class extends UtilityScript
     // args: null, null, null, null // nnnn
     public function run(&$args) : bool
     {
-        if (!$this->config && file_exists(self::CONFIG_FILE))
+        $isFirstRun = !file_exists(self::CONFIG_FILE);
+
+        if (!$isFirstRun)
         {
             require self::CONFIG_FILE;
             $this->config = $AoWoWconf;
@@ -50,18 +52,34 @@ CLISetup::registerUtility(new class extends UtilityScript
         }
 
         $defaults = [                                           // [hostname, username, password, database name, table prefix]
-            'aowow'  => ['localhost', 'acore', 'acore', 'acore_aowow', 'aowow_'],  // mandatory
-            'world'  => ['localhost', 'acore', 'acore', 'acore_world', ''],         // mandatory
-            'auth'   => ['localhost', 'acore', 'acore', 'acore_auth',  ''],         // optional - leave host empty to skip
+            'aowow'       => ['localhost', 'acore', 'acore', 'acore_aowow',       'aowow_'],  // mandatory
+            'world'       => ['localhost', 'acore', 'acore', 'acore_world',       ''],         // mandatory
+            'auth'        => ['localhost', 'acore', 'acore', 'acore_auth',        ''],         // optional - leave host empty to skip
+            'characters'  => ['localhost', 'acore', 'acore', 'acore_characters',  ''],         // optional - realm 1 (default AzerothCore realm)
         ];
 
-        foreach ($this->databases as $idx => $name)
-            if (empty($this->config[$name]) && $name != 'characters')
-                $this->config[$name] = array_combine(array_keys($this->dbFields), $defaults[$name] ?? ['', '', '', '', '']);
+        CLI::write('Please enter your database credentials.');
+        CLI::write();
+
+        if ($isFirstRun)
+        {
+            CLI::read(['useDefaults' => ['Use default AzerothCore credentials and databases? [Y/N]', false, true, '/y|n/i']], $answer);
+            $useDefaults = empty($answer['useDefaults']) || strtolower($answer['useDefaults']) === 'y';
+
+            if ($useDefaults)
+            {
+                foreach ($this->databases as $idx => $name)
+                    if ($name != 'characters')
+                        $this->config[$name] = array_combine(array_keys($this->dbFields), $defaults[$name]);
+
+                // characters: optional - enables the character profiler; defaults to realm 1 (always created by AzerothCore)
+                $this->config['characters'][1] = array_combine(array_keys($this->dbFields), $defaults['characters']);
+            }
+        }
 
         while (true)
         {
-            CLI::write("select an index to use the corresponding entry", -1, false);
+            CLI::write("Select an index to use the corresponding entry", -1, false);
 
             $nCharDBs = 0;
             $tblRows  = [];
@@ -78,6 +96,7 @@ CLISetup::registerUtility(new class extends UtilityScript
             $tblRows[] = ['['.CLI::bold('S').']', 'show available realms'];
             $tblRows[] = ['['.CLI::bold('R').']', 'retest / reload DBs'];
             CLI::writeTable($tblRows, false, true);
+            CLI::write("If you're done, press ENTER to save the configuration.", -1, false);
 
             while (true)
             {
