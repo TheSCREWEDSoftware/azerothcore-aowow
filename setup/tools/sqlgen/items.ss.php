@@ -122,7 +122,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             LEFT JOIN item_template_locale itl4 ON it.entry = itl4.ID AND itl4.locale = "zhCN"
             LEFT JOIN item_template_locale itl6 ON it.entry = itl6.ID AND itl6.locale = "esES"
             LEFT JOIN item_template_locale itl8 ON it.entry = itl8.ID AND itl8.locale = "ruRU"
-            LEFT JOIN spell_group sg ON sg.spell_id = it.spellid_1 AND it.class = 0 AND it.subclass = 2 AND sg.id IN (1, 2)
+            LEFT JOIN (SELECT spell_id, MIN(id) AS id FROM spell_group WHERE id IN (1, 2) GROUP BY spell_id) sg ON sg.spell_id = it.spellid_1 AND it.class = 0 AND it.subclass = 2
             LEFT JOIN game_event ge ON ge.holiday = it.HolidayId AND it.HolidayId > 0
           { WHERE     it.entry IN (?a) }
             LIMIT     ?d, ?d';
@@ -134,7 +134,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             CLI::write(' * batch #' . ++$i . ' (' . count($items) . ')', CLI::LOG_BLANK, true, true);
 
             foreach ($items as $item)
-                DB::Aowow()->query('INSERT INTO ?_items VALUES (?a)', array_values($item));
+                DB::Aowow()->query('INSERT IGNORE INTO ?_items VALUES (?a)', array_values($item));
         }
 
         // merge with gemProperties

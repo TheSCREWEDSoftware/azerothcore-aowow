@@ -654,6 +654,22 @@ CREATE TABLE `aowow_currencies` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `aowow_updates`
+--
+
+DROP TABLE IF EXISTS `aowow_updates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `aowow_updates` (
+  `name`      VARCHAR(200) NOT NULL COMMENT 'filename with extension of the update.',
+  `hash`      CHAR(40)     NULL DEFAULT '' COMMENT 'sha1 hash of the sql file.',
+  `timestamp` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'timestamp when the query was applied.',
+  `speed`     INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'time the query takes to apply in ms.',
+  PRIMARY KEY (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='List of all applied updates in this database.';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `aowow_dbversion`
 --
 
@@ -1443,12 +1459,12 @@ CREATE TABLE `aowow_items` (
   `armor` smallint unsigned NOT NULL DEFAULT 0,
   `armorDamageModifier` float NOT NULL DEFAULT 0,
   `block` mediumint unsigned NOT NULL DEFAULT 0,
-  `resHoly` tinyint unsigned NOT NULL DEFAULT 0,
-  `resFire` tinyint unsigned NOT NULL DEFAULT 0,
-  `resNature` tinyint unsigned NOT NULL DEFAULT 0,
-  `resFrost` tinyint unsigned NOT NULL DEFAULT 0,
-  `resShadow` tinyint unsigned NOT NULL DEFAULT 0,
-  `resArcane` tinyint unsigned NOT NULL DEFAULT 0,
+  `resHoly` smallint NOT NULL DEFAULT 0,
+  `resFire` smallint NOT NULL DEFAULT 0,
+  `resNature` smallint NOT NULL DEFAULT 0,
+  `resFrost` smallint NOT NULL DEFAULT 0,
+  `resShadow` smallint NOT NULL DEFAULT 0,
+  `resArcane` smallint NOT NULL DEFAULT 0,
   `ammoType` tinyint unsigned NOT NULL DEFAULT 0,
   `rangedModRange` float NOT NULL DEFAULT 0,
   `spellId1` mediumint NOT NULL DEFAULT 0,
@@ -1487,12 +1503,12 @@ CREATE TABLE `aowow_items` (
   `spellCategory5` smallint unsigned NOT NULL DEFAULT 0,
   `spellCategoryCooldown5` int NOT NULL DEFAULT -1,
   `bonding` tinyint unsigned NOT NULL DEFAULT 0,
-  `description_loc0` varchar(255) DEFAULT NULL,
-  `description_loc2` varchar(255) DEFAULT NULL,
-  `description_loc3` varchar(255) DEFAULT NULL,
-  `description_loc4` varchar(255) DEFAULT NULL,
-  `description_loc6` varchar(255) DEFAULT NULL,
-  `description_loc8` varchar(255) DEFAULT NULL,
+  `description_loc0` text DEFAULT NULL,
+  `description_loc2` text DEFAULT NULL,
+  `description_loc3` text DEFAULT NULL,
+  `description_loc4` text DEFAULT NULL,
+  `description_loc6` text DEFAULT NULL,
+  `description_loc8` text DEFAULT NULL,
   `pageTextId` mediumint unsigned NOT NULL DEFAULT 0,
   `languageId` tinyint unsigned NOT NULL DEFAULT 0,
   `startQuest` mediumint unsigned NOT NULL DEFAULT 0,
@@ -2141,7 +2157,7 @@ CREATE TABLE `aowow_quests` (
   `exclusiveGroup` mediumint NOT NULL DEFAULT 0,
   `nextQuestIdChain` mediumint unsigned NOT NULL DEFAULT 0,
   `flags` int unsigned NOT NULL DEFAULT 0,
-  `specialFlags` tinyint unsigned NOT NULL DEFAULT 0,
+  `specialFlags` int unsigned NOT NULL DEFAULT 0,
   `cuFlags` int unsigned NOT NULL DEFAULT 0 COMMENT 'see defines.php for flags',
   `reqClassMask` smallint unsigned NOT NULL DEFAULT 0,
   `reqRaceMask` smallint unsigned NOT NULL DEFAULT 0,

@@ -209,6 +209,21 @@ CLISetup::registerUtility(new class extends UtilityScript
                 {
                     CLI::write("[db] leaving db config...", CLI::LOG_INFO);
                     CLI::write();
+                    // always persist config on exit so resumed setup runs can reconnect
+                    if ($this->config)
+                    {
+                        $buff = "<?php\n\nif (!defined('AOWOW_REVISION'))\n    die('illegal access');\n\n\n";
+                        foreach ($this->databases as $db)
+                        {
+                            if ($db != 'characters')
+                                $buff .= '$AoWoWconf[\''.$db.'\'] = '.var_export($this->config[$db] ?? [], true).";\n\n";
+                            else if (isset($this->config[$db]))
+                                foreach ($this->config[$db] as $idx => $charInfo)
+                                    $buff .= '$AoWoWconf[\''.$db.'\'][\''.$idx.'\'] = '.var_export($this->config[$db][$idx], true).";\n\n";
+                        }
+                        $buff .= "?>\n";
+                        CLISetup::writeFile(self::CONFIG_FILE, $buff);
+                    }
                     break 2;
                 }
             }
