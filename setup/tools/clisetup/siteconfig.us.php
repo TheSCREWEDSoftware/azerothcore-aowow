@@ -73,7 +73,7 @@ CLISetup::registerUtility(new class extends UtilityScript
         // offer localhost defaults on first run when SITE_HOST is still empty
         if (!Cfg::get('SITE_HOST'))
         {
-            CLI::read(['useLocal' => ['Set up for local use? (localhost) [Y/N]', false, true, '/y|n/i']], $answer);
+            CLI::read(['useLocal' => ['Set up for local use? (localhost) [Y / N]', false, true, '/y|n/i']], $answer);
             if (empty($answer['useLocal']) || strtolower($answer['useLocal']) === 'y')
             {
                 Cfg::set('site_host',   'localhost/aowow');
@@ -85,7 +85,7 @@ CLISetup::registerUtility(new class extends UtilityScript
 
         while (true)
         {
-            CLI::write('Select a numerical index or name to use the corresponding entry', -1, false);
+            CLI::write('Select an entry by number or name to edit it, or press ENTER to finish.', -1, false);
             CLI::write();
 
             $sumNum   = 0;
@@ -129,6 +129,8 @@ CLISetup::registerUtility(new class extends UtilityScript
                 CLI::write();
             }
 
+            CLI::write('Select an entry by number or name to edit it, or press ENTER to finish.', -1, false);
+            CLI::write();
 
             if (CLI::read(['idx' => ['', false, false, Cfg::PATTERN_CONF_KEY]], $uiIndex) && $uiIndex && $uiIndex['idx'] !== '')
             {
@@ -436,7 +438,7 @@ CLISetup::registerUtility(new class extends UtilityScript
                     if ($resp == self::HTTP_STATUS_MOVED_PERM || $resp == self::HTTP_STATUS_MOVED_TEMP)
                     {
                         CLI::write('self test received status '.CLI::bold($resp).' (page moved) for '.$conf.', pointing to: '.$protocol.$host.$testFile, CLI::LOG_WARN);
-                        if (!CLI::read(['x' => ['should '.CLI::bold($conf).' be set to '.CLI::bold($host).' and force_ssl be updated? (y/n)', true, true, '/y|n/i']], $uiN) || !$uiN || strtolower($uiN['x']) == 'n')
+                        if (!CLI::read(['x' => ['should '.CLI::bold($conf).' be set to '.CLI::bold($host).' and force_ssl be updated? [Y / N]', true, true, '/y|n/i']], $uiN) || !$uiN || strtolower($uiN['x']) == 'n')
                             $error[] = ' * '.$protocol.$host.$testFile.' ['.$resp.']';
                         else
                         {

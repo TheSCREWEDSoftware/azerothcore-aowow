@@ -78,16 +78,16 @@ CLISetup::registerUtility(new class extends UtilityScript
     {
         if ($this->startStep)
         {
-            CLI::write('[setup] found firstrun progression info. (Halted on subscript: '.($this->steps[$this->startStep][1] ?: $this->steps[$this->startStep][0]).')', CLI::LOG_INFO);
+            CLI::write('[setup] found firstrun progression info. (Halted on subscript: '.($this->steps[$this->startStep][1] ?: $this->steps[$this->startStep][0]).' ['.($this->startStep + 1).' / '.count($this->steps).'])', CLI::LOG_INFO);
             $msg = '';
-            if (!CLI::read(['x' => ['continue setup? (y/n)', true, true, '/y|n/i']], $uiN) || !$uiN || strtolower($uiN['x']) == 'n')
+            if (!CLI::read(['x' => ['continue setup? [Y / N]', true, true, '/y|n/i']], $uiN) || !$uiN || strtolower($uiN['x']) == 'n')
             {
                 $msg = '[setup] starting from scratch...';
                 $this->startStep = 0;
 
                 if (file_exists('config/config.php'))
                 {
-                    CLI::read(['x' => ['Keep existing database configuration? (y/n)', true, true, '/y|n/i']], $uiKeep);
+                    CLI::read(['x' => ['Keep existing database configuration? [Y / N]', true, true, '/y|n/i']], $uiKeep);
                     if (!$uiKeep || strtolower($uiKeep['x']) == 'n')
                         unlink('config/config.php');
                 }
