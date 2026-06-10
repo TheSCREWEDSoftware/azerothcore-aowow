@@ -270,16 +270,16 @@ abstract class CLI
             switch ($lvl)
             {
                 case self::LOG_ERROR:                       // red      critical error
-                    $msg .= '['.self::red('ERR').']   ';
+                    $msg .= '[ERR]   ';
                     break;
                 case self::LOG_WARN:                        // yellow   notice
-                    $msg .= '['.self::yellow('WARN').']  ';
+                    $msg .= '[WARN]  ';
                     break;
                 case self::LOG_OK:                          // green    success
-                    $msg .= '['.self::green('OK').']    ';
+                    $msg .= '[OK]    ';
                     break;
                 case self::LOG_INFO:                        // blue     info
-                    $msg .= '['.self::blue('INFO').']  ';
+                    $msg .= '[INFO]  ';
                     break;
                 case self::LOG_BLANK:
                     $msg .= '        ';
@@ -287,6 +287,14 @@ abstract class CLI
             }
 
             $msg .= $txt;
+
+            switch ($lvl)
+            {
+                case self::LOG_ERROR: $msg = self::red($msg);    break;
+                case self::LOG_WARN:  $msg = self::yellow($msg); break;
+                case self::LOG_OK:    $msg = self::green($msg);  break;
+                case self::LOG_INFO:  $msg = self::blue($msg);   break;
+            }
         }
 
         // https://shiroyasha.svbtle.com/escape-sequences-a-quick-guide-1#movement_1
