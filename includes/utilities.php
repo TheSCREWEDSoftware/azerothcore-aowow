@@ -132,6 +132,7 @@ abstract class CLI
     public const LOG_OK         = 4;
 
     private static $logHandle   = null;
+    private static $logLevel    = self::LOG_WARN;             // minimum level written to log file
     private static $hasReadline = null;
     public  static $bell        = false;
 
@@ -191,6 +192,11 @@ abstract class CLI
     /***********/
     /* logging */
     /***********/
+
+    public static function setLogLevel(int $level) : void
+    {
+        self::$logLevel = $level;
+    }
 
     public static function initLogFile(string $file = '') : void
     {
@@ -289,7 +295,8 @@ abstract class CLI
 
         fwrite($lvl == self::LOG_ERROR ? STDERR : STDOUT, $msg);
 
-        if (self::$logHandle)                               // remove control sequences from log
+        // LOG_NONE (-1) = log everything; otherwise only write if level is severe enough (lower = more severe)
+        if (self::$logHandle && (self::$logLevel === self::LOG_NONE || ($lvl > self::LOG_BLANK && $lvl <= self::$logLevel)))
             fwrite(self::$logHandle, self::purgeEscapes($msg));
 
         flush();

@@ -44,7 +44,8 @@ class CLISetup
         'force'   => [self::OPT_GRP_MISC, ['f'], self::ARGV_NONE,                        'Force existing files to be overwritten.',                                                                   ''               ],
         'locales' => [self::OPT_GRP_MISC, [],    self::ARGV_ARRAY | self::ARGV_OPTIONAL, 'Limit setup to enUS, frFR, deDE, zhCN, esES and/or ruRU. (does not override config settings)',              '=<regionCodes,>'],
         'datasrc' => [self::OPT_GRP_MISC, [],    self::ARGV_OPTIONAL,                    'Manually point to directory with extracted mpq files. This is limited to setup/ (default: setup/mpqdata/)', '=path/'         ],
-        'beep'    => [self::OPT_GRP_MISC, [],    self::ARGV_NONE,                        'Enable terminal bell after each input prompt.',                                                              ''               ],
+        'beep'      => [self::OPT_GRP_MISC, [],    self::ARGV_NONE,                        'Enable terminal bell after each input prompt.',                                                                         ''                  ],
+        'log-level' => [self::OPT_GRP_MISC, [],    self::ARGV_REQUIRED,                    'Minimum log level written to the log file: all, info, warn, error, none. (default: warn)',                                      '=level'            ],
     );
 
     private static $utilScriptRefs  = [];
@@ -183,8 +184,26 @@ class CLISetup
     {
         self::evalOpts();
 
+        // resolve log level first so we can honour --log-level=none before creating the file
+        $logLevelKey = strtolower(trim(self::$opts['log-level'] ?? ''));
+        $levelMap    = ['all' => CLI::LOG_NONE, 'info' => CLI::LOG_INFO, 'warn' => CLI::LOG_WARN, 'error' => CLI::LOG_ERROR];
+        if ($logLevelKey && $logLevelKey !== 'none')
+            CLI::setLogLevel($levelMap[$logLevelKey] ?? CLI::LOG_WARN);
+
+        // auto-log setup runs unless disabled with --log-level=none; --log overrides the path
+        $loggingDisabled  = ($logLevelKey === 'none');
+        $runningSetup     = in_array('--setup', $_SERVER['argv'] ?? []) || in_array('-s', $_SERVER['argv'] ?? []);
+        if (!$loggingDisabled && $runningSetup && !isset(self::$opts['log']))
+        {
+            $logDir = 'setup/logs/';
+            if (!is_dir($logDir))
+                mkdir($logDir, 0755, true);
+
+            self::$opts['log'] = $logDir . date('Y_m_d-H_i_s') . '-setup.log';
+        }
+
         // optional logging
-        if (isset(self::$opts['log']))
+        if (!$loggingDisabled && isset(self::$opts['log']))
             CLI::initLogFile(trim(self::$opts['log']));
 
         // optional terminal bell after input prompts
