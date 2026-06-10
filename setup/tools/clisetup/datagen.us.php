@@ -67,7 +67,7 @@ CLISetup::registerUtility(new class extends UtilityScript
             }
 
             // supplement self::NOTE_START
-            CLI::write('             - '.Lang::concat($todo), CLI::LOG_BLANK, false);
+            CLI::write('             - '.implode(', ', $todo), CLI::LOG_BLANK, false);
             CLI::write();
         }
         else if ($todo)

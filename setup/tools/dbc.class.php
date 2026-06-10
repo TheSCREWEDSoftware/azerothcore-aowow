@@ -171,7 +171,7 @@ class DBC
         $this->createTable();
 
         if ($this->localized)
-            CLI::write(' - DBC: reading and merging '.$this->file.'.dbc for locales '.Lang::concat(array_keys($this->fileRefs), callback: fn($x) => CLI::bold(Locale::from($x)->name)));
+            CLI::write(' - DBC: reading and merging '.$this->file.'.dbc for locales '.implode(', ', array_map(fn($x) => CLI::bold(Locale::from($x)->name), array_keys($this->fileRefs))));
         else
             CLI::write(' - DBC: reading '.$this->file.'.dbc');
 

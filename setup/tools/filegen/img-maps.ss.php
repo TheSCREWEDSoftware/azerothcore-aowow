@@ -145,7 +145,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
         $sumAreas  = count($this->wmAreas);
         $sumMaps   = count(CLISetup::$locales) * ($sumAreas + $sumFloors);
 
-        CLI::write('[img-maps] Processing '.$sumAreas.' zone maps and '.$sumFloors.' dungeon maps from Interface/WorldMap/ for locale: '.Lang::concat(CLISetup::$locales, callback: fn($x) => $x->name));
+        CLI::write('[img-maps] Processing '.$sumAreas.' zone maps and '.$sumFloors.' dungeon maps from Interface/WorldMap/ for locale: '.implode(', ', array_map(fn($x) => $x->name, CLISetup::$locales)));
 
         /*  todo: retrain brain and generate maps by given files and GlobalStrings. Then assign dbc data to them not the other way round like it is now.
                 foreach ($this->mapFiles as $name => [$floors, $isMultilevel])
@@ -508,7 +508,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
         $sumAreas  = count($this->wmAreas);
         $sumMaps   = count(CLISetup::$locales) * ($sumAreas + $sumFloors);
 
-        CLI::write('[img-maps] Processing '.$sumAreas.' zone maps and '.$sumFloors.' dungeon maps from Interface/WorldMap/ for locale: '.Lang::concat(CLISetup::$locales, callback: fn($x) => CLI::bold($x->name)));
+        CLI::write('[img-maps] Processing '.$sumAreas.' zone maps and '.$sumFloors.' dungeon maps from Interface/WorldMap/ for locale: '.implode(', ', array_map(fn($x) => CLI::bold($x->name), CLISetup::$locales)));
 
         foreach (CLISetup::$locales as $l => $loc)
         {
