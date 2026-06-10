@@ -84,6 +84,13 @@ CLISetup::registerUtility(new class extends UtilityScript
             {
                 $msg = '[setup] starting from scratch...';
                 $this->startStep = 0;
+
+                if (file_exists('config/config.php'))
+                {
+                    CLI::read(['x' => ['Keep existing database configuration? (y/n)', true, true, '/y|n/i']], $uiKeep);
+                    if (!$uiKeep || strtolower($uiKeep['x']) == 'n')
+                        unlink('config/config.php');
+                }
             }
             else
                 $msg = '[setup] resuming from step '.($this->startStep + 1).'...';
