@@ -727,7 +727,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             // second: search by name and family equality
             if (!$icons)
             {
-                $search = !empty($glyphAffects[$applyId]) ? $glyphAffects[$applyId] : str_replace('Glyph of ', '', $glyphEffect['name_loc0']);
+                $search = $glyphAffects[$applyId] ?? $glyphAffects[$glyphEffect['id']] ?? str_replace('Glyph of ', '', $glyphEffect['name_loc0']);
                 if (is_int($search))
                     $where = "?d AND s.id = ?d";
                 else
