@@ -132,6 +132,7 @@ abstract class CLI
     public const LOG_OK         = 4;
 
     private static $logHandle   = null;
+    private static $logFile     = null;                       // deferred log path; file created on first write
     private static $logLevel    = self::LOG_WARN;             // minimum level written to log file
     private static $hasReadline = null;
     public  static $bell        = false;
@@ -203,10 +204,18 @@ abstract class CLI
         if (!$file)
             return;
 
-        $file = self::nicePath($file);
-        if (!file_exists($file))
-            self::$logHandle = fopen($file, 'w');
-        else
+        // store path only; the file is created on the first actual write
+        self::$logFile = self::nicePath($file);
+    }
+
+    private static function openLogFile() : void
+    {
+        if (self::$logHandle || !self::$logFile)
+            return;
+
+        $file = self::$logFile;
+
+        if (file_exists($file))
         {
             $logFileParts = pathinfo($file);
 
@@ -215,8 +224,9 @@ abstract class CLI
                 $i++;
 
             $file = $logFileParts['dirname'].'/'.$logFileParts['filename'].$i.(isset($logFileParts['extension']) ? '.'.$logFileParts['extension'] : '');
-            self::$logHandle = fopen($file, 'w');
         }
+
+        self::$logHandle = fopen($file, 'w');
     }
 
     private static function tblHead(string $str) : string
@@ -304,8 +314,11 @@ abstract class CLI
         fwrite($lvl == self::LOG_ERROR ? STDERR : STDOUT, $msg);
 
         // LOG_NONE (-1) = log everything; otherwise only write if level is severe enough (lower = more severe)
-        if (self::$logHandle && (self::$logLevel === self::LOG_NONE || ($lvl > self::LOG_BLANK && $lvl <= self::$logLevel)))
+        if (self::$logFile && (self::$logLevel === self::LOG_NONE || ($lvl > self::LOG_BLANK && $lvl <= self::$logLevel)))
+        {
+            self::openLogFile();
             fwrite(self::$logHandle, self::purgeEscapes($msg));
+        }
 
         flush();
     }
