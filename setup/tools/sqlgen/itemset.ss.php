@@ -185,6 +185,8 @@ CLISetup::registerSetup("sql", new class extends SetupScript
 
     public function generate(array $ids = []) : bool
     {
+        Lang::load(reset(CLISetup::$locales));              // SpellList construction requires locale to be initialised
+
         // find events associated with holidayIds
         if ($pairs = DB::World()->selectCol('SELECT `holiday` AS ARRAY_KEY, `eventEntry` FROM game_event WHERE `holiday` IN (?a)', array_values($this->setToHoliday)))
             foreach ($this->setToHoliday as &$hId)
