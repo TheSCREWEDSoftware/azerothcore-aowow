@@ -2695,7 +2695,7 @@ CREATE TABLE `aowow_spawns` (
   `typeId` int unsigned NOT NULL,
   `respawn` int NOT NULL DEFAULT 0 COMMENT 'in seconds',
   `spawnMask` tinyint unsigned NOT NULL DEFAULT 0,
-  `phaseMask` smallint unsigned NOT NULL DEFAULT 0,
+  `phaseMask` int unsigned NOT NULL DEFAULT 0,
   `areaId` smallint unsigned NOT NULL DEFAULT 0,
   `floor` tinyint unsigned NOT NULL DEFAULT 0,
   `posX` float unsigned NOT NULL,
