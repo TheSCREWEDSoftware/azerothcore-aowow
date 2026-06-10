@@ -212,7 +212,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         $lastMax = 0;
         $n = 0;
         CLI::write('[spell] - copying serverside spells into aowow_spell');
-        while ($spells = DB::World()->select($ssQuery, CUSTOM_SERVERSIDE, $n++ * CLISetup::SQL_BATCH, CLISetup::SQL_BATCH))
+        while ($spells = DB::World()->select($ssQuery, CUSTOM_SERVERSIDE, $n++ * CLISetup::$SQL_BATCH, CLISetup::$SQL_BATCH))
         {
             $newMax = max(array_column($spells, 'id'));
 
@@ -235,7 +235,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         $lastMax = 0;
         $n = 0;
         CLI::write('[spell] - merging spell.dbc into aowow_spell');
-        while ($spells = DB::Aowow()->select($baseQry, $n++ * CLISetup::SQL_BATCH, CLISetup::SQL_BATCH))
+        while ($spells = DB::Aowow()->select($baseQry, $n++ * CLISetup::$SQL_BATCH, CLISetup::$SQL_BATCH))
         {
             $newMax = max(array_column($spells, 'id'));
 
@@ -643,7 +643,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             $world = array_merge($world, array_filter(explode(' ', $a)));
         }
 
-        foreach (array_chunk($world, 1000) as $chunk)
+        foreach (array_chunk($world, CLISetup::$SQL_BATCH) as $chunk)
             DB::Aowow()->query('UPDATE ?_spell s SET s.typeCat = -8 WHERE s.typeCat = 0 AND s.id IN (?a)', $chunk);
 
 

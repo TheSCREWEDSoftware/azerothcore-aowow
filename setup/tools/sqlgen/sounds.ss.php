@@ -73,7 +73,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         $soundFileIdx = 0;
         $soundIndex   = [];
         $j = 0;
-        while ($sounds = DB::Aowow()->select($query, $j * CLISetup::SQL_BATCH, CLISetup::SQL_BATCH))
+        while ($sounds = DB::Aowow()->select($query, $j * CLISetup::$SQL_BATCH, CLISetup::$SQL_BATCH))
         {
             CLI::write('[sound] * batch #' . ++$j . ' (' . count($sounds) . ')', CLI::LOG_BLANK, true, true);
 

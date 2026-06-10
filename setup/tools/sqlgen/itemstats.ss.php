@@ -116,7 +116,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         $offset = 0;
         while (true)
         {
-            $items = new ItemStatSetup($offset, CLISetup::SQL_BATCH, $ids, $enchStats, $this->relSpells);
+            $items = new ItemStatSetup($offset, CLISetup::$SQL_BATCH, $ids, $enchStats, $this->relSpells);
             if ($items->error)
                 break;
 

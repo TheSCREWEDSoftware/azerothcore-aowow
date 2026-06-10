@@ -116,7 +116,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
 
         $i = 0;
         DB::Aowow()->query('TRUNCATE ?_quests');
-        while ($quests = DB::World()->select($baseQuery, $ids ?: DBSIMPLE_SKIP, CLISetup::SQL_BATCH * $i, CLISetup::SQL_BATCH))
+        while ($quests = DB::World()->select($baseQuery, $ids ?: DBSIMPLE_SKIP, CLISetup::$SQL_BATCH * $i, CLISetup::$SQL_BATCH))
         {
             CLI::write(' * batch #' . ++$i . ' (' . count($quests) . ')', CLI::LOG_BLANK, true, true);
 

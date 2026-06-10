@@ -14,8 +14,9 @@ class CLISetup
     public  static $srcDir        = 'setup/mpqdata/';
 
     private static $mpqFiles      = [];
+    private const  MPQ_CACHE_FILE = 'setup/mpqdata.cache';
 
-    public  const SQL_BATCH       = 1000;                   // max. n items per sql insert
+    public  static int $SQL_BATCH  = 1000;                   // max. n items per sql insert / fetch
 
     public  const LOCK_OFF        = 0;
     public  const LOCK_ON         = 1;
@@ -44,6 +45,7 @@ class CLISetup
         'force'   => [self::OPT_GRP_MISC, ['f'], self::ARGV_NONE,                        'Force existing files to be overwritten.',                                                                   ''               ],
         'locales' => [self::OPT_GRP_MISC, [],    self::ARGV_ARRAY | self::ARGV_OPTIONAL, 'Limit setup to enUS, frFR, deDE, zhCN, esES and/or ruRU. (does not override config settings)',              '=<regionCodes,>'],
         'datasrc' => [self::OPT_GRP_MISC, [],    self::ARGV_OPTIONAL,                    'Manually point to directory with extracted game files. Accepts absolute paths or paths relative to setup/. (default: setup/mpqdata/)', '=path/'         ],
+        'batch-size' => [self::OPT_GRP_MISC, [],   self::ARGV_REQUIRED,                    'Number of rows per fetch/insert batch. (default: 1000)',                                                                '=n'                ],
         'beep'      => [self::OPT_GRP_MISC, [],    self::ARGV_NONE,                        'Enable terminal bell after each input prompt.',                                                                         ''                  ],
         'log-level' => [self::OPT_GRP_MISC, [],    self::ARGV_REQUIRED,                    'Minimum log level written to the log file: all, info, warn, error, none. (default: warn)',                                      '=level'            ],
     );
@@ -213,6 +215,10 @@ class CLISetup
         // alternative data source (no quotes, use forward slash)
         if (isset(self::$opts['datasrc']))
             self::$srcDir = CLI::nicePath('', self::$opts['datasrc']);
+
+        // custom batch size
+        if (isset(self::$opts['batch-size']) && (int)self::$opts['batch-size'] > 0)
+            self::$SQL_BATCH = (int)self::$opts['batch-size'];
 
         if (!self::setLocales())
             CLI::write('No valid locale specified. Check your config or --locales parameter, if used', CLI::LOG_ERROR);
@@ -478,8 +484,6 @@ class CLISetup
     */
     private static function buildFileList() : bool
     {
-        CLI::write('indexing game data from '.self::$srcDir.' for first time use...', CLI::LOG_INFO, true, true);
-
         // normalise case for relative paths inside setup/ (not needed for absolute paths)
         if (!CLI::isAbsolutePath(self::$srcDir))
         {
@@ -497,18 +501,38 @@ class CLISetup
             }
         }
 
+        // load from cache if source path matches and --force was not passed
+        if (!isset(self::$opts['force']) && file_exists(self::MPQ_CACHE_FILE))
+        {
+            $cache = unserialize(file_get_contents(self::MPQ_CACHE_FILE));
+            if (is_array($cache) && ($cache['src'] ?? '') === self::$srcDir)
+            {
+                self::$mpqFiles = $cache['files'];
+                CLI::write('indexing game data from '.self::$srcDir.'... loaded from cache ('.count(self::$mpqFiles).' files)', CLI::LOG_INFO);
+                return true;
+            }
+        }
+
+        CLI::write('indexing game data from '.self::$srcDir.'...', CLI::LOG_INFO, true, true);
+
         try
         {
             $iterator = new RecursiveDirectoryIterator(self::$srcDir);
             $iterator->setFlags(RecursiveDirectoryIterator::SKIP_DOTS);
 
+            $count = 0;
             foreach (new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::SELF_FIRST) as $path)
             {
                 $_ = CLI::nicePath($path->getPathname());
                 self::$mpqFiles[strtolower($_)] = $_;
+                $count++;
+                if ($count % 500 === 0)
+                    CLI::write('indexing game data from '.self::$srcDir.'... '.$count.' files', CLI::LOG_INFO, true, true);
             }
 
-            CLI::write('indexing game data from '.self::$srcDir.' for first time use... done!', CLI::LOG_INFO);
+            CLI::write('indexing game data from '.self::$srcDir.'... done! ('.$count.' files)', CLI::LOG_INFO);
+
+            file_put_contents(self::MPQ_CACHE_FILE, serialize(['src' => self::$srcDir, 'files' => self::$mpqFiles]));
         }
         catch (UnexpectedValueException $e)
         {
