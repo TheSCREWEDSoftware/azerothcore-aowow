@@ -43,7 +43,7 @@ class CLISetup
         'help'    => [self::OPT_GRP_MISC, ['h'], self::ARGV_NONE,                        'Display contextual help, if available.',                                                                    ''               ],
         'force'   => [self::OPT_GRP_MISC, ['f'], self::ARGV_NONE,                        'Force existing files to be overwritten.',                                                                   ''               ],
         'locales' => [self::OPT_GRP_MISC, [],    self::ARGV_ARRAY | self::ARGV_OPTIONAL, 'Limit setup to enUS, frFR, deDE, zhCN, esES and/or ruRU. (does not override config settings)',              '=<regionCodes,>'],
-        'datasrc' => [self::OPT_GRP_MISC, [],    self::ARGV_OPTIONAL,                    'Manually point to directory with extracted mpq files. This is limited to setup/ (default: setup/mpqdata/)', '=path/'         ],
+        'datasrc' => [self::OPT_GRP_MISC, [],    self::ARGV_OPTIONAL,                    'Manually point to directory with extracted game files. Accepts absolute paths or paths relative to setup/. (default: setup/mpqdata/)', '=path/'         ],
         'beep'      => [self::OPT_GRP_MISC, [],    self::ARGV_NONE,                        'Enable terminal bell after each input prompt.',                                                                         ''                  ],
         'log-level' => [self::OPT_GRP_MISC, [],    self::ARGV_REQUIRED,                    'Minimum log level written to the log file: all, info, warn, error, none. (default: warn)',                                      '=level'            ],
     );
@@ -480,16 +480,20 @@ class CLISetup
     {
         CLI::write('indexing game data from '.self::$srcDir.' for first time use...', CLI::LOG_INFO, true, true);
 
-        $setupDirs = glob('setup/*');
-        foreach ($setupDirs as $sd)
+        // normalise case for relative paths inside setup/ (not needed for absolute paths)
+        if (!CLI::isAbsolutePath(self::$srcDir))
         {
-            if (mb_substr($sd, -1) == DIRECTORY_SEPARATOR)
-                $sd = mb_substr($sd, 0, -1);
-
-            if (Util::lower($sd) == Util::lower(self::$srcDir))
+            $setupDirs = glob('setup/*');
+            foreach ($setupDirs as $sd)
             {
-                self::$srcDir = $sd.DIRECTORY_SEPARATOR;
-                break;
+                if (mb_substr($sd, -1) == DIRECTORY_SEPARATOR)
+                    $sd = mb_substr($sd, 0, -1);
+
+                if (Util::lower($sd) == Util::lower(self::$srcDir))
+                {
+                    self::$srcDir = $sd.DIRECTORY_SEPARATOR;
+                    break;
+                }
             }
         }
 
