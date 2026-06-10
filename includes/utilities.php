@@ -428,11 +428,14 @@ abstract class CLI
         stream_set_blocking(STDIN, false);
 
         // pad default values onto $fields
-        array_walk($fields, function(&$val, $_, $pad) { $val += $pad; }, ['', false, false, '']);
+        array_walk($fields, function(&$val, $_, $pad) { $val += $pad; }, ['', false, false, '', '']);
 
-        foreach ($fields as $name => [$desc, $isHidden, $singleChar, $validPattern])
+        foreach ($fields as $name => [$desc, $isHidden, $singleChar, $validPattern, $hint])
         {
             $charBuff = '';
+
+            if ($hint)
+                fwrite(STDOUT, "\n".$hint);
 
             if ($desc)
                 fwrite(STDOUT, "\n".$desc.": ");

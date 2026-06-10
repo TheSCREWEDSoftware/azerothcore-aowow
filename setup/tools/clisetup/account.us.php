@@ -35,6 +35,48 @@ CLISetup::registerUtility(new class extends UtilityScript
         'email' => ['Email (optional)', false]
     );
 
+    // append the validation rules enforced by User::isValidName() / User::isValidPass()
+    // to the field labels, so the user knows the requirements before typing
+    private function addFieldHints() : void
+    {
+        $authMode = Cfg::get('ACC_AUTH_MODE');
+
+        $nameMin = $nameMax = 0;
+        if ($authMode == AUTH_MODE_SELF)
+        {
+            $nameMin = 4;
+            $nameMax = 16;
+        }
+        else if ($authMode == AUTH_MODE_REALM)
+        {
+            $nameMin = 3;
+            $nameMax = 32;
+        }
+        else if ($authMode == AUTH_MODE_ACORE)
+        {
+            $nameMin = 2;
+            $nameMax = 16;
+        }
+
+        if (isset($this->fields['name']))
+        {
+            $hint = $nameMin && $nameMax ? $nameMin.'-'.$nameMax.' characters; letters, digits, - and _' : 'letters, digits, - and _';
+            $this->fields['name'][4] = 'Allowed: '.$hint;
+        }
+
+        if (isset($this->fields['pass1']))
+        {
+            $hint = $authMode == AUTH_MODE_SELF ? 'min. 6 characters' : 'no length restriction';
+            $this->fields['pass1'][4] = 'Allowed: '.$hint;
+        }
+
+        if (isset($this->fields['pass2']))
+            $this->fields['pass2'][4] = 'Must match the password entered above';
+
+        if (isset($this->fields['email']))
+            $this->fields['email'][4] = 'Allowed: valid email address, leave empty for default';
+    }
+
     // args: username, password, email, null // iiin
     public function run(&$args) : bool
     {
@@ -61,6 +103,9 @@ CLISetup::registerUtility(new class extends UtilityScript
             unset($this->fields['email']);
         else
             $email = '';
+
+        if ($this->fields)
+            $this->addFieldHints();
 
         if ($this->fields && CLI::read($this->fields, $uiAccount))
         {

@@ -294,6 +294,15 @@ class CLISetup
             return;
         }
 
+        if ($us::PROMPT)
+        {
+            CLI::write($us::PROMPT, -1, false);
+            CLI::write();
+
+            if (!CLI::read(['x' => ['Press the ENTER key to continue', true, true]], $_))           // we don't actually care about the input
+                return;
+        }
+
         if ($us::LOCK_SITE != self::LOCK_OFF)
             self::siteLock(self::LOCK_ON);
 
@@ -351,7 +360,7 @@ class CLISetup
             CLI::write($us::PROMPT, -1, false);
             CLI::write();
 
-            if (!CLI::read(['x' => ['Press any key to continue', true, true]], $_))                // we don't actually care about the input
+            if (!CLI::read(['x' => ['Press the ENTER key to continue', true, true]], $_))           // we don't actually care about the input
                 return false;
         }
 
