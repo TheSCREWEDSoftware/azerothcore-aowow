@@ -173,9 +173,7 @@ class CLISetup
                     self::$locales[$loc->value] = $loc;
         }
         if (!self::$locales)
-            foreach (Locale::cases() as $loc)
-                if ($loc->validate())
-                    self::$locales[$loc->value] = $loc;
+            self::$locales[Locale::EN->value] = Locale::EN;  // default to EN if no valid locales specified
 
         return !!self::$locales;
     }
@@ -594,7 +592,8 @@ class CLISetup
 
         if ($missing = array_diff_key(self::$locales, self::$gsFiles))
         {
-            ClI::write('GlobalStrings.lua not found for locale '. Lang::concat($missing, callback: fn($x) => $x->name), CLI::LOG_WARN);
+            $missingNames = implode(', ', array_map(fn($x) => $x->name, $missing));
+            CLI::write('GlobalStrings.lua not found for locale '.$missingNames, CLI::LOG_WARN);
             return false;
         }
 
