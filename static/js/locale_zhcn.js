@@ -4427,19 +4427,19 @@ var LANG = {
         hasvideos:                  "有视频",
 
         sepstaffonly:               "仅限员工",
-        flags1:                     "Flags (1)",
-        flags2:                     "Flags (2)",
-        flags3:                     "Flags (3)",
-        flags4:                     "Flags (4)",
-        flags5:                     "Flags (5)",
-        flags6:                     "Flags (6)",
-        flags7:                     "Flags (7)",
-        flags8:                     "Flags (8)",
-        flags9:                     "Flags (9)",
-        flags10:                    "Flags (10)",
-        flags11:                    "Flags (11)",
-        flags12:                    "Flags (12)",
-        flags13:                    "Flags (13)"
+        flags1:                     "Attributes 0 (SpellAttr0)",
+        flags2:                     "Attributes 1 (SpellAttr1)",
+        flags3:                     "Attributes 2 (SpellAttr2)",
+        flags4:                     "Attributes 3 (SpellAttr3)",
+        flags5:                     "Attributes 4 (SpellAttr4)",
+        flags6:                     "Attributes 5 (SpellAttr5)",
+        flags7:                     "Attributes 6 (SpellAttr6)",
+        flags8:                     "Attributes 7 (SpellAttr7)",
+        flags9:                     "Target Flags",
+        flags10:                    "Excluded Stances",
+        flags11:                    "Family Flags 1",
+        flags12:                    "Family Flags 2",
+        flags13:                    "Family Flags 3"
     },
 
     fiachievements: {
