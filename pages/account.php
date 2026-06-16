@@ -409,8 +409,13 @@ Markup.printHtml("description text here", "description-generic", { allow: Markup
             return Lang::account('passMismatch');
 
         // check email
-        if (!Util::isValidEmail($this->_post['email']))
-            return Lang::account('emailInvalid');
+        $emailRequired = (bool)(Cfg::get('ACC_EMAIL') ?? 1);
+        $email         = $this->_post['email'];
+        if ($emailRequired || $email)
+        {
+            if (!Util::isValidEmail($email))
+                return $emailRequired ? Lang::account('emailInvalid') : null;
+        }
 
         // check ip
         if (!User::$ip)
@@ -424,8 +429,14 @@ Markup.printHtml("description text here", "description-generic", { allow: Markup
             return sprintf(Lang::account('signupExceeded'), Util::formatTime(Cfg::get('ACC_FAILED_AUTH_BLOCK') * 1000));
         }
 
-        // username taken
-        if ($_ = DB::Aowow()->SelectCell('SELECT user FROM ?_account WHERE (user = ? OR email = ?) AND (status <> ?d OR (status = ?d AND statusTimer > UNIX_TIMESTAMP()))', $this->_post['username'], $this->_post['email'], ACC_STATUS_NEW, ACC_STATUS_NEW))
+        // username taken (skip email uniqueness check when email is blank)
+        $dupCheck = $email
+            ? 'SELECT user FROM ?_account WHERE (user = ? OR email = ?) AND (status <> ?d OR (status = ?d AND statusTimer > UNIX_TIMESTAMP()))'
+            : 'SELECT user FROM ?_account WHERE  user = ?                  AND (status <> ?d OR (status = ?d AND statusTimer > UNIX_TIMESTAMP()))';
+        $dupArgs  = $email
+            ? [$this->_post['username'], $email, ACC_STATUS_NEW, ACC_STATUS_NEW]
+            : [$this->_post['username'],          ACC_STATUS_NEW, ACC_STATUS_NEW];
+        if ($_ = DB::Aowow()->SelectCell($dupCheck, ...$dupArgs))
             return $_ == $this->_post['username'] ? Lang::account('nameInUse') : Lang::account('mailInUse');
 
         // create..

@@ -216,12 +216,15 @@
                 $(node).find('input[type="checkbox"]').each(function(idx, opt) { opt.checked = !!(val & (1 << opt.value)); });
 
                 // boolean
-                $(node).find('input[type="radio"]').each(function(idx, opt) { opt.checked = !!opt.value == !!val; });
+                $(node).find('input[type="radio"]').each(function(idx, opt) { opt.checked = (opt.value == String(val)); });
             }
             else if (node.tagName == 'SELECT')                  // opt-list
                 $(node).find('option').each(function(idx, opt) { opt.selected = opt.value == val; });
             else if (node.tagName == 'INPUT')                   // string or numeric
                 node.value = node.type == 'text' ? val : eval(val);
+
+            // restore value in UI then immediately persist it
+            cfg_submit.bind(node.parentNode.parentNode.querySelector('.icon-save'), id)();
         }
 
         function cfg_remove(id)

@@ -61,21 +61,21 @@
                         return false;
                     }
 
-                    var e = $('input[name=email]', f)
+<?php if (Cfg::get('ACC_EMAIL') ?? 1): ?>
+                    var e = $('input[name=email]', f);
                     if (e.val().length == 0)
                     {
                         $WH.ge('inputbox-error').innerHTML = LANG.message_enteremail;
                         e.focus();
                         return false;
                     }
-
                     if (!g_isEmailValid(e.val()))
                     {
                         $WH.ge('inputbox-error').innerHTML = LANG.message_emailnotvalid;
                         e.focus();
                         return false;
                     }
-
+<?php endif; ?>
 
                 }
             </script>
@@ -99,10 +99,12 @@
                             <td><input type="password" name="c_password" style="width: 10em" /></td>
                         </tr>
                         <tr>
+<?php if (Cfg::get('ACC_EMAIL') ?? 1): ?>
                         <tr>
                             <td align="right"><?=Lang::account('email').Lang::main('colon'); ?></td>
                             <td><input type="text" name="email" style="width: 10em" /></td>
                         </tr>
+<?php endif; ?>
                             <td align="right" valign="top"><input type="checkbox" name="remember_me" id="remember_me" value="yes" /></td>
                             <td>
                                 <label for="remember_me"><?=Lang::account('rememberMe'); ?></label>
