@@ -314,7 +314,7 @@ class QuestPage extends GenericPage
         )));
 
         $prevStepIds = [$lastQuestId ?: $this->typeId];
-        while ($prevQuests = DB::Aowow()->select('SELECT `id`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `nextQuestIdChain` IN (?a) AND `id` <> `nextQuestIdChain`', $prevStepIds))
+        while ($prevQuests = DB::Aowow()->select('SELECT `id`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `nextQuestIdChain` IN (?a) AND `id` <> `nextQuestIdChain` AND `breadcrumbForQuestId` = 0', $prevStepIds))
         {
             $step = [];
             foreach ($prevQuests as $pQuest)
@@ -364,27 +364,27 @@ class QuestPage extends GenericPage
 
         $extraLists = array(
             // Requires all of these quests (Quests that you must follow to get this quest)
-            ['reqQ',       array('OR', ['AND', ['nextQuestId', $this->typeId], ['exclusiveGroup', 0, '<']], ['AND', ['id', $this->subject->getField('prevQuestId')], ['nextQuestIdChain', $this->typeId, '!']])],
+            ['reqQ',       array('OR', ['AND', ['nextQuestId', $this->typeId], ['exclusiveGroup', 0, '<']], ['AND', ['id', $this->subject->getField('prevQuestId')], ['nextQuestIdChain', $this->typeId, '!']]), false],
 
             // Requires one of these quests (Requires one of the quests to choose from)
-            ['reqOneQ',    array('AND', ['exclusiveGroup', 0, '>'], ['nextQuestId', $this->typeId])],
+            ['reqOneQ',    array('AND', ['exclusiveGroup', 0, '>'], ['nextQuestId', $this->typeId]), false],
 
             // Opens Quests (Quests that become available only after complete this quest (optionally only one))
-            ['opensQ',     array('OR', ['AND', ['prevQuestId', $this->typeId], ['id', $this->subject->getField('nextQuestIdChain'), '!']], ['id', $this->subject->getField('nextQuestId')])],
+            ['opensQ',     array('OR', ['AND', ['prevQuestId', $this->typeId], ['id', $this->subject->getField('nextQuestIdChain'), '!']], ['id', $this->subject->getField('nextQuestId')]), true],
 
             // Closes Quests (Quests that become inaccessible after completing this quest)
-            ['closesQ',    array(['exclusiveGroup', 0, '>'], ['exclusiveGroup', $this->subject->getField('exclusiveGroup')], ['id', $this->typeId, '!'])],
+            ['closesQ',    array(['exclusiveGroup', 0, '>'], ['exclusiveGroup', $this->subject->getField('exclusiveGroup')], ['id', $this->typeId, '!']), true],
 
             // During the quest available these quests (Quests that are available only at run time this quest)
-            ['enablesQ',   array(['prevQuestId', -$this->typeId])],
+            ['enablesQ',   array(['prevQuestId', -$this->typeId]), true],
 
             // Requires an active quest (Quests during the execution of which is available on the quest)
-            ['enabledByQ', array(['id', -$this->subject->getField('prevQuestId')])]
+            ['enabledByQ', array(['id', -$this->subject->getField('prevQuestId')]), true]
         );
 
         foreach ($extraLists as $el)
             if ($_ = $listGen($el[1]))
-                $this->series[] = [$_, sprintf(Util::$dfnString, Lang::quest($el[0].'Desc'), Lang::quest($el[0]))];
+                $this->series[] = [$_, sprintf(Util::$dfnString, Lang::quest($el[0].'Desc'), Lang::quest($el[0])), $el[2]];
 
         /*******************/
         /* Objectives List */
