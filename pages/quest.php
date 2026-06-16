@@ -352,7 +352,7 @@ class QuestPage extends GenericPage
         };
 
         // Breadcrumb quests that lead into this quest (shown ABOVE series)
-        if ($bcList = $listGen(array(['breadCrumbForQuestId', $this->typeId])))
+        if ($bcList = $listGen(array(['breadcrumbForQuestId', $this->typeId])))
             $this->series[] = [
                 $bcList,
                 sprintf(Util::$dfnString, Lang::quest('breadcrumbQDesc'), Lang::quest('breadcrumbQ')),
