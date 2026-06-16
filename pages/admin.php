@@ -399,7 +399,7 @@ class AdminPage extends GenericPage
             'loot'    => 'Loot',
         );
 
-        $rows = DB::Aowow()->select('SELECT `name`, `label`, `min_group` FROM ?_page_config ORDER BY `name`');
+        $rows = DB::Aowow()->select('SELECT `name`, `label`, `default_group`, `override_group` FROM ?_page_config ORDER BY `name`');
 
         // group rows by dot-notation prefix
         $grouped = [];
@@ -413,7 +413,7 @@ class AdminPage extends GenericPage
         $head  = '<tr>';
         $head .= '<th style="width:200px;"><b>Element</b></th>';
         $head .= '<th><b>Description</b></th>';
-        $head .= '<th style="width:220px;"><b>Minimum Group</b></th>';
+        $head .= '<th style="width:220px;"><b>Role / Permission</b></th>';
         $head .= '<th style="width:100px;"><b>Options</b></th>';
         $head .= '</tr>';
 
@@ -425,16 +425,20 @@ class AdminPage extends GenericPage
             $lastIdx = count($prefixRows) - 1;
             foreach ($prefixRows as $i => $row)
             {
-                $fullName  = htmlspecialchars($row['name']);
-                $subKey    = htmlspecialchars(substr($row['name'], strlen($prefix) + 1));
-                $label     = htmlspecialchars($row['label']);
-                $curGrp    = (int)$row['min_group'];
-                $lastClass = ($i === $lastIdx) ? ' class="pcfg-section-last"' : '';
-                $elemId    = $tabCtx.'__'.$fullName;   // unique per tab
+                $fullName     = htmlspecialchars($row['name']);
+                $subKey       = htmlspecialchars(substr($row['name'], strlen($prefix) + 1));
+                $label        = htmlspecialchars($row['label']);
+                $defaultGrp   = (int)$row['default_group'];
+                $hasOverride  = $row['override_group'] !== null;
+                $overrideGrp  = $hasOverride ? (int)$row['override_group'] : '';
+                $lastClass    = ($i === $lastIdx) ? ' class="pcfg-section-last"' : '';
+                $elemId       = $tabCtx.'__'.$fullName;
 
-                $select  = '<select id="pcfg_'.$elemId.'" data-pcfg-name="'.$fullName.'">';
+                // show override if set, otherwise fall back to default
+                $activeGrp = $hasOverride ? (int)$row['override_group'] : $defaultGrp;
+                $select  = '<select id="pcfg_'.$elemId.'" data-pcfg-name="'.$fullName.'" data-pcfg-default="'.$defaultGrp.'">';
                 foreach ($groups as $val => $grpName)
-                    $select .= '<option value="'.$val.'"'.($curGrp === $val ? ' selected' : '').'>'.htmlspecialchars($grpName).'</option>';
+                    $select .= '<option value="'.$val.'"'.($activeGrp === $val ? ' selected' : '').'>'.htmlspecialchars($grpName).'</option>';
                 $select .= '</select>';
 
                 $body .= '<tr style="position:relative;"'.$lastClass.'>';
@@ -443,6 +447,7 @@ class AdminPage extends GenericPage
                 $body .= '<td>'.$select.'</td>';
                 $body .= '<td style="position:relative;">';
                 $body .= '<a class="icon-save tip" onclick="pcfg_save(\''.$elemId.'\', \''.$fullName.'\')" onmouseover="$WH.Tooltip.showAtCursor(event, \'Save\', 0, 0, \'q\')" onmousemove="$WH.Tooltip.cursorUpdate(event)" onmouseout="$WH.Tooltip.hide()"></a>';
+                $body .= '<a class="icon-refresh tip" onclick="pcfg_reset(\''.$elemId.'\', \''.$fullName.'\')" onmouseover="$WH.Tooltip.showAtCursor(event, \'Reset to default\', 0, 0, \'q\')" onmousemove="$WH.Tooltip.cursorUpdate(event)" onmouseout="$WH.Tooltip.hide()"></a>';
                 $body .= '<span class="status" id="pcfg_status_'.$elemId.'" data-pcfg-status="'.$fullName.'"></span>';
                 $body .= '</td>';
                 $body .= '</tr>';

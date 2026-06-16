@@ -1,24 +1,15 @@
 <?php $this->brick('header'); ?>
 
     <script type="text/javascript">
-    function pcfg_save(elemId, name)
+    function pcfg_ajax(name, val, onSuccess)
     {
-        var sel    = $WH.ge("pcfg_" + elemId);
-        var status = $WH.ge("pcfg_status_" + elemId);
-        if (!sel || !status) return;
+        var statuses = document.querySelectorAll('[data-pcfg-status="' + name + '"]');
+        statuses.forEach(function(st) { $(st).empty().append(CreateAjaxLoader()); });
 
-        var val = sel.options[sel.selectedIndex].value;
-
-        $(status).empty().append(CreateAjaxLoader());
-
-        new Ajax("?admin=pagecfg&action=update&key=" + encodeURIComponent(name) + "&val=" + val, {
+        new Ajax("?admin=pagecfg&action=update&key=" + encodeURIComponent(name) + "&val=" + encodeURIComponent(val), {
             method: "get",
             onSuccess: function(xhr) {
-                // sync value and status across all tab instances of this key
-                document.querySelectorAll('[data-pcfg-name="' + name + '"]').forEach(function(s) {
-                    s.value = val;
-                });
-                document.querySelectorAll('[data-pcfg-status="' + name + '"]').forEach(function(st) {
+                statuses.forEach(function(st) {
                     $(st).empty();
                     var a = $WH.ce("a");
                     a.className = xhr.responseText ? "icon-report" : "icon-tick";
@@ -27,7 +18,29 @@
                     setTimeout(function() { $WH.de(a); }, 8000);
                     $WH.ae(st, a);
                 });
+                if (!xhr.responseText && onSuccess) onSuccess();
             }
+        });
+    }
+
+    function pcfg_save(elemId, name)
+    {
+        var sel = $WH.ge("pcfg_" + elemId);
+        if (!sel) return;
+        var val = sel.options[sel.selectedIndex].value;
+        pcfg_ajax(name, val, function() {
+            // sync dropdown across all tabs
+            document.querySelectorAll('[data-pcfg-name="' + name + '"]').forEach(function(s) { s.value = val; });
+        });
+    }
+
+    function pcfg_reset(elemId, name)
+    {
+        pcfg_ajax(name, '', function() {
+            // snap all selects back to data-pcfg-default
+            document.querySelectorAll('[data-pcfg-name="' + name + '"]').forEach(function(s) {
+                s.value = s.getAttribute('data-pcfg-default');
+            });
         });
     }
     </script>

@@ -1,19 +1,21 @@
 -- add: aowow_page_config table for DB-overrideable page element visibility per user group
 -- If no row exists for a given name, AoWoW's hardcoded default applies.
--- min_group is a U_GROUP_* bitmask (decimal):
+-- default_group is a U_GROUP_* bitmask (decimal):
 --   0    = everyone,  1  = tester,  2  = admin,   4   = editor
 --   8    = mod,       16 = bureau,  32 = dev,      50  = employee (admin|bureau|dev)
 --   1726 = staff (admin|editor|mod|bureau|dev|blogger|localizer|salesagent)
+-- override_group: NULL = use default_group; any valid bitmask = staff override
 DROP TABLE IF EXISTS `aowow_page_config`;
 
 CREATE TABLE `aowow_page_config` (
-    `name`      varchar(100)     NOT NULL                COMMENT 'dot-notation key identifying the page element',
-    `label`     varchar(200)     NOT NULL DEFAULT ''     COMMENT 'human-readable description shown in staff UI',
-    `min_group` int unsigned     NOT NULL DEFAULT 0      COMMENT 'U_GROUP_* bitmask override; 0 = everyone can see it',
+    `name`           varchar(100)  NOT NULL                  COMMENT 'dot-notation key identifying the page element',
+    `label`          varchar(200)  NOT NULL DEFAULT ''        COMMENT 'human-readable description shown in staff UI',
+    `default_group`  int unsigned  NOT NULL DEFAULT 0         COMMENT 'hardcoded default U_GROUP_* bitmask from PHP source',
+    `override_group` int unsigned           DEFAULT NULL      COMMENT 'staff-set override; NULL = use default_group',
     PRIMARY KEY (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Per-element page visibility overrides keyed by dot-notation name.';
 
-INSERT INTO `aowow_page_config` (`name`, `label`, `min_group`) VALUES
+INSERT INTO `aowow_page_config` (`name`, `label`, `default_group`) VALUES
     ('achievement.scripts',            'Show achievement script data on Achievement detail pages [Default: Employee]',                50),
     ('emote.sounds',                   'Show sound data tab on Emote detail pages [Default: Staff]',                                 1726),
     ('event.staff_info',               'Show staff-only event information on Event detail pages [Default: Staff]',                   1726),
@@ -22,7 +24,7 @@ INSERT INTO `aowow_page_config` (`name`, `label`, `min_group`) VALUES
     ('list.arenateams.excluded',       'Show excluded arena teams in Arena Teams list [Default: Employee]',                          50),
     ('list.currencies.excluded',       'Show excluded currencies in Currencies list [Default: Employee]',                            50),
     ('list.emotes',                    'Show Emotes list entirely [Default: Staff]',                                                 1726),
-    ('list.enchantments.excluded',     'Show excluded enchantments in Enchantments list [Default: Employee]',                       50),
+    ('list.enchantments.excluded',     'Show excluded enchantments in Enchantments list [Default: Employee]',                        50),
     ('list.events.excluded',           'Show excluded events in Events list [Default: Employee]',                                    50),
     ('list.icons.excluded',            'Show excluded icons in Icons list [Default: Employee]',                                      50),
     ('list.items.excluded',            'Show excluded items in Items list [Default: Employee]',                                      50),
@@ -35,7 +37,7 @@ INSERT INTO `aowow_page_config` (`name`, `label`, `min_group`) VALUES
     ('list.skills.excluded',           'Show excluded skills in Skills list [Default: Employee]',                                    50),
     ('list.spells.excluded',           'Show excluded spells in Spells list [Default: Employee]',                                    50),
     ('list.titles.excluded',           'Show unused titles in Titles list [Default: Employee]',                                      50),
-    ('list.zones.excluded',            'Show sub-areas and unused zones in Zones list [Default: Employee]',                         50),
+    ('list.zones.excluded',            'Show sub-areas and unused zones in Zones list [Default: Employee]',                          50),
     ('loot.reference_groups',          'Show reference loot group entries on NPC/object drop tables [Default: Employee]',            50),
     ('npc.areatrigger_spawns',         'Show area trigger spawn markers on NPC map [Default: Staff]',                               1726),
     ('npc.employee_info',              'Show AI script name and debug info in NPC infobox [Default: Employee]',                      50),

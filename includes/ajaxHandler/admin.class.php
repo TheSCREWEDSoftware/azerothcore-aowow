@@ -534,19 +534,27 @@ class AjaxAdmin extends AjaxHandler
     {
         static $validGroups = [0, 1, 2, 4, 8, 16, 32, 50, 1726, 1727];
 
-        $name = trim(urldecode($this->_get['key'] ?: ''));
-        $val  = (int)$this->_get['val'];
+        $name    = trim(urldecode($this->_get['key'] ?: ''));
+        $rawVal  = $this->_get['val'];
+        $isReset = ($rawVal === '' || $rawVal === null);
 
         if (!$name)
             return 'invalid name';
 
-        if (!in_array($val, $validGroups, true))
-            return 'invalid group value: '.$val;
+        if (!$isReset)
+        {
+            $val = (int)$rawVal;
+            if (!in_array($val, $validGroups, true))
+                return 'invalid group value: '.$val;
+        }
 
         if (!DB::Aowow()->selectCell('SELECT 1 FROM ?_page_config WHERE `name` = ?', $name))
             return 'unknown configuration key';
 
-        DB::Aowow()->query('UPDATE ?_page_config SET `min_group` = ?d WHERE `name` = ?', $val, $name);
+        if ($isReset)
+            DB::Aowow()->query('UPDATE ?_page_config SET `override_group` = NULL WHERE `name` = ?', $name);
+        else
+            DB::Aowow()->query('UPDATE ?_page_config SET `override_group` = ?d WHERE `name` = ?', $val, $name);
 
         // visibility change may affect any cached page — wipe the file cache
         $cacheDir = Cfg::get('CACHE_DIR') ?: 'cache/template/';
