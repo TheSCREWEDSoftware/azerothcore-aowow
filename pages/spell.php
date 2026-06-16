@@ -1371,10 +1371,11 @@ class SpellPage extends GenericPage
                    s.`id` AS ARRAY_KEY, ic.`name` AS `iconString`
             FROM   ?_spell s
             JOIN   ?_icons ic ON s.`iconId` = ic.`id`
-            WHERE  (`effect1CreateItemId` = ?d AND `effect1Id` = ?d)',// OR
+            WHERE  (s.`cuFlags` & ?d) = 0 AND
+                   (`effect1CreateItemId` = ?d AND `effect1Id` = ?d)',// OR
                 // (`effect2CreateItemId` = ?d AND `effect2Id` = ?d) OR
                 // (`effect3CreateItemId` = ?d AND `effect3Id` = ?d)',
-            $_iId, SPELL_EFFECT_CREATE_ITEM //, $_iId, SPELL_EFFECT_CREATE_ITEM, $_iId, SPELL_EFFECT_CREATE_ITEM
+            CUSTOM_UNAVAILABLE, $_iId, SPELL_EFFECT_CREATE_ITEM //, $_iId, SPELL_EFFECT_CREATE_ITEM, $_iId, SPELL_EFFECT_CREATE_ITEM
         );
 
         if (!$spells)
