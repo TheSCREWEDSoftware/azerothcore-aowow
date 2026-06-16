@@ -471,16 +471,33 @@ class AdminPage extends GenericPage
             'id'   => 'pcfg-all'
         )];
 
-        // individual prefix tabs
+        // individual prefix tabs (prefixes with >1 entry get their own tab; singles go into "Other")
+        $otherBody = '';
         foreach ($grouped as $prefix => $prefixRows)
         {
-            $tabName = $tabNames[$prefix] ?? ucfirst($prefix);
-            $this->lvTabs[] = [null, array(
-                'data' => '<table class="grid">' . $head . $buildRows($prefix, $prefixRows, $prefix) . '</table>',
-                'name' => $tabName,
-                'id'   => 'pcfg-'.$prefix
-            )];
+            if (count($prefixRows) > 1)
+            {
+                $tabName = $tabNames[$prefix] ?? ucfirst($prefix);
+                $this->lvTabs[] = [null, array(
+                    'data' => '<table class="grid">' . $head . $buildRows($prefix, $prefixRows, $prefix) . '</table>',
+                    'name' => $tabName,
+                    'id'   => 'pcfg-'.$prefix
+                )];
+            }
+            else
+            {
+                $sectionName = $tabNames[$prefix] ?? ucfirst($prefix);
+                $otherBody  .= '<tr class="pcfg-section-header"><td colspan="4">'.$sectionName.'</td></tr>';
+                $otherBody  .= $buildRows($prefix, $prefixRows, 'other');
+            }
         }
+
+        if ($otherBody)
+            $this->lvTabs[] = [null, array(
+                'data' => '<table class="grid">' . $head . $otherBody . '</table>',
+                'name' => 'Other',
+                'id'   => 'pcfg-other'
+            )];
 
         // Role Builder tab
         $roleBits = array(

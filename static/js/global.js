@@ -829,8 +829,19 @@ var PageTemplate = new function()
         var d = $WH.ce('div');
         d.id = 'page-access-label';
         d.title = 'Yes, this is intended.';
-        d.style.cssText = 'position: absolute; top: 6px; right: 10px; font-size: 12px; color: #aaa; cursor: help; z-index: 10;';
+        d.style.cssText = 'position: absolute; top: 6px; right: 10px; font-size: 12px; color: #aaa; cursor: help; z-index: 10; text-align: right;';
         $WH.ae(d, $WH.ct(g_pageAccess.text));
+        if (g_pageAccess.cfgNames && g_pageAccess.cfgNames.length) {
+            var cfg = $WH.ce('div');
+            cfg.style.cssText = 'margin-top: 4px; font-size: 10px; color: #888; line-height: 1.7;';
+            g_pageAccess.cfgNames.forEach(function(entry) {
+                var row = $WH.ce('div');
+                row.textContent = entry.name + (entry.canSee ? ' - ' + entry.groupName + ' [' + entry.group + ']' : '');
+                row.title = entry.label;
+                $WH.ae(cfg, row);
+            });
+            $WH.ae(d, cfg);
+        }
         $WH.ae(_, d);
     }
 

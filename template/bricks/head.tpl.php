@@ -33,7 +33,10 @@ endforeach;
 ?>
     <script type="text/javascript">
         var g_user = <?=Util::toJSON($this->gUser, JSON_UNESCAPED_UNICODE); ?>;
-        var g_pageAccess = <?=Util::toJSON(['text' => $this->getAccessLabel()], JSON_UNESCAPED_UNICODE); ?>; // aowow: custom
+        var g_pageAccess = <?=Util::toJSON([
+            'text'     => $this->getAccessLabel(),
+            'cfgNames' => PageCfg::getForPage(array_key_first($_GET) ?? ''),
+        ], JSON_UNESCAPED_UNICODE); ?>; // aowow: custom
 <?php
 if ($this->gFavorites):
     echo "        g_favorites = ".Util::toJSON($this->gFavorites).";\n";
