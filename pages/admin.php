@@ -435,10 +435,12 @@ class AdminPage extends GenericPage
                 $elemId       = $tabCtx.'__'.$fullName;
 
                 // show override if set, otherwise fall back to default
-                $activeGrp = $hasOverride ? (int)$row['override_group'] : $defaultGrp;
-                $select  = '<select id="pcfg_'.$elemId.'" data-pcfg-name="'.$fullName.'" data-pcfg-default="'.$defaultGrp.'">';
+                $activeGrp     = $hasOverride ? (int)$row['override_group'] : $defaultGrp;
+                $activeGrpName = $groups[$activeGrp] ?? ('Custom ['.$activeGrp.']');
+                $select  = '<select id="pcfg_'.$elemId.'" data-pcfg-name="'.$fullName.'" data-pcfg-default="'.$defaultGrp.'" data-pcfg-groups="'.htmlspecialchars(json_encode($groups)).'">';
+                $select .= '<option value="" disabled class="pcfg-header">'.htmlspecialchars($activeGrpName).' ['.$activeGrp.']</option>';
                 foreach ($groups as $val => $grpName)
-                    $select .= '<option value="'.$val.'"'.($activeGrp === $val ? ' selected' : '').'>'.htmlspecialchars($grpName).'</option>';
+                    $select .= '<option value="'.$val.'"'.($activeGrp === $val ? ' selected hidden' : '').'>'.htmlspecialchars($grpName).' ['.$val.']</option>';
                 $select .= '</select>';
 
                 $body .= '<tr style="position:relative;"'.$lastClass.'>';
@@ -455,7 +457,7 @@ class AdminPage extends GenericPage
             return $body;
         };
 
-        // "All" tab — each prefix gets a section header row followed by its rows
+        // All tab (first)
         $allBody = '';
         foreach ($grouped as $prefix => $prefixRows)
         {
@@ -479,6 +481,124 @@ class AdminPage extends GenericPage
                 'id'   => 'pcfg-'.$prefix
             )];
         }
+
+        // Role Builder tab
+        $roleBits = array(
+            0x0001 => 'Tester',
+            0x0002 => 'Admin',
+            0x0004 => 'Editor',
+            0x0008 => 'Moderator',
+            0x0010 => 'Bureau',
+            0x0020 => 'Dev',
+            0x0040 => 'VIP',
+            0x0080 => 'Blogger',
+            0x0100 => 'Premium',
+            0x0200 => 'Localizer',
+            0x0400 => 'Sales Agent',
+            0x0800 => 'Screenshot',
+            0x1000 => 'Video',
+        );
+        $rolePresets = array(
+            26   => 'Moderator group (Admin | Mod | Bureau)',
+            50   => 'Employee (Admin | Bureau | Dev)',
+            56   => 'Green Text (Mod | Bureau | Dev)',
+            1726 => 'Staff (all non-tester roles)',
+        );
+
+        $rbRows = '<tr>'
+                . '<th colspan="3" style="text-align:center;padding:4px 8px;color:#aaa;font-size:11px;text-transform:uppercase;letter-spacing:.05em;">Bitmask | Name</th>'
+                . '</tr>';
+        foreach ($roleBits as $bit => $label)
+            $rbRows .= '<tr class="rb-row" onclick="rb_toggle('.$bit.')" style="cursor:pointer;">'
+                     . '<td style="width:30px;padding:4px 6px;"><input type="checkbox" id="rb_'.$bit.'" value="'.$bit.'" onclick="event.stopPropagation()" onchange="rb_calc()"></td>'
+                     . '<td style="font-size:13px;font-weight:bold;white-space:nowrap;padding:4px 10px;">'.$bit.'</td>'
+                     . '<td style="padding:4px 8px;font-size:13px;">'.$label.'</td>'
+                     . '</tr>';
+
+        $presetOpts = '<option value="">— select a preset —</option>';
+        foreach ($rolePresets as $val => $name)
+            $presetOpts .= '<option value="'.$val.'">['.$val.'] '.htmlspecialchars($name).'</option>';
+
+        $rbHtml = '
+<style>
+#rb-result { font-size:22px; font-weight:bold; color:#ffd100; margin:8px 0; }
+#rb-wrap { display:flex; gap:40px; align-items:flex-start; padding:10px; }
+#rb-checks table { border-collapse:separate; border-spacing:0 3px; }
+#rb-checks th { padding:4px 8px; }
+#rb-checks tr.rb-row td { border-top:1px solid #3a3a3a; border-bottom:1px solid #3a3a3a; background:#252525; transition:background .1s; color:#ccc; }
+#rb-checks tr.rb-row td:first-child { border-left:1px solid #3a3a3a; border-radius:3px 0 0 3px; }
+#rb-checks tr.rb-row td:last-child  { border-right:1px solid #3a3a3a; border-radius:0 3px 3px 0; }
+#rb-checks tr.rb-row td:nth-child(2) { color:#fff; }
+#rb-checks tr.rb-row:hover td { background:#2e2e2e; border-color:#555; }
+#rb-checks tr.rb-row.rb-checked td { background:#2a2a1a; border-color:#ffd100; color:#ccc; }
+#rb-checks tr.rb-row.rb-checked td:nth-child(2),
+#rb-checks tr.rb-row.rb-checked td:nth-child(3) { color:#ffd100; }
+#rb-info { min-width:220px; }
+#rb-info h4 { color:#ffd100; margin:0 0 6px 0; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+#rb-presets { margin-top:18px; }
+#rb-presets select { width:100%; }
+#rb-matches { margin-top:10px; font-size:12px; color:#aaa; }
+</style>
+<div id="rb-wrap">
+    <div id="rb-checks">
+        <table>'.$rbRows.'</table>
+    </div>
+    <div id="rb-info">
+        <h4>Resulting Bitmask</h4>
+        <div id="rb-result">0</div>
+        <div id="rb-matches"></div>
+        <div id="rb-presets">
+            <h4>Load Preset</h4>
+            <select onchange="rb_preset(this)">'.$presetOpts.'</select>
+        </div>
+    </div>
+</div>
+<script>
+var rbPresets = '.json_encode($rolePresets).';
+var rbBits    = '.json_encode($roleBits).';
+function rb_toggle(bit) {
+    var cb = $WH.ge(\'rb_\' + bit);
+    if (!cb) return;
+    cb.checked = !cb.checked;
+    rb_calc();
+}
+function rb_calc() {
+    var val = 0;
+    document.querySelectorAll(\'#rb-checks input[type=checkbox]\').forEach(function(cb) {
+        if (cb.checked) val |= parseInt(cb.value);
+        var row = cb.closest(\'tr\');
+        if (row) row.classList.toggle(\'rb-checked\', cb.checked);
+    });
+    $WH.ge(\'rb-result\').textContent = val;
+    var matchEl = $WH.ge(\'rb-matches\');
+    matchEl.innerHTML = \'\';
+    for (var pv in rbPresets) {
+        if (parseInt(pv) === val) {
+            var html = \'<div><strong>Matches: \' + rbPresets[pv] + \' [\' + pv + \']</strong></div>\';
+            for (var bit in rbBits) {
+                if (val & parseInt(bit))
+                    html += \'<div style="padding-left:8px;">- \' + rbBits[bit] + \' [\' + bit + \']</div>\';
+            }
+            matchEl.innerHTML = html;
+            return;
+        }
+    }
+}
+function rb_preset(sel) {
+    var val = parseInt(sel.value) || 0;
+    document.querySelectorAll(\'#rb-checks input[type=checkbox]\').forEach(function(cb) {
+        cb.checked = !!(val & parseInt(cb.value));
+    });
+    rb_calc();
+}
+</script>';
+
+        $this->lvTabs[] = [null, array(
+            'data' => $rbHtml,
+            'name' => 'Role Builder',
+            'id'   => 'pcfg-rolebuilder'
+        )];
+
     }
 
     protected function generateTitle() {}

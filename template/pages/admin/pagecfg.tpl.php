@@ -23,14 +23,29 @@
         });
     }
 
+    function pcfg_updateHeader(sel, val) {
+        var header = sel.querySelector('option.pcfg-header');
+        if (!header) return;
+        var groups = JSON.parse(sel.getAttribute('data-pcfg-groups') || '{}');
+        var intVal = parseInt(val);
+        var label = groups[intVal] !== undefined ? groups[intVal] : ('Custom [' + intVal + ']');
+        header.textContent = label + ' [' + intVal + ']';
+        // un-hide all real options, then hide the new active one
+        sel.querySelectorAll('option[value]').forEach(function(o) { o.hidden = false; });
+        var activeOpt = sel.querySelector('option[value="' + intVal + '"]');
+        if (activeOpt) activeOpt.hidden = true;
+    }
+
     function pcfg_save(elemId, name)
     {
         var sel = $WH.ge("pcfg_" + elemId);
         if (!sel) return;
         var val = sel.options[sel.selectedIndex].value;
         pcfg_ajax(name, val, function() {
-            // sync dropdown across all tabs
-            document.querySelectorAll('[data-pcfg-name="' + name + '"]').forEach(function(s) { s.value = val; });
+            document.querySelectorAll('[data-pcfg-name="' + name + '"]').forEach(function(s) {
+                s.value = val;
+                pcfg_updateHeader(s, val);
+            });
         });
     }
 
@@ -40,9 +55,10 @@
             return;
 
         pcfg_ajax(name, '', function() {
-            // snap all selects back to data-pcfg-default
             document.querySelectorAll('[data-pcfg-name="' + name + '"]').forEach(function(s) {
-                s.value = s.getAttribute('data-pcfg-default');
+                var def = s.getAttribute('data-pcfg-default');
+                s.value = def;
+                pcfg_updateHeader(s, def);
             });
         });
     }
@@ -57,6 +73,19 @@
     $this->brick('pageTemplate');
     $this->brick('lvTabs');
 ?>
+            <script type="text/javascript">
+            // push "Role Builder" tab to the far right
+            (function() {
+                var lis = document.querySelectorAll('#tabs-generic .tabs li');
+                if (lis.length < 1) return;
+                var roleBuilder = lis[lis.length - 1];
+                roleBuilder.style.cssFloat    = 'right';
+                roleBuilder.style.marginRight = '0';
+                roleBuilder.style.marginLeft  = '3px';
+                roleBuilder.style.borderLeft  = '1px solid #555';
+                roleBuilder.style.paddingLeft = '6px';
+            })();
+            </script>
             <div class="clear"></div>
         </div><!-- main-contents -->
     </div><!-- main -->
