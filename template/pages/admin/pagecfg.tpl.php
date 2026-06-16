@@ -36,6 +36,9 @@
 
     function pcfg_reset(elemId, name)
     {
+        if (!confirm('Are you sure you want to reset this to its default value?'))
+            return;
+
         pcfg_ajax(name, '', function() {
             // snap all selects back to data-pcfg-default
             document.querySelectorAll('[data-pcfg-name="' + name + '"]').forEach(function(s) {
