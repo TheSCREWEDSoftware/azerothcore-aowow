@@ -5,7 +5,7 @@ if (!defined('AOWOW_REVISION'))
 
 class AjaxAdmin extends AjaxHandler
 {
-    protected $validParams = ['screenshots', 'siteconfig', 'weight-presets', 'spawn-override', 'guide', 'comment'];
+    protected $validParams = ['screenshots', 'siteconfig', 'weight-presets', 'spawn-override', 'guide', 'comment', 'pagecfg'];
     protected $_get        = array(
         'action' => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkTextLine'      ],
         'id'     => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkIdListUnsigned'],
@@ -95,6 +95,14 @@ class AjaxAdmin extends AjaxHandler
                 return;
 
             $this->handler = 'commentOutOfDate';
+        }
+        else if ($this->params[0] == 'pagecfg' && $this->_get['action'])
+        {
+            if (!User::isInGroup(U_GROUP_ADMIN | U_GROUP_DEV))
+                return;
+
+            if ($this->_get['action'] == 'update')
+                $this->handler = 'pageCfgUpdate';
         }
     }
 
@@ -517,6 +525,37 @@ class AjaxAdmin extends AjaxHandler
         }
 
         return $ok ? '1' : '0';
+    }
+
+
+    // get: id => dot-notation key, val => int U_GROUP bitmask
+    // resp: '' on success, error string on failure
+    protected function pageCfgUpdate() : string
+    {
+        static $validGroups = [0, 1, 2, 4, 8, 16, 32, 50, 1726, 1727];
+
+        $name = trim(urldecode($this->_get['key'] ?: ''));
+        $val  = (int)$this->_get['val'];
+
+        if (!$name)
+            return 'invalid name';
+
+        if (!in_array($val, $validGroups, true))
+            return 'invalid group value: '.$val;
+
+        if (!DB::Aowow()->selectCell('SELECT 1 FROM ?_page_config WHERE `name` = ?', $name))
+            return 'unknown configuration key';
+
+        DB::Aowow()->query('UPDATE ?_page_config SET `min_group` = ?d WHERE `name` = ?', $val, $name);
+
+        // visibility change may affect any cached page — wipe the file cache
+        $cacheDir = Cfg::get('CACHE_DIR') ?: 'cache/template/';
+        if (is_dir($cacheDir))
+            foreach (glob(rtrim($cacheDir, '/').'/*') as $file)
+                if (is_file($file))
+                    unlink($file);
+
+        return '';
     }
 
 

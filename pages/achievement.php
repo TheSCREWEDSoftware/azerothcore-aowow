@@ -539,9 +539,9 @@ class AchievementPage extends GenericPage
             $this->criteria['data'] = array_merge($this->criteria['data'], $rightCol);
 
         // criteria have scripts
-        if (User::isInGroup(U_GROUP_EMPLOYEE) && $scripts)
+        if (PageCfg::can('achievement.scripts', U_GROUP_EMPLOYEE) && $scripts)
         {
-            $s = '[li]Script'.Lang::main('colon').'[ul][li]'.implode('[/li][li]', array_unique($scripts)).'[/li][/ul][/li]';
+            $s = '[li]Script'.Lang::main('colon').implode(', ', array_unique($scripts)).'[/li]';
             $this->infobox = substr_replace($this->infobox, $s, -5, 0);
         }
     }

@@ -11,6 +11,7 @@ class AdminPage extends GenericPage
     protected $ssData    = [];
     protected $ssNFound  = 0;
     protected $lvTabs    = [];
+    protected $forceTabs = false;
     protected $extraText = '';
     protected $extraHTML = '';
 
@@ -56,6 +57,14 @@ class AdminPage extends GenericPage
 
                 array_push($this->path, 2, 18);
                 $this->name = 'Site Configuration';
+                break;
+            case 'pagecfg':
+                $this->reqUGroup = U_GROUP_ADMIN | U_GROUP_DEV;
+                $this->generator = 'handlePageConfig';
+                $this->tpl       = 'admin/pagecfg';
+
+                array_push($this->path, 2, 22);
+                $this->name = 'Page Configuration';
                 break;
             case 'weight-presets':
                 $this->reqUGroup = U_GROUP_ADMIN | U_GROUP_DEV | U_GROUP_BUREAU;
@@ -357,6 +366,114 @@ class AdminPage extends GenericPage
         $buff .= '<span class="status"></span></td></tr>';
 
         return $buff;
+    }
+
+    private function handlePageConfig() : void
+    {
+        $this->addScript(
+            [SC_CSS_STRING, '.grid input[type="text"] { width:250px; text-align:left; }'],
+            [SC_CSS_STRING, '.grid tr { height:30px; }'],
+            [SC_CSS_STRING, '.grid .status { position:absolute; right:5px; }'],
+            [SC_CSS_STRING, '.grid a.tip { margin:0px 5px; opacity:0.8; }'],
+            [SC_CSS_STRING, '.grid a.tip:hover { opacity:1; }'],
+            [SC_CSS_STRING, '.grid tr.pcfg-section-header { height:auto; }'],
+            [SC_CSS_STRING, '.grid tr.pcfg-section-header td { background:#2e2e2e; color:#ffd100; font-weight:bold; padding:3px 8px; border-top:2px solid #444; letter-spacing:0.05em; text-transform:uppercase; font-size:11px; }'],
+            [SC_CSS_STRING, '.grid tr.pcfg-section-last td { border-bottom:2px solid #ffd100; }']
+        );
+
+        $groups = array(
+            0      => 'Everyone (no restriction)',
+            1      => 'Tester+',
+            2      => 'Admin',
+            4      => 'Editor+',
+            8      => 'Moderator+',
+            32     => 'Dev+',
+            50     => 'Employee (Admin | Bureau | Dev)',
+            1726   => 'Staff (any)',
+        );
+
+        // pretty tab names for prefixes that don't ucfirst cleanly
+        $tabNames = array(
+            'npc'     => 'NPC',
+            'smartai' => 'SmartAI',
+            'loot'    => 'Loot',
+        );
+
+        $rows = DB::Aowow()->select('SELECT `name`, `label`, `min_group` FROM ?_page_config ORDER BY `name`');
+
+        // group rows by dot-notation prefix
+        $grouped = [];
+        foreach ($rows as $row)
+        {
+            $dot    = strpos($row['name'], '.');
+            $prefix = $dot !== false ? substr($row['name'], 0, $dot) : $row['name'];
+            $grouped[$prefix][] = $row;
+        }
+
+        $head  = '<tr>';
+        $head .= '<th style="width:200px;"><b>Element</b></th>';
+        $head .= '<th><b>Description</b></th>';
+        $head .= '<th style="width:220px;"><b>Minimum Group</b></th>';
+        $head .= '<th style="width:100px;"><b>Options</b></th>';
+        $head .= '</tr>';
+
+        // helper to build rows for a given prefix group
+        // $tabCtx scopes element IDs so duplicate keys across tabs don't collide
+        $buildRows = function(string $prefix, array $prefixRows, string $tabCtx) use ($groups) : string
+        {
+            $body    = '';
+            $lastIdx = count($prefixRows) - 1;
+            foreach ($prefixRows as $i => $row)
+            {
+                $fullName  = htmlspecialchars($row['name']);
+                $subKey    = htmlspecialchars(substr($row['name'], strlen($prefix) + 1));
+                $label     = htmlspecialchars($row['label']);
+                $curGrp    = (int)$row['min_group'];
+                $lastClass = ($i === $lastIdx) ? ' class="pcfg-section-last"' : '';
+                $elemId    = $tabCtx.'__'.$fullName;   // unique per tab
+
+                $select  = '<select id="pcfg_'.$elemId.'" data-pcfg-name="'.$fullName.'">';
+                foreach ($groups as $val => $grpName)
+                    $select .= '<option value="'.$val.'"'.($curGrp === $val ? ' selected' : '').'>'.htmlspecialchars($grpName).'</option>';
+                $select .= '</select>';
+
+                $body .= '<tr style="position:relative;"'.$lastClass.'>';
+                $body .= '<td><code style="cursor:help;" onmouseover="$WH.Tooltip.showAtCursor(event, \''.$fullName.'\', 0, 0, \'q\')" onmousemove="$WH.Tooltip.cursorUpdate(event)" onmouseout="$WH.Tooltip.hide()">'.$subKey.'</code></td>';
+                $body .= '<td>'.$label.'</td>';
+                $body .= '<td>'.$select.'</td>';
+                $body .= '<td style="position:relative;">';
+                $body .= '<a class="icon-save tip" onclick="pcfg_save(\''.$elemId.'\', \''.$fullName.'\')" onmouseover="$WH.Tooltip.showAtCursor(event, \'Save\', 0, 0, \'q\')" onmousemove="$WH.Tooltip.cursorUpdate(event)" onmouseout="$WH.Tooltip.hide()"></a>';
+                $body .= '<span class="status" id="pcfg_status_'.$elemId.'" data-pcfg-status="'.$fullName.'"></span>';
+                $body .= '</td>';
+                $body .= '</tr>';
+            }
+            return $body;
+        };
+
+        // "All" tab — each prefix gets a section header row followed by its rows
+        $allBody = '';
+        foreach ($grouped as $prefix => $prefixRows)
+        {
+            $sectionName = $tabNames[$prefix] ?? ucfirst($prefix);
+            $allBody .= '<tr class="pcfg-section-header"><td colspan="4">'.$sectionName.'</td></tr>';
+            $allBody .= $buildRows($prefix, $prefixRows, 'all');
+        }
+        $this->lvTabs[] = [null, array(
+            'data' => '<table class="grid">' . $head . $allBody . '</table>',
+            'name' => 'All',
+            'id'   => 'pcfg-all'
+        )];
+
+        // individual prefix tabs
+        foreach ($grouped as $prefix => $prefixRows)
+        {
+            $tabName = $tabNames[$prefix] ?? ucfirst($prefix);
+            $this->lvTabs[] = [null, array(
+                'data' => '<table class="grid">' . $head . $buildRows($prefix, $prefixRows, $prefix) . '</table>',
+                'name' => $tabName,
+                'id'   => 'pcfg-'.$prefix
+            )];
+        }
     }
 
     protected function generateTitle() {}

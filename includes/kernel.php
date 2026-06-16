@@ -52,6 +52,7 @@ require_once 'includes/database.class.php';                 // wrap DBSimple
 require_once 'includes/utilities.php';                      // helper functions
 require_once 'includes/config.class.php';                   // Config holder
 require_once 'includes/user.class.php';                     // Session handling (could be skipped for CLI context except for username and password validation used in account creation)
+require_once 'includes/pagecfg.class.php';                  // DB-overrideable page element visibility
 
 // todo: make everything below autoloaded
 require_once 'includes/stats.class.php';                    // Game entity statistics conversion
