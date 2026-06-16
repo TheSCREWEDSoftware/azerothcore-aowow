@@ -30,7 +30,7 @@ echo "    <table class=\"infobox\">\n";
 
     if (!empty($this->series)):
         foreach ($this->series as $s):
-            $this->brick('series', ['list' => $s[0], 'listTitle' => $s[1]]);
+            $this->brick('series', ['list' => $s[0], 'listTitle' => $s[1], 'noNumbers' => $s[2] ?? false]);
         endforeach;
     endif;
 

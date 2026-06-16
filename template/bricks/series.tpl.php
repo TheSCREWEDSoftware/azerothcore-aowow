@@ -4,7 +4,7 @@
         <table class="series">
 <?php
 foreach ($list as $idx => $itr):
-    echo '            <tr><th>'.($idx + 1).'</th><td><div>';
+    echo $noNumbers ? '            <tr><th></th><td><div>' : '            <tr><th>'.($idx + 1).'</th><td><div>';
 
     $_   = array_keys($itr);
     $end = array_pop($_);

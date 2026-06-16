@@ -269,6 +269,30 @@ class QuestPage extends GenericPage
 
         $this->infobox = '[ul][li]'.implode('[/li][li]', $infobox).'[/li][/ul]';
 
+        /*************/
+        /* Breadcrumb */
+        /*************/
+
+        if ($bcTargetId = intVal($this->subject->getField('breadcrumbForQuestId')))
+        {
+            if ($bcTarget = DB::Aowow()->selectRow('SELECT `id` AS `typeId`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `id` = ?d', $bcTargetId))
+            {
+                $bcName = Util::localizedString($bcTarget, 'name');
+                $this->series[] = [
+                    [
+                        [array(
+                            'side'    => ChrRace::sideFromMask($bcTarget['reqRaceMask']),
+                            'typeStr' => Type::getFileString(Type::QUEST),
+                            'typeId'  => $bcTargetId,
+                            'name'    => Util::htmlEscape(Lang::trimTextClean($bcName, 40)),
+                        )]
+                    ],
+                    sprintf(Util::$dfnString, Lang::quest('breadcrumbForDesc'), Lang::quest('breadcrumbFor')),
+                    true   // noNumbers
+                ];
+            }
+        }
+
         /**********/
         /* Series */
         /**********/
@@ -330,10 +354,6 @@ class QuestPage extends GenericPage
             }
         }
 
-        if (count($chain) > 1)
-            $this->series[] = [$chain, null];
-
-
         // todo (low): sensibly merge the following lists into 'series'
         $listGen = function($cnd)
         {
@@ -356,15 +376,26 @@ class QuestPage extends GenericPage
             return $chain;
         };
 
+        // Breadcrumb quests that lead into this quest (shown ABOVE series)
+        if ($bcList = $listGen(array(['breadCrumbForQuestId', $this->typeId])))
+            $this->series[] = [
+                $bcList,
+                sprintf(Util::$dfnString, Lang::quest('breadcrumbQDesc'), Lang::quest('breadcrumbQ')),
+                true   // noNumbers
+            ];
+
+        if (count($chain) > 1)
+            $this->series[] = [$chain, null];
+
         $extraLists = array(
             // Requires all of these quests (Quests that you must follow to get this quest)
             ['reqQ',       array('OR', ['AND', ['nextQuestId', $this->typeId], ['exclusiveGroup', 0, '<']], ['AND', ['id', $this->subject->getField('prevQuestId')], ['nextQuestIdChain', $this->typeId, '!']])],
 
             // Requires one of these quests (Requires one of the quests to choose from)
-            ['reqOneQ',    array('OR', ['AND', ['exclusiveGroup', 0, '>'], ['nextQuestId', $this->typeId]], ['breadCrumbForQuestId', $this->typeId])],
+            ['reqOneQ',    array('AND', ['exclusiveGroup', 0, '>'], ['nextQuestId', $this->typeId])],
 
             // Opens Quests (Quests that become available only after complete this quest (optionally only one))
-            ['opensQ',     array('OR', ['AND', ['prevQuestId', $this->typeId], ['id', $this->subject->getField('nextQuestIdChain'), '!']], ['id', $this->subject->getField('nextQuestId')], ['id', $this->subject->getField('breadcrumbForQuestId')])],
+            ['opensQ',     array('OR', ['AND', ['prevQuestId', $this->typeId], ['id', $this->subject->getField('nextQuestIdChain'), '!']], ['id', $this->subject->getField('nextQuestId')])],
 
             // Closes Quests (Quests that become inaccessible after completing this quest)
             ['closesQ',    array(['exclusiveGroup', 0, '>'], ['exclusiveGroup', $this->subject->getField('exclusiveGroup')], ['id', $this->typeId, '!'])],
