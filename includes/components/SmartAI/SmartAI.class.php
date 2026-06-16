@@ -24,7 +24,7 @@ trait SmartHelper
 
         $str = $isTime ? Util::formatTime($min, true) : $min;
         if ($max > $min)
-            $str .= ' &ndash; '.($isTime ? Util::formatTime($max, true) : $max);
+            $str .= ' - '.($isTime ? Util::formatTime($max, true) : $max);
 
         return $str;
     }
@@ -231,7 +231,7 @@ class SmartAI
 
         $raw = DB::World()->select(
             'SELECT   `id`, `link`,
-                      `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`,
+                      `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`,
                       `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`,
                       `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`
              FROM     smart_scripts
@@ -244,7 +244,7 @@ class SmartAI
             $this->rawData[$r['id']] = array(
                 'id'     => $r['id'],
                 'link'   => $r['link'],
-                'event'  => new SmartEvent($r['id'], $r['event_type'], $r['event_phase_mask'], $r['event_chance'], $r['event_flags'], [$r['event_param1'], $r['event_param2'], $r['event_param3'], $r['event_param4'], $r['event_param5']], $this),
+                'event'  => new SmartEvent($r['id'], $r['event_type'], $r['event_phase_mask'], $r['event_chance'], $r['event_flags'], [$r['event_param1'], $r['event_param2'], $r['event_param3'], $r['event_param4'], $r['event_param5'], $r['event_param6']], $this),
                 'action' => new SmartAction($r['id'], $r['action_type'], [$r['action_param1'], $r['action_param2'], $r['action_param3'], $r['action_param4'], $r['action_param5'], $r['action_param6']], $this),
                 'target' => new SmartTarget($r['id'], $r['target_type'], [$r['target_param1'], $r['target_param2'], $r['target_param3'], $r['target_param4']], [$r['target_x'], $r['target_y'], $r['target_z'], $r['target_o']], $this)
             );
