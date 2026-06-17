@@ -393,7 +393,8 @@ abstract class CLI
                 $path = '/home/'.substr($path, 1);
             else if (substr($path, 0, 2) == '~/')
                 $path = getenv('HOME').substr($path, 1);
-            // absolute paths (starting with /) are left as-is
+            else if ($path[0] == DIRECTORY_SEPARATOR && substr($path, 0, 6) != '/home/')
+                $path = substr($path, 1);
         }
 
         return $path;
