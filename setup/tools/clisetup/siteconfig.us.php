@@ -485,6 +485,3 @@ CLISetup::registerUtility(new class extends UtilityScript
         $status = 0;
         return false;
     }
-});
-
-?>
