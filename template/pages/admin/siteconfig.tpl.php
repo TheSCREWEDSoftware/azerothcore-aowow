@@ -273,4 +273,7 @@
     $this->brick('lvTabs');
 ?>
             <div class="clear"></div>
-        </div><!-- main-content
+        </div><!-- main-contents -->
+    </div><!-- main -->
+
+<?php $this->brick('footer'); ?>
