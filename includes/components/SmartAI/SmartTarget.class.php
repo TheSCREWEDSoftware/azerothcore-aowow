@@ -193,3 +193,5 @@ class SmartTarget
         };
     }
 }
+
+?>
