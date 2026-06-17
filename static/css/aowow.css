@@ -2261,17 +2261,39 @@ div.live-search-icon-quest-horde {
     display: block;
 }
 
-.mapper-pin, .mapper-pin-1, .mapper-pin-2, .mapper-pin-3, .mapper-pin-4 {
+.mapper-pin, .mapper-pin-1, .mapper-pin-2, .mapper-pin-3, .mapper-pin-4,
+.mapper-pin-5, .mapper-pin-6, .mapper-pin-7, .mapper-pin-8, .mapper-pin-9,
+.mapper-pin-10, .mapper-pin-11, .mapper-pin-12, .mapper-pin-13, .mapper-pin-14, .mapper-pin-15 {
     padding-left: 13px;
     background-image: url(../images/Mapper/pin-yellow.png);
     background-repeat: no-repeat;
     background-position: 0 50%;
 }
 
-.mapper-pin-1, .mapper .pin-1 a { background-image: url(../images/Mapper/pin-green.png);  }
-.mapper-pin-2, .mapper .pin-2 a { background-image: url(../images/Mapper/pin-red.png);    }
-.mapper-pin-3, .mapper .pin-3 a { background-image: url(../images/Mapper/pin-blue.png);   }
-.mapper-pin-4, .mapper .pin-4 a { background-image: url(../images/Mapper/pin-purple.png); }
+.mapper-pin-1,  .mapper .pin-1  a { background-image: url(../images/Mapper/pin-green.png);  }
+.mapper-pin-2,  .mapper .pin-2  a { background-image: url(../images/Mapper/pin-red.png);    }
+.mapper-pin-3,  .mapper .pin-3  a { background-image: url(../images/Mapper/pin-blue.png);   }
+.mapper-pin-4,  .mapper .pin-4  a { background-image: url(../images/Mapper/pin-purple.png); }
+
+/* extended pool colors via hue-rotate on yellow pin (hue ~50deg base) */
+.mapper-pin-5,  .mapper .pin-5  a { filter: hue-rotate(-26deg);  } /* orange        ~24deg  */
+.mapper-pin-6,  .mapper .pin-6  a { filter: hue-rotate(22deg);   } /* yellow-green  ~72deg  */
+.mapper-pin-7,  .mapper .pin-7  a { filter: hue-rotate(46deg);   } /* lime          ~96deg  */
+.mapper-pin-8,  .mapper .pin-8  a { filter: hue-rotate(94deg);   } /* spring-green  ~144deg */
+.mapper-pin-9,  .mapper .pin-9  a { filter: hue-rotate(118deg);  } /* teal          ~168deg */
+.mapper-pin-10, .mapper .pin-10 a { filter: hue-rotate(142deg);  } /* cyan          ~192deg */
+.mapper-pin-11, .mapper .pin-11 a { filter: hue-rotate(190deg);  } /* indigo        ~240deg */
+.mapper-pin-12, .mapper .pin-12 a { filter: hue-rotate(214deg);  } /* blue-violet   ~264deg */
+.mapper-pin-13, .mapper .pin-13 a { filter: hue-rotate(262deg);  } /* magenta       ~312deg */
+.mapper-pin-14, .mapper .pin-14 a { filter: hue-rotate(286deg);  } /* pink          ~336deg */
+.mapper-pin-15, .mapper .pin-15 a { filter: hue-rotate(310deg);  } /* rose-red      ~360deg */
+
+/* foreign pool members: same color, diamond shape */
+.mapper .pin-alt a { transform: rotate(45deg); border-radius: 1px; }
+
+/* pool legend toggle */
+.pool-toggle { display: inline-block; }
+.pool-toggle-off { opacity: 0.35; text-decoration: line-through; }
 
 .mapper .pin-start a {
     background-image: url(../images/Mapper/quest-start.png);

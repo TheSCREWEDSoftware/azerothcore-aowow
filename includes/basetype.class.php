@@ -579,6 +579,13 @@ trait spawnHelper
         SPAWNINFO_QUEST => null
     );
 
+    private $spawnColorMap = [];                               // guid => ['type'=>int, 'pool'=>int, 'max'=>int]
+
+    public function setSpawnColorMap(array $map) : void
+    {
+        $this->spawnColorMap = $map;
+    }
+
     private function createShortSpawns()                    // [zoneId, floor, [[x1, y1], [x2, y2], ..]] as tooltip2 if enabled by <a rel="map" ...> or anchor #map (one area, one floor, one creature, no survivors)
     {
         $this->spawnResult[SPAWNINFO_SHORT] = new StdClass;
@@ -667,7 +674,7 @@ trait spawnHelper
                     $info[0] = 'GUID'.Lang::main('colon').$s['guid'];
 
                 if ($s['phaseMask'] > 1 && ($s['phaseMask'] & 0xFFFF) != 0xFFFF)
-                    $info[2] = Lang::game('phases').Lang::main('colon').Util::asHex($s['phaseMask']);
+                    $info[2] = Lang::game('phases').Lang::main('colon').(int)$s['phaseMask'];
 
                 if ($s['spawnMask'] == 15)
                     $info[3] = Lang::game('mode').Lang::main('colon').Lang::game('modes', -1);
@@ -702,6 +709,15 @@ trait spawnHelper
 
                 if ($menu)
                     $footer = '<br /><span class="q2">Click to move pin</span>';
+            }
+
+            // pool-based pin color + tooltip info (must come before tooltip is built)
+            if ($this->spawnColorMap && isset($this->spawnColorMap[$s['guid']]))
+            {
+                $poolData = $this->spawnColorMap[$s['guid']];
+                if (!isset($opts['type']))                  // don't override respawn/teleport color
+                    $opts['type'] = $poolData['type'];
+                $info[6] = 'Pool'.Lang::main('colon').$poolData['pool'].' (max '.$poolData['max'].' active)';
             }
 
             if ($info)

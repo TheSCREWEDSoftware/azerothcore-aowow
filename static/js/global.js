@@ -20189,6 +20189,9 @@ Mapper.prototype = {
             if(opt && opt.type)
                 _.className += ' pin-' + opt.type;
 
+            if(opt && opt.alt)
+                _.className += ' pin-alt';
+
             _.a.tt = $WH.str_replace(_.a.tt, '$', _.x.toFixed(1) + ', ' + _.y.toFixed(1));
 
             if(opt && opt.lines)

@@ -216,6 +216,86 @@ class ObjectPage extends GenericPage
                 [SC_CSS_FILE, 'css/Book.css']
             );
 
+        // color spawns by pool membership; pin types 1-15 cycle across pools
+        $poolLegend  = null;
+        $foreignData = [];
+        if ($poolRows = DB::World()->select(
+            'SELECT pg.`guid`, pg.`pool_entry`, COALESCE(pt.`max_limit`, 0) AS `max_limit`
+             FROM pool_gameobject pg
+             JOIN gameobject g ON g.`guid` = pg.`guid`
+             LEFT JOIN pool_template pt ON pt.`entry` = pg.`pool_entry`
+             WHERE g.`id` = ?d',
+            $this->typeId
+        ))
+        {
+            $pools      = array_unique(array_column($poolRows, 'pool_entry'));
+            sort($pools);
+            $poolIndex  = array_flip($pools);               // pool_entry => 0-based index
+            $poolMaxMap = [];
+            $colorMap   = [];
+            foreach ($poolRows as $r)
+            {
+                $pe = (int)$r['pool_entry'];
+                $poolMaxMap[$pe] = (int)$r['max_limit'];
+                $colorMap[(int)$r['guid']] = [
+                    'type' => ($poolIndex[$pe] % 15) + 1,
+                    'pool' => $pe,
+                    'max'  => (int)$r['max_limit'],
+                ];
+            }
+
+            // find other objects sharing these pools (foreign members)
+            $myGuids = array_keys($colorMap);
+            if ($foreignPoolRows = DB::World()->select(
+                'SELECT pg.`guid`, pg.`pool_entry` FROM pool_gameobject pg
+                 WHERE pg.`pool_entry` IN (?a) AND pg.`guid` NOT IN (?a)',
+                $pools, $myGuids
+            ))
+            {
+                $fGuids = array_column($foreignPoolRows, 'guid');
+
+                $guidToId = [];
+                foreach (DB::World()->select('SELECT `guid`, `id` FROM gameobject WHERE `guid` IN (?a)', $fGuids) as $r)
+                    $guidToId[(int)$r['guid']] = (int)$r['id'];
+
+                $nameMap = [];
+                if ($eids = array_unique(array_values($guidToId)))
+                    foreach (DB::Aowow()->select('SELECT `id`, `name_loc0` FROM ?_objects WHERE `id` IN (?a)', $eids) as $r)
+                        $nameMap[(int)$r['id']] = $r['name_loc0'];
+
+                foreach ($foreignPoolRows as $r)
+                {
+                    $guid = (int)$r['guid'];
+                    $pe   = (int)$r['pool_entry'];
+                    $eid  = $guidToId[$guid] ?? 0;
+                    $foreignData[$guid] = [
+                        'type' => ($poolIndex[$pe] % 15) + 1,
+                        'pool' => $pe,
+                        'max'  => $poolMaxMap[$pe] ?? 0,
+                        'name' => $nameMap[$eid] ?? '?',
+                    ];
+                }
+            }
+
+            $this->subject->setSpawnColorMap($colorMap);
+
+            // Total members per pool (own + foreign) for legend display
+            $poolSizes = DB::World()->selectCol(
+                'SELECT `pool_entry` AS ARRAY_KEY, COUNT(*) FROM pool_gameobject WHERE `pool_entry` IN (?a) GROUP BY `pool_entry`',
+                $pools
+            );
+
+            // Legend: one entry per pool (zone-filtered in the template via data-areas)
+            $poolLegend = [];
+            foreach ($pools as $pe)
+                $poolLegend[] = [
+                    'type'  => ($poolIndex[$pe] % 15) + 1,
+                    'pool'  => $pe,
+                    'max'   => $poolMaxMap[$pe],
+                    'total' => (int)($poolSizes[$pe] ?? 0),
+                ];
+        }
+
         // get spawns and path
         $map = null;
         if ($spawns = $this->subject->getSpawns(SPAWNINFO_FULL))
@@ -223,11 +303,60 @@ class ObjectPage extends GenericPage
             $map = ['data' => ['parent' => 'mapper-generic'], 'mapperData' => &$spawns];
             foreach ($spawns as $areaId => &$areaData)
                 $map['extra'][$areaId] = ZoneList::getName($areaId);
+            unset($areaData);
         }
 
+        // inject foreign pool members into the map (same pool color, diamond pin)
+        if ($foreignData && $map)
+        {
+            $fGuids = array_keys($foreignData);
+            if ($fSpawnRows = DB::Aowow()->select(
+                'SELECT `guid`, `areaId`, `floor`, `posX`, `posY` FROM ?_spawns
+                 WHERE `type` = ?d AND `guid` IN (?a) AND `posX` > 0 AND `posY` > 0',
+                Type::OBJECT, $fGuids
+            ))
+            {
+                foreach ($fSpawnRows as $fs)
+                {
+                    $guid   = (int)$fs['guid'];
+                    $fd     = $foreignData[$guid];
+                    $areaId = (int)$fs['areaId'];
+                    $floor  = (int)$fs['floor'];
+                    $opts   = [
+                        'type'    => $fd['type'],
+                        'alt'     => true,
+                        'tooltip' => [$fd['name'] => ['info' => [
+                            6 => 'Pool'.Lang::main('colon').$fd['pool'].' (max '.$fd['max'].' active)',
+                        ]]],
+                    ];
+                    if (!isset($spawns[$areaId]))
+                    {
+                        $spawns[$areaId] = [];
+                        $map['extra'][$areaId] = ZoneList::getName($areaId);
+                    }
+                    if (!isset($spawns[$areaId][$floor]))
+                        $spawns[$areaId][$floor] = ['coords' => [], 'count' => 0];
+                    // prepend so native pins render on top of foreign diamonds in the DOM
+                    array_unshift($spawns[$areaId][$floor]['coords'], [$fs['posX'], $fs['posY'], $opts]);
+                }
+            }
+        }
 
-        // todo (low): consider pooled spawns
+        // Annotate each pool legend entry with the area IDs it actually appears in
+        // so the template can hide legend entries that aren't on the current map zone.
+        if ($poolLegend && $spawns)
+        {
+            $typeAreas = [];
+            foreach ($spawns as $areaId => $areaData)
+                foreach ($areaData as $floorData)
+                    foreach ($floorData['coords'] as $coord)
+                        if (!empty($coord[2]['type']))
+                            $typeAreas[(int)$coord[2]['type']][$areaId] = true;
 
+            foreach ($poolLegend as &$p)
+                $p['areas'] = array_keys($typeAreas[$p['type']] ?? []);
+            unset($p);
+        }
 
         $relBoss = null;
         if ($ll = DB::Aowow()->selectRow('SELECT * FROM ?_loot_link WHERE `objectId` = ?d ORDER BY `priority` DESC LIMIT 1', $this->typeId))
@@ -267,6 +396,7 @@ class ObjectPage extends GenericPage
         }
 
         $this->map         = $map;
+        $this->poolLegend  = $poolLegend;
         $this->infobox     = $infobox ? '[ul][li]'.implode('[/li][li]', $infobox).'[/li][/ul]' : null;
         $this->relBoss     = $relBoss;
         $this->smartAI     = $sai ? $sai->getMarkdown() : null;

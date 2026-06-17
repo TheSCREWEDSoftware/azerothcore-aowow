@@ -471,8 +471,7 @@ class AdminPage extends GenericPage
             'id'   => 'pcfg-all'
         )];
 
-        // individual prefix tabs (prefixes with >1 entry get their own tab; singles go into "Other")
-        $otherBody = '';
+        // individual prefix tabs — only for prefixes with >1 entry; singletons appear in All only
         foreach ($grouped as $prefix => $prefixRows)
         {
             if (count($prefixRows) > 1)
@@ -484,20 +483,7 @@ class AdminPage extends GenericPage
                     'id'   => 'pcfg-'.$prefix
                 )];
             }
-            else
-            {
-                $sectionName = $tabNames[$prefix] ?? ucfirst($prefix);
-                $otherBody  .= '<tr class="pcfg-section-header"><td colspan="4">'.$sectionName.'</td></tr>';
-                $otherBody  .= $buildRows($prefix, $prefixRows, 'other');
-            }
         }
-
-        if ($otherBody)
-            $this->lvTabs[] = [null, array(
-                'data' => '<table class="grid">' . $head . $otherBody . '</table>',
-                'name' => 'Other',
-                'id'   => 'pcfg-other'
-            )];
 
         // Role Builder tab
         $roleBits = array(

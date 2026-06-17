@@ -96,7 +96,7 @@ if (isset($this->smartAI)):
 <?php
 endif;
 
-if (isset($this->gossipMenu)):
+if (isset($this->gossipMenu) && PageCfg::can('npc.gossip', U_GROUP_EVERYONE)):
 ?>
     <div id="text-gossip" class="left"></div>
     <script type="text/javascript">//<![CDATA[
