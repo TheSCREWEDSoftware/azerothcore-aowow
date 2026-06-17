@@ -14,8 +14,9 @@ class NpcPage extends GenericPage
     protected $accessory    = [];
     protected $quotes       = [];
     protected $reputation   = [];
-    protected $gossipMenu   = null;
-    protected $subname      = '';
+    protected $gossipMenu      = null;
+    protected $gossipCndResult = null;
+    protected $subname         = '';
 
     protected $type          = Type::NPC;
     protected $typeId        = 0;
@@ -129,7 +130,6 @@ class NpcPage extends GenericPage
         // Expansion
         $_expVal   = (int)$this->subject->getField('exp');
         $_expIcons = [1 => 'bc', 2 => 'wotlk'];
-        $_expNames = [0 => 'Classic', 1 => 'The Burning Crusade', 2 => 'Wrath of the Lich King'];
         if ($_expVal && isset($_expIcons[$_expVal]))
             $this->expansion = $_expIcons[$_expVal];
 
@@ -163,7 +163,8 @@ class NpcPage extends GenericPage
             $str = Lang::npc('rank', $_).' ['.$_.']';
             if ($this->subject->isBoss())
                 $str = '[span class=icon-boss]'.$str.'[/span]';
-            $infobox[] = '[tooltip name=tt_rank_label]'.Lang::npc('classification').'[/tooltip][span class=tip tooltip=tt_rank_label]Rank[/span]'.Lang::main('colon').$str;
+            $_rankLabel = Lang::npc('classification');
+            $infobox[] = '[tooltip name=tt_rank_label]'.$_rankLabel.'[/tooltip][span class=tip tooltip=tt_rank_label]'.$_rankLabel.'[/span]'.Lang::main('colon').$str;
         }
 
         // Reaction
