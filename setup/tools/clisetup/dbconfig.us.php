@@ -63,7 +63,7 @@ CLISetup::registerUtility(new class extends UtilityScript
 
         if ($isFirstRun)
         {
-            CLI::read(['useDefaults' => ['Use default AzerothCore credentials and databases? [Y / N]', false, true, '/y|n/i']], $answer);
+            CLI::read(['useDefaults' => ['Use default AzerothCore credentials and databases? [Y/n]', false, true, '/y|n/i']], $answer);
             $useDefaults = empty($answer['useDefaults']) || strtolower($answer['useDefaults']) === 'y';
 
             if ($useDefaults)
@@ -354,3 +354,4 @@ CLISetup::registerUtility(new class extends UtilityScript
 });
 
 ?>
+  
