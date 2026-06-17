@@ -84,11 +84,11 @@ class SmartTarget
         self::TARGET_CLOSEST_UNSPAWNED_GO   => [Type::OBJECT,            null,                    null, null],  // entry(0any), maxDist
 
         self::TARGET_PLAYER_WITH_AURA       => [Type::SPELL,             null,                    null, null],  // spellId, negation, MaxDist, MinDist
-        self::TARGET_RANDOM_POINT           => [null,                    null,                    null, null],  // range, amount, self as middle (0/1)
-        self::TARGET_ROLE_SELECTION         => [null,                    null,                    null, null],  // Range Max, TargetMask (Tanks=1, Healer=2, Damage=4)
-        self::TARGET_SUMMONED_CREATURES     => [Type::NPC,               null,                    null, null],  // Entry
-        self::TARGET_INSTANCE_STORAGE       => [null,                    null,                    null, null],  // Instance data index, Type (creature=1, gameobject=2)
-        self::TARGET_FORMATION              => [Type::NPC,               null,                    null, null],  // Type (0: members, 1: leader, 2: all), CreatureEntry, ExcludeSelf
+        self::TARGET_RANDOM_POINT          => [null,                    null,                    null, null],  // range, amount, self as middle (0/1)
+        self::TARGET_ROLE_SELECTION        => [null,                    null,                    null, null],  // Range Max, TargetMask (Tanks=1, Healer=2, Damage=4)
+        self::TARGET_SUMMONED_CREATURES    => [Type::NPC,               null,                    null, null],  // Entry
+        self::TARGET_INSTANCE_STORAGE      => [null,                    null,                    null, null],  // Instance data index, Type (creature=1, gameobject=2)
+        self::TARGET_FORMATION             => [Type::NPC,               null,                    null, null],  // Type (0: members, 1: leader, 2: all), CreatureEntry, ExcludeSelf
     );
 
     private array $jsGlobals = [];

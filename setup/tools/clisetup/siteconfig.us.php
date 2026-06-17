@@ -74,7 +74,7 @@ CLISetup::registerUtility(new class extends UtilityScript
         if (!Cfg::get('SITE_HOST'))
         {
             CLI::read(['useLocal' => ['Set up for local use? (localhost) [Y / N]', false, true, '/y|n/i']], $answer);
-            if (($answer['useLocal'] ?? '') === '' || strtolower($answer['useLocal']) === 'y')
+            if (empty($answer['useLocal']) || strtolower($answer['useLocal']) === 'y')
             {
                 Cfg::set('site_host',   'localhost/aowow');
                 Cfg::set('static_host', 'localhost/aowow/static');

@@ -513,8 +513,7 @@ class CLISetup
         // load from cache if source path matches and --force was not passed
         if (!isset(self::$opts['force']) && file_exists(self::MPQ_CACHE_FILE))
         {
-            $raw   = file_get_contents(self::MPQ_CACHE_FILE);
-            $cache = $raw !== false ? unserialize($raw) : false;
+            $cache = unserialize(file_get_contents(self::MPQ_CACHE_FILE));
             if (is_array($cache) && ($cache['src'] ?? '') === self::$srcDir)
             {
                 self::$mpqFiles = $cache['files'];
