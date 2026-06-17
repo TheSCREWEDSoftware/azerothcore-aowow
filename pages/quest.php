@@ -1327,20 +1327,4 @@ class QuestPage extends GenericPage
                         $rep['qty'][1] = $rep['qty'][0] * ($cuRates['quest_monthly_rate'] - 1);
                 }
                 else if ($this->subject->isRepeatable() && $cuRates['quest_repeatable_rate'] != 1.0)
-                    $rep['qty'][1] = $rep['qty'][0] * ($cuRates['quest_repeatable_rate'] - 1);
-                else if ($cuRates['quest_rate'] != 1.0)
-                    $rep['qty'][1] = $rep['qty'][0] * ($cuRates['quest_rate'] - 1);
-            }
-
-            $gains['rep'][] = $rep;
-        }
-
-        // title
-        if ($_ = (new TitleList(array(['id', $this->subject->getField('rewardTitleId')])))->getHtmlizedName())
-            $gains['title'] = $_;
-
-        return $gains;
-    }
-}
-
-?>
+             

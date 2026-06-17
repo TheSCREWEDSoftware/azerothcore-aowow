@@ -246,40 +246,6 @@ $AoWoWconf = null;                                          // empty auths
 // load config from DB
 Cfg::load();
 
-// Use AzerothCore git hash for cache invalidation; clears automatically on server update
-define('CACHE_REVISION', DB::isConnected(DB_AUTH)
-    ? (DB::Auth()->selectCell("SELECT TRIM(TRAILING '+' FROM SUBSTRING_INDEX(SUBSTRING_INDEX(revision, 'rev. ', -1), ' ', 1)) FROM uptime ORDER BY starttime DESC LIMIT 1") ?: AOWOW_REVISION)
-    : AOWOW_REVISION
-);
-
-if (!CLI && Cfg::get('CACHE_MODE'))
-{
-    $cacheRevFile = (Cfg::get('CACHE_DIR') ?: 'cache/template') . '/.revision';
-    $storedRev    = is_readable($cacheRevFile) ? trim(file_get_contents($cacheRevFile)) : '';
-
-    if ($storedRev !== (string)CACHE_REVISION)
-    {
-        // wipe file cache
-        $cacheDir = (Cfg::get('CACHE_DIR') ?: 'cache/template') . '/';
-        if (is_dir($cacheDir))
-            foreach (glob($cacheDir . '*') as $f)
-                if (is_file($f))
-                    @unlink($f);
-
-        // flush memcached
-        if (Cfg::get('CACHE_MODE') & CACHE_MODE_MEMCACHED)
-        {
-            $mc = new Memcached();
-            $mc->addServer('localhost', 11211);
-            $mc->flush();
-        }
-
-        file_put_contents($cacheRevFile, CACHE_REVISION);
-    }
-
-    unset($cacheRevFile, $storedRev, $cacheDir, $mc);
-}
-
 
 // handle non-fatal errors and notices
 error_reporting(E_ALL);

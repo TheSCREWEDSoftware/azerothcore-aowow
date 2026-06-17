@@ -1605,27 +1605,4 @@ abstract class Filter
 
     /***********************************/
     /*     create conditions from      */
-    /* non-generic values and criteria */
-    /***********************************/
-
-    protected function createSQLForCriterium(int &$cr, int &$crs, string &$crv) : array
-    {
-        if (!$this->genericFilter)                          // criteria not in use - no error
-            return [];
-
-        if (in_array($cr, array_keys($this->genericFilter)))
-            if ($genCr = $this->genericCriterion($cr, $crs, $crv))
-                return $genCr;
-
-        $this->error = true;
-        trigger_error('Filter::createSQLForCriterium - received unhandled criterium: ["'.$cr.'", "'.$crs.'", "'.$crv.'"]', E_USER_WARNING);
-
-        unset($cr, $crs, $crv);
-
-        return [];
-    }
-
-    abstract protected function createSQLForValues();
-}
-
-?>
+    /* non-gener
