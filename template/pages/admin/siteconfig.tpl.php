@@ -224,7 +224,9 @@
                 node.value = node.type == 'text' ? val : eval(val);
 
             // restore value in UI then immediately persist it
-            cfg_submit.bind(node.parentNode.parentNode.querySelector('.icon-save'), id)();
+            var saveBtn = node.parentNode.parentNode.querySelector('.icon-save');
+            if (saveBtn)
+                cfg_submit.bind(saveBtn, id)();
         }
 
         function cfg_remove(id)
@@ -271,7 +273,4 @@
     $this->brick('lvTabs');
 ?>
             <div class="clear"></div>
-        </div><!-- main-contents -->
-    </div><!-- main -->
-
-<?php $this->brick('footer'); ?>
+        </div><!-- main-content

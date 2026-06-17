@@ -306,6 +306,12 @@ class QuestPage extends GenericPage
             $lastQuestId = $newLast;
 
         $end = DB::Aowow()->selectRow('SELECT `id`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `id` = ?d', $lastQuestId ?: $this->typeId);
+        if (!$end)
+            $end = DB::Aowow()->selectRow('SELECT `id`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `id` = ?d', $this->typeId);
+
+        if (!$end)
+            return;
+
         $chain = array(array(array(                         // series / step / quest
             'side'    => ChrRace::sideFromMask($end['reqRaceMask']),
             'typeStr' => Type::getFileString(Type::QUEST),
@@ -314,6 +320,7 @@ class QuestPage extends GenericPage
         )));
 
         $prevStepIds = [$lastQuestId ?: $this->typeId];
+        $visited     = array_fill_keys($prevStepIds, true);
         while ($prevQuests = DB::Aowow()->select('SELECT `id`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `nextQuestIdChain` IN (?a) AND `id` <> `nextQuestIdChain` AND `breadcrumbForQuestId` = 0', $prevStepIds))
         {
             $step = [];
@@ -325,8 +332,14 @@ class QuestPage extends GenericPage
                     'name'    => Util::htmlEscape(Lang::trimTextClean(Util::localizedString($pQuest, 'name'), 40)),
                 );
 
-            $prevStepIds = array_keys($step);
-            $chain[]     = $step;
+            $prevStepIds = array_diff(array_keys($step), array_keys($visited));
+            if (!$prevStepIds)
+                break;
+
+            foreach ($prevStepIds as $id)
+                $visited[$id] = true;
+
+            $chain[] = $step;
         }
 
         // todo (low): sensibly merge the following lists into 'series'
@@ -1314,20 +1327,4 @@ class QuestPage extends GenericPage
                         $rep['qty'][1] = $rep['qty'][0] * ($cuRates['quest_monthly_rate'] - 1);
                 }
                 else if ($this->subject->isRepeatable() && $cuRates['quest_repeatable_rate'] != 1.0)
-                    $rep['qty'][1] = $rep['qty'][0] * ($cuRates['quest_repeatable_rate'] - 1);
-                else if ($cuRates['quest_rate'] != 1.0)
-                    $rep['qty'][1] = $rep['qty'][0] * ($cuRates['quest_rate'] - 1);
-            }
-
-            $gains['rep'][] = $rep;
-        }
-
-        // title
-        if ($_ = (new TitleList(array(['id', $this->subject->getField('rewardTitleId')])))->getHtmlizedName())
-            $gains['title'] = $_;
-
-        return $gains;
-    }
-}
-
-?>
+             

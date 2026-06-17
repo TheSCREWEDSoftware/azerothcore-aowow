@@ -63,7 +63,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
            'UPDATE    ?_factions x
             JOIN      dbc_faction f ON f.id = x.id
             SET       cuFlags = cuFlags | ?d
-            WHERE     f.repIdx < 0 OR f.id = 952 OR ( (f.repFlags1 & ?d) > 0 AND f.id NOT IN (67, 169, 469, 589, 1085) AND (f.repFLags1 & ?d) = 0 )',
+            WHERE     f.repIdx < 0 OR f.id = 952 OR ( (f.repFlags1 & ?d) > 0 AND f.id NOT IN (67, 169, 469, 589, 1085) AND (f.repFlags1 & ?d) = 0 )',
             CUSTOM_EXCLUDE_FOR_LISTVIEW,
             FACTION_FLAG_HIDDEN | FACTION_FLAG_INVISIBLE_FORCED, FACTION_FLAG_SPECIAL
         );
