@@ -98,13 +98,13 @@
                             <td align="right"><?=Lang::account('passConfirm').Lang::main('colon'); ?></td>
                             <td><input type="password" name="c_password" style="width: 10em" /></td>
                         </tr>
+                        <tr>
 <?php if (Cfg::get('ACC_EMAIL') ?? 1): ?>
                         <tr>
                             <td align="right"><?=Lang::account('email').Lang::main('colon'); ?></td>
                             <td><input type="text" name="email" style="width: 10em" /></td>
                         </tr>
 <?php endif; ?>
-                        <tr>
                             <td align="right" valign="top"><input type="checkbox" name="remember_me" id="remember_me" value="yes" /></td>
                             <td>
                                 <label for="remember_me"><?=Lang::account('rememberMe'); ?></label>

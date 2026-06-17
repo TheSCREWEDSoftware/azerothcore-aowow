@@ -27,7 +27,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         if ($x = array_diff_key(CLISetup::$locales, $locPath))
         {
             $locs     = array_intersect_key(CLISetup::$locales, $x);
-            $locNames = implode(', ', array_map(fn($l) => CLI::bold(implode('/', $l->gameDirs()) . '/'), $locs));
+            $locNames = implode('/, ', array_map(fn($l) => implode('/, ', $l->gameDirs()) . '/', $locs));
             CLI::write('[emotes] '.sprintf($globStrPath, '[' . $locNames . ']') . ' not found!', CLI::LOG_WARN);
             CLI::write('         Emote aliasses can not be generated for affected locales!', CLI::LOG_WARN);
         }
@@ -177,3 +177,6 @@ CLISetup::registerSetup("sql", new class extends SetupScript
 
         return implode(' ', array_merge($front, [$mid], array_reverse($back)));
     }
+});
+
+?>
