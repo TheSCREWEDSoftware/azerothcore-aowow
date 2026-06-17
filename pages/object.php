@@ -12,7 +12,6 @@ class ObjectPage extends GenericPage
 
     protected $pageText      = [];
     protected $relBoss       = null;
-    protected $poolLegend    = null;
 
     protected $type          = Type::OBJECT;
     protected $typeId        = 0;
