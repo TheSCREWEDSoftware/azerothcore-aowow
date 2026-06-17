@@ -722,11 +722,4 @@ class CLISetup
         if (!$dbc->readFile())
         {
             CLI::write('CLISetup::loadDBC() - DBC '.$name.'.dbc could not be written to DB!', CLI::LOG_ERROR);
-            return false;
-        }
-
-        return true;
-    }
-}
-
-?>
+            return
