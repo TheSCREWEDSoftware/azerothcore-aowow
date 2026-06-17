@@ -4,13 +4,13 @@
     function pcfg_ajax(name, val, onSuccess)
     {
         var statuses = document.querySelectorAll('[data-pcfg-status="' + name + '"]');
-        statuses.forEach(function(st) { while (st.firstChild) $WH.de(st.firstChild); $WH.ae(st, CreateAjaxLoader()); });
+        statuses.forEach(function(st) { $(st).empty().append(CreateAjaxLoader()); });
 
         new Ajax("?admin=pagecfg&action=update&key=" + encodeURIComponent(name) + "&val=" + encodeURIComponent(val), {
             method: "get",
             onSuccess: function(xhr) {
                 statuses.forEach(function(st) {
-                    while (st.firstChild) $WH.de(st.firstChild);
+                    $(st).empty();
                     var a = $WH.ce("a");
                     a.className = xhr.responseText ? "icon-report" : "icon-tick";
                     g_addTooltip(a, xhr.responseText || "Saved", "q");
