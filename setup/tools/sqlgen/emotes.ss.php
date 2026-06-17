@@ -177,3 +177,6 @@ CLISetup::registerSetup("sql", new class extends SetupScript
 
         return implode(' ', array_merge($front, [$mid], array_reverse($back)));
     }
+});
+
+?>

@@ -36,15 +36,16 @@ class HomePage extends GenericPage
             $this->acRev = ($rev && $rev !== 'unknown') ? $rev : 'Custom build';
         }
 
-        // DB modification times
+        // DB modification times — use AzerothCore's `updates` table (tracks when each SQL file was applied)
+        // for AoWoW DB fall back to information_schema since it has no updates table
         if (DB::isConnected(DB_AUTH))
             $this->dbTimes['auth'] = DB::Auth()->selectCell(
-                "SELECT DATE_FORMAT(FROM_UNIXTIME(MAX(starttime)), '%Y-%m-%d %H:%i') FROM uptime"
+                "SELECT DATE_FORMAT(MAX(timestamp), '%Y-%m-%d %H:%i') FROM updates"
             ) ?: 'N/A';
 
         if (DB::isConnected(DB_WORLD))
             $this->dbTimes['world'] = DB::World()->selectCell(
-                "SELECT DATE_FORMAT(MAX(UPDATE_TIME), '%Y-%m-%d %H:%i') FROM information_schema.tables WHERE TABLE_SCHEMA = DATABASE() AND UPDATE_TIME IS NOT NULL"
+                "SELECT DATE_FORMAT(MAX(timestamp), '%Y-%m-%d %H:%i') FROM updates"
             ) ?: 'N/A';
 
         if (DB::isConnected(DB_AOWOW))
@@ -57,7 +58,7 @@ class HomePage extends GenericPage
             if (DB::isConnected(DB_CHARACTERS . $r))
             {
                 $this->dbTimes['chars'] = DB::Characters($r)->selectCell(
-                    "SELECT DATE_FORMAT(MAX(UPDATE_TIME), '%Y-%m-%d %H:%i') FROM information_schema.tables WHERE TABLE_SCHEMA = DATABASE() AND UPDATE_TIME IS NOT NULL"
+                    "SELECT DATE_FORMAT(MAX(timestamp), '%Y-%m-%d %H:%i') FROM updates"
                 ) ?: 'N/A';
                 break;
             }
