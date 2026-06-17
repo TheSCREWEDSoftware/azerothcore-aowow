@@ -360,4 +360,11 @@ class UtilityPage extends GenericPage
         if ($this->page == 'most-comments')
         {
             if ($this->category && in_array($this->category[0], [7, 30]))
-                $thi
+                $this->path[] = $this->category[0];
+            else
+                $this->path[] = 1;
+        }
+    }
+}
+
+?>
