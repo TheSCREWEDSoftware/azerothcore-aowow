@@ -206,9 +206,12 @@ class UtilityPage extends GenericPage
                 }
                 break;
             case 'errors':
+                if (!User::isInGroup(U_GROUP_EMPLOYEE))
+                    $this->error(403);
+
                 $this->forceTabs = true;
 
-                $errors = DB::Aowow()->select('SELECT * FROM ?_errors ORDER BY `date` DESC');
+                $errors = DB::Aowow()->select('SELECT * FROM ?_errors ORDER BY `date` DESC LIMIT 500');
 
                 $root = dirname(__DIR__);                   // aowow root directory (no trailing slash)
 
