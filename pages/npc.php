@@ -14,6 +14,7 @@ class NpcPage extends GenericPage
     protected $accessory    = [];
     protected $quotes       = [];
     protected $reputation   = [];
+    protected $gossipMenu   = null;
     protected $subname      = '';
 
     protected $type          = Type::NPC;
@@ -125,6 +126,13 @@ class NpcPage extends GenericPage
 
         $infobox = Lang::getInfoBoxForFlags($this->subject->getField('cuFlags'));
 
+        // Expansion
+        $_expVal   = (int)$this->subject->getField('exp');
+        $_expIcons = [1 => 'bc', 2 => 'wotlk'];
+        $_expNames = [0 => 'Classic', 1 => 'The Burning Crusade', 2 => 'Wrath of the Lich King'];
+        if ($_expVal && isset($_expIcons[$_expVal]))
+            $this->expansion = $_expIcons[$_expVal];
+
         // Event (ignore events, where the object only gets removed)
         if ($_ = DB::World()->selectCol('SELECT DISTINCT ge.`eventEntry` FROM game_event ge, game_event_creature gec, creature c WHERE ge.`eventEntry` = gec.`eventEntry` AND c.`guid` = gec.`guid` AND c.`id1` = ?d', $this->typeId))
         {
@@ -152,22 +160,34 @@ class NpcPage extends GenericPage
         // Classification
         if ($_ = $this->subject->getField('rank'))          //  != NPC_RANK_NORMAL
         {
-            $str = $this->subject->isBoss() ? '[span class=icon-boss]'.Lang::npc('rank', $_).'[/span]' : Lang::npc('rank', $_);
-            $infobox[] = Lang::npc('classification').Lang::main('colon').$str;
+            $str = Lang::npc('rank', $_).' ['.$_.']';
+            if ($this->subject->isBoss())
+                $str = '[span class=icon-boss]'.$str.'[/span]';
+            $infobox[] = '[tooltip name=tt_rank_label]'.Lang::npc('classification').'[/tooltip][span class=tip tooltip=tt_rank_label]Rank[/span]'.Lang::main('colon').$str;
         }
 
         // Reaction
-        $_ = function ($r)
+        $_reactColor = fn(int $r) : string => $r > 0 ? 'q2' : ($r < 0 ? 'q10' : '');
+        $_reactLabel = fn(int $r) : string => $r > 0 ? 'Friendly' : ($r < 0 ? 'Hostile' : 'Neutral');
+        $_mkReact    = function(int $val, string $letter, string $ttId, string $faction) use ($_reactColor, $_reactLabel) : string
         {
-            if ($r == 1)  return 2;
-            if ($r == -1) return 10;
-            return;
+            $col   = $_reactColor($val);
+            $class = 'tip'.($col ? ' '.$col : '');
+            $style = $col ? '' : ' style="color:#e5cc80"';
+            return '[tooltip name='.$ttId.']'.$faction.': '.$_reactLabel($val).'[/tooltip]'.
+                   '[span class="'.$class.'" tooltip='.$ttId.$style.']'.$letter.'[/span]';
         };
-        $infobox[] = Lang::npc('react').Lang::main('colon').'[color=q'.$_($this->subject->getField('A')).']A[/color] [color=q'.$_($this->subject->getField('H')).']H[/color]';
+        $infobox[] = '[tooltip name=tt_react_label]'.Lang::npc('react').'[/tooltip][span class=tip tooltip=tt_react_label]Relation[/span]'.Lang::main('colon').
+            $_mkReact((int)$this->subject->getField('A'), 'A', 'react_a', 'Alliance').' '.
+            $_mkReact((int)$this->subject->getField('H'), 'H', 'react_h', 'Horde');
 
         // Faction
         $this->extendGlobalIds(Type::FACTION, $this->subject->getField('factionId'));
         $infobox[] = Util::ucFirst(Lang::game('faction')).Lang::main('colon').'[faction='.$this->subject->getField('factionId').']';
+
+        // Type
+        if ($npcType = (int)$this->subject->getField('type'))
+            $infobox[] = Lang::game('type').Lang::main('colon').Lang::game('ct', $npcType).' ['.$npcType.']';
 
         // Tameable
         if ($_typeFlags & 0x1)
@@ -205,52 +225,259 @@ class NpcPage extends GenericPage
                 $infobox[] = 'Not affected by mechanic'.Lang::main('colon').implode(', ', $buff);
             }
 
+            // helper: build tooltip markup inline
+            $_tt = function(string $name, string $label, string $tip) : string {
+                return '[tooltip name='.$name.']'.$tip.'[/tooltip][span class=tip tooltip='.$name.']'.$label.'[/span]';
+            };
+            // helper: append a named flag group to the $flagGroups collector
+            $_flagGroup = function(string $groupName, array $bits) use (&$flagGroups) : void {
+                if ($bits)
+                    $flagGroups[] = $groupName.Lang::main('colon').'[ul][li]'.implode('[/li][li]', $bits).'[/li][/ul]';
+            };
+            $flagGroups = [];
+
+            // npc flags (raw)
+            if ($npcflag = $this->subject->getField('npcflag'))
+            {
+                $buff = [];
+                if ($npcflag & NPC_FLAG_GOSSIP)          $buff[] = $_tt('nf-gossip',     'Gossip',          'Can be interacted with for gossip dialogue');
+                if ($npcflag & NPC_FLAG_QUEST_GIVER)     $buff[] = $_tt('nf-quest',      'Quest Giver',     'Offers or completes quests');
+                if ($npcflag & NPC_FLAG_TRAINER)         $buff[] = $_tt('nf-trainer',    'Trainer',         'Teaches skills or abilities');
+                if ($npcflag & NPC_FLAG_CLASS_TRAINER)   $buff[] = $_tt('nf-clstrainer', 'Class Trainer',   'Teaches class-specific talents');
+                if ($npcflag & NPC_FLAG_VENDOR)          $buff[] = $_tt('nf-vendor',     'Vendor',          'Sells items');
+                if ($npcflag & NPC_FLAG_VENDOR_AMMO)     $buff[] = $_tt('nf-ammo',       'Ammo Vendor',     'Sells ammunition');
+                if ($npcflag & NPC_FLAG_VENDOR_FOOD)     $buff[] = $_tt('nf-food',       'Food Vendor',     'Sells food and drink');
+                if ($npcflag & NPC_FLAG_VENDOR_POISON)   $buff[] = $_tt('nf-poison',     'Poison Vendor',   'Sells poisons (Rogue only)');
+                if ($npcflag & NPC_FLAG_VENDOR_REAGENT)  $buff[] = $_tt('nf-reagent',    'Reagent Vendor',  'Sells spell reagents');
+                if ($npcflag & NPC_FLAG_REPAIRER)        $buff[] = $_tt('nf-repair',     'Repairer',        'Can repair damaged equipment');
+                if ($npcflag & NPC_FLAG_FLIGHT_MASTER)   $buff[] = $_tt('nf-flight',     'Flight Master',   'Provides flight path transport');
+                if ($npcflag & NPC_FLAG_SPIRIT_HEALER)   $buff[] = $_tt('nf-sphealer',   'Spirit Healer',   'Resurrects players at graveyards');
+                if ($npcflag & NPC_FLAG_SPIRIT_GUIDE)    $buff[] = $_tt('nf-spguide',    'Spirit Guide',    'Guides players in battlegrounds');
+                if ($npcflag & NPC_FLAG_INNKEEPER)       $buff[] = $_tt('nf-innkeeper',  'Innkeeper',       'Allows players to set their hearthstone location');
+                if ($npcflag & NPC_FLAG_BANKER)          $buff[] = $_tt('nf-banker',     'Banker',          'Provides access to the bank');
+                if ($npcflag & NPC_FLAG_PETITIONER)      $buff[] = $_tt('nf-petition',   'Petitioner',      'Handles guild and arena team charters');
+                if ($npcflag & NPC_FLAG_GUILD_MASTER)    $buff[] = $_tt('nf-guildmstr',  'Guild Master',    'Manages guild creation');
+                if ($npcflag & NPC_FLAG_BATTLEMASTER)    $buff[] = $_tt('nf-bmaster',    'Battlemaster',    'Registers players for battlegrounds');
+                if ($npcflag & NPC_FLAG_AUCTIONEER)      $buff[] = $_tt('nf-auctioneer', 'Auctioneer',      'Provides access to the Auction House');
+                if ($npcflag & NPC_FLAG_STABLE_MASTER)   $buff[] = $_tt('nf-stable',     'Stable Master',   'Manages hunter pet stabling');
+                if ($npcflag & NPC_FLAG_GUILD_BANK)      $buff[] = $_tt('nf-guildbank',  'Guild Bank',      'Provides access to the guild bank');
+                if ($npcflag & NPC_FLAG_SPELLCLICK)      $buff[] = $_tt('nf-spellclick', 'SpellClick',      'Clicking triggers a spell (UNIT_NPC_FLAG_SPELLCLICK)');
+                if ($npcflag & NPC_FLAG_MAILBOX)         $buff[] = $_tt('nf-mailbox',    'Mailbox',         'Provides access to the mailbox');
+                $_flagGroup('NPC Flags', $buff);
+            }
+
+            // unit flags
+            if ($unitFlags = $this->subject->getField('unitFlags'))
+            {
+                $buff = [];
+                if ($unitFlags & UNIT_FLAG_SERVER_CONTROLLED)     $buff[] = $_tt('uf-svctrl',    'Server Controlled',   'Movement and actions are controlled server-side');
+                if ($unitFlags & UNIT_FLAG_NON_ATTACKABLE)        $buff[] = $_tt('uf-noatk',     'Non-Attackable',      'Cannot be attacked by anyone');
+                if ($unitFlags & UNIT_FLAG_REMOVE_CLIENT_CONTROL) $buff[] = $_tt('uf-rmctrl',    'Remove Client Control','Prevents the client from controlling this unit');
+                if ($unitFlags & UNIT_FLAG_PVP_ATTACKABLE)        $buff[] = $_tt('uf-pvpatk',    'PvP Attackable',      'Can be attacked under PvP rules in addition to faction rules');
+                if ($unitFlags & UNIT_FLAG_RENAME)                $buff[] = $_tt('uf-rename',    'Rename',              'Unit can be renamed');
+                if ($unitFlags & UNIT_FLAG_PREPARATION)           $buff[] = $_tt('uf-prep',      'Preparation',         'No reagent cost for spells with SPELL_ATTR5_NO_REAGENT_WHILE_PREP');
+                if ($unitFlags & UNIT_FLAG_NOT_ATTACKABLE_1)      $buff[] = $_tt('uf-nopvpatk',  'Non-PvP Attackable',  'Cannot be attacked in PvP (combined with PVP_ATTACKABLE flag)');
+                if ($unitFlags & UNIT_FLAG_IMMUNE_TO_PC)          $buff[] = $_tt('uf-immpc',     'Immune to PC',        'Ignores combat and assistance from player characters');
+                if ($unitFlags & UNIT_FLAG_IMMUNE_TO_NPC)         $buff[] = $_tt('uf-immnpc',    'Immune to NPC',       'Ignores combat and assistance from non-player characters');
+                if ($unitFlags & UNIT_FLAG_PVP)                   $buff[] = $_tt('uf-pvp',       'PvP',                 'Flagged for PvP combat');
+                if ($unitFlags & UNIT_FLAG_SILENCED)              $buff[] = $_tt('uf-silence',   'Silenced',            'Cannot cast spells');
+                if ($unitFlags & UNIT_FLAG_CANNOT_SWIM)           $buff[] = $_tt('uf-noswim',    'Cannot Swim',         'Cannot enter water');
+                if ($unitFlags & UNIT_FLAG_PACIFIED)              $buff[] = $_tt('uf-pacified',  'Pacified',            'Will not initiate or engage in combat');
+                if ($unitFlags & UNIT_FLAG_STUNNED)               $buff[] = $_tt('uf-stunned',   'Stunned',             'Currently stunned');
+                if ($unitFlags & UNIT_FLAG_IN_COMBAT)             $buff[] = $_tt('uf-combat',    'In Combat',           'Currently engaged in combat');
+                if ($unitFlags & UNIT_FLAG_TAXI_FLIGHT)           $buff[] = $_tt('uf-taxi',      'Taxi Flight',         'On a taxi flight path; certain spells are disabled');
+                if ($unitFlags & UNIT_FLAG_DISARMED)              $buff[] = $_tt('uf-disarm',    'Disarmed',            'Melee weapon is disabled');
+                if ($unitFlags & UNIT_FLAG_CONFUSED)              $buff[] = $_tt('uf-confused',  'Confused',            'Wandering randomly, cannot act normally');
+                if ($unitFlags & UNIT_FLAG_FLEEING)               $buff[] = $_tt('uf-fleeing',   'Fleeing',             'Running away in fear');
+                if ($unitFlags & UNIT_FLAG_PLAYER_CONTROLLED)     $buff[] = $_tt('uf-plrctrl',   'Player Controlled',   'Under player or vehicle control');
+                if ($unitFlags & UNIT_FLAG_NOT_SELECTABLE)        $buff[] = $_tt('uf-nosel',     'Not Selectable',      'Cannot be selected by mouse or /target command');
+                if ($unitFlags & UNIT_FLAG_SKINNABLE)             $buff[] = $_tt('uf-skin',      'Skinnable',           'Can be skinned after death');
+                if ($unitFlags & UNIT_FLAG_MOUNT)                 $buff[] = $_tt('uf-mount',     'Mount',               'Treated as a mount by the client');
+                if ($unitFlags & UNIT_FLAG_SHEATHE)               $buff[] = $_tt('uf-sheathe',   'Sheathe',             'Weapon is sheathed');
+                $_flagGroup('Unit Flags', $buff);
+            }
+
+            // unit flags 2
+            if ($unitFlags2 = $this->subject->getField('unitFlags2'))
+            {
+                $buff = [];
+                if ($unitFlags2 & UNIT_FLAG2_FEIGN_DEATH)                $buff[] = $_tt('uf2-feign',    'Feign Death',              'Unit appears dead to the client');
+                if ($unitFlags2 & UNIT_FLAG2_UNK1)                       $buff[] = $_tt('uf2-hidemdl',  'Hide Model',               'Unit model is hidden; only player equipment is shown');
+                if ($unitFlags2 & UNIT_FLAG2_IGNORE_REPUTATION)          $buff[] = $_tt('uf2-ignrep',   'Ignore Reputation',        'Reputation does not affect interaction with this unit');
+                if ($unitFlags2 & UNIT_FLAG2_COMPREHEND_LANG)            $buff[] = $_tt('uf2-complang', 'Comprehend Language',      'Can understand all player languages');
+                if ($unitFlags2 & UNIT_FLAG2_MIRROR_IMAGE)               $buff[] = $_tt('uf2-mirror',   'Mirror Image',             'A mirror image copy of another unit');
+                if ($unitFlags2 & UNIT_FLAG2_INSTANTLY_APPEAR_MODEL)     $buff[] = $_tt('uf2-instant',  'Instantly Appear Model',   'Model appears immediately when summoned with no fade-in');
+                if ($unitFlags2 & UNIT_FLAG2_FORCE_MOVEMENT)             $buff[] = $_tt('uf2-forcemov', 'Force Movement',           'Forced movement is applied to this unit');
+                if ($unitFlags2 & UNIT_FLAG2_DISARM_OFFHAND)             $buff[] = $_tt('uf2-disarmoh', 'Disarm Off-hand',          'Off-hand weapon is disabled');
+                if ($unitFlags2 & UNIT_FLAG2_DISABLE_PRED_STATS)         $buff[] = $_tt('uf2-predstat', 'Disable Predicted Stats',  'Predicted stats disabled (used by raid frames)');
+                if ($unitFlags2 & UNIT_FLAG2_DISARM_RANGED)              $buff[] = $_tt('uf2-disarmrng','Disarm Ranged',            'Ranged weapon is disabled');
+                if ($unitFlags2 & UNIT_FLAG2_REGENERATE_POWER)           $buff[] = $_tt('uf2-regen',    'Regenerate Power',         'Unit regenerates mana, energy or other power');
+                if ($unitFlags2 & UNIT_FLAG2_RESTRICT_PARTY_INTERACTION) $buff[] = $_tt('uf2-partyonly','Restrict Party Interact',  'Interaction is restricted to party or raid members only');
+                if ($unitFlags2 & UNIT_FLAG2_PREVENT_SPELL_CLICK)        $buff[] = $_tt('uf2-nospclck', 'Prevent SpellClick',       'SpellClick cannot be used on this unit');
+                if ($unitFlags2 & UNIT_FLAG2_ALLOW_ENEMY_INTERACT)       $buff[] = $_tt('uf2-enemyint', 'Allow Enemy Interact',     'Enemy players can interact with this unit');
+                if ($unitFlags2 & UNIT_FLAG2_DISABLE_TURN)               $buff[] = $_tt('uf2-noturn',   'Disable Turn',             'Unit cannot turn');
+                if ($unitFlags2 & UNIT_FLAG2_PLAY_DEATH_ANIM)            $buff[] = $_tt('uf2-deathanim','Play Death Animation',     'Plays a special death animation instead of the default');
+                if ($unitFlags2 & UNIT_FLAG2_ALLOW_CHEAT_SPELLS)         $buff[] = $_tt('uf2-cheat',    'Allow Cheat Spells',       'Can be targeted by spells with SPELL_ATTR7_IS_CHEAT_SPELL');
+                $_flagGroup('Unit Flags 2', $buff);
+            }
+
+            // dynamic flags
+            if ($dynamicFlags = $this->subject->getField('dynamicFlags'))
+            {
+                $buff = [];
+                if ($dynamicFlags & 0x001) $buff[] = $_tt('df-loot',      'Lootable',             'Has loot available for players');
+                if ($dynamicFlags & 0x002) $buff[] = $_tt('df-track',     'Track Unit',           'Tracked on the minimap');
+                if ($dynamicFlags & 0x004) $buff[] = $_tt('df-tapped',    'Tapped',               'Has been tagged (name appears grey to others)');
+                if ($dynamicFlags & 0x008) $buff[] = $_tt('df-tapplr',    'Tapped by Player',     'Tagged by a player character');
+                if ($dynamicFlags & 0x010) $buff[] = $_tt('df-specinfo',  'Special Info',         'Shows special interaction information');
+                if ($dynamicFlags & 0x020) $buff[] = $_tt('df-dead',      'Dead',                 'Unit is currently dead');
+                if ($dynamicFlags & 0x040) $buff[] = $_tt('df-raf',       'Refer-a-Friend',       'Linked to the Refer-a-Friend bonus system');
+                if ($dynamicFlags & 0x100) $buff[] = $_tt('df-taplist',   'Tapped by Threat List','Tagged by all units currently on its threat list');
+                $_flagGroup('Dynamic Flags', $buff);
+            }
+
+            // type flags
+            if ($_typeFlags)
+            {
+                $buff = [];
+                if ($_typeFlags & 0x000001)  $buff[] = $_tt('tf-tame',      'Tameable',                  'Can be tamed as a Hunter pet');
+                if ($_typeFlags & 0x000002)  $buff[] = $_tt('tf-ghost',     'Visible to Ghosts',         'Visible and interactable to dead (ghost) players');
+                if ($_typeFlags & 0x000004)  $buff[] = $_tt('tf-boss',      'Boss',                      'Boss-level creature; nameplate shown in purple');
+                if ($_typeFlags & 0x000008)  $buff[] = $_tt('tf-nowound',   'No Wound Animation',        'Does not play wound/hit flinch animations');
+                if ($_typeFlags & 0x000010)  $buff[] = $_tt('tf-nofaction', 'No Faction Tooltip',        'Faction name is not shown in the unit tooltip');
+                if ($_typeFlags & 0x000020)  $buff[] = $_tt('tf-audible',   'More Audible',              'Plays sounds more frequently than usual');
+                if ($_typeFlags & 0x000040)  $buff[] = $_tt('tf-spellatk',  'Spell Attackable',          'Can only be targeted via spells, not melee');
+                if ($_typeFlags & 0x000080)  $buff[] = $_tt('tf-intdead',   'Interact While Dead',       'Players can gossip or loot while the creature is dead');
+                if ($_typeFlags & 0x000100)  $buff[] = $_tt('tf-herb',      'Skin with Herbalism',       'Can be looted using the Herbalism skill');
+                if ($_typeFlags & 0x000200)  $buff[] = $_tt('tf-mine',      'Skin with Mining',          'Can be looted using the Mining skill');
+                if ($_typeFlags & 0x000400)  $buff[] = $_tt('tf-nodeathlog','No Death Log',              'Death of this creature is not written to the combat log');
+                if ($_typeFlags & 0x000800)  $buff[] = $_tt('tf-mntcombat', 'Mounted Combat',            'Creature can remain mounted when entering combat');
+                if ($_typeFlags & 0x001000)  $buff[] = $_tt('tf-assist',    'Can Assist',                'Will assist friendly units in nearby combat');
+                if ($_typeFlags & 0x002000)  $buff[] = $_tt('tf-nopetbar',  'No Pet Bar',                'Pet action bar is not shown when controlling this creature');
+                if ($_typeFlags & 0x004000)  $buff[] = $_tt('tf-maskuid',   'Mask UID',                  'Unit ID is masked in network packets');
+                if ($_typeFlags & 0x008000)  $buff[] = $_tt('tf-eng',       'Skin with Engineering',     'Can be looted using the Engineering skill');
+                if ($_typeFlags & 0x010000)  $buff[] = $_tt('tf-exotic',    'Exotic Pet',                'Can be tamed as an exotic Hunter pet (requires Beast Mastery)');
+                if ($_typeFlags & 0x020000)  $buff[] = $_tt('tf-defcoll',   'Default Collision Box',     'Uses the default collision box instead of a fitted one');
+                if ($_typeFlags & 0x040000)  $buff[] = $_tt('tf-siege',     'Siege Weapon',              'Treated as a siege weapon for combat purposes');
+                if ($_typeFlags & 0x080000)  $buff[] = $_tt('tf-missile',   'Collides with Missiles',    'Projectiles and missiles can collide with this creature');
+                if ($_typeFlags & 0x100000)  $buff[] = $_tt('tf-hideplate', 'Hide Nameplate',            'Nameplate is hidden above the creature');
+                if ($_typeFlags & 0x200000)  $buff[] = $_tt('tf-nomntanim', 'No Mounted Animations',     'Does not play mounted movement animations');
+                if ($_typeFlags & 0x400000)  $buff[] = $_tt('tf-linkall',   'Link All',                  'Shares aggro with all nearby creatures of the same entry');
+                if ($_typeFlags & 0x800000)  $buff[] = $_tt('tf-creatonly', 'Creator Only',              'Can only be interacted with by the unit that created it');
+                if ($_typeFlags & 0x1000000) $buff[] = $_tt('tf-noevtsnd',  'No Unit Event Sounds',      'Does not play unit event sounds (aggro, death, etc.)');
+                if ($_typeFlags & 0x2000000) $buff[] = $_tt('tf-noshadow',  'No Shadow Blob',            'No circular shadow blob is rendered under the creature');
+                if ($_typeFlags & 0x4000000) $buff[] = $_tt('tf-raidheal',  'Raid Unit (Helpful)',       'Covered by AoE healing spells cast by friendly units');
+                if ($_typeFlags & 0x8000000) $buff[] = $_tt('tf-largeaoi',  'Large AOI',                 'Has an extended area of influence for AI and events');
+                if ($_typeFlags & 0x10000000) $buff[] = $_tt('tf-gigaoi',   'Gigantic AOI',              'Has a very large area of influence (used by world bosses)');
+                if ($_typeFlags & 0x20000000) $buff[] = $_tt('tf-nomelee',  'No Melee Approach',         'Will not physically approach targets to engage in melee');
+                if ($_typeFlags & 0x40000000) $buff[] = $_tt('tf-raidharm', 'Raid Unit (Harmful)',       'Treated as a raid unit for harmful AoE spells');
+                if ($_typeFlags & 0x80000000) $buff[] = $_tt('tf-missile2', 'Collide with Missiles (2)', 'Secondary missile collision flag');
+                $_flagGroup('Type Flags', $buff);
+            }
+
             // extra flags
             if ($flagsExtra = $this->subject->getField('flagsExtra'))
             {
                 $buff = [];
-                if ($flagsExtra & 0x000001)
-                    $buff[] = 'Binds attacker to instance on death';
-                if ($flagsExtra & 0x000002)
-                    $buff[] = "[tooltip name=civilian]- does not aggro\n- death costs Honor[/tooltip][span class=tip tooltip=civilian]Civilian[/span]";
-                if ($flagsExtra & 0x000004)
-                    $buff[] = 'Cannot parry';
-                if ($flagsExtra & 0x000008)
-                    $buff[] = 'Has no parry haste';
-                if ($flagsExtra & 0x000010)
-                    $buff[] = 'Cannot block';
-                if ($flagsExtra & 0x000020)
-                    $buff[] = 'Cannot deal Crushing Blows';
-                if ($flagsExtra & 0x000040)
-                    $buff[] = 'Rewards no experience';
-                if ($flagsExtra & 0x000080)
-                    $buff[] = 'Trigger creature';
-                if ($flagsExtra & 0x000100)
-                    $buff[] = 'Immune to Taunt';
-                if ($flagsExtra & 0x008000)
-                    $buff[] = "[tooltip name=guard]- engages PvP attackers\n- ignores enemy stealth, invisibility and Feign Death[/tooltip][span class=tip tooltip=guard]Guard[/span]";
-                if ($flagsExtra & 0x020000)
-                    $buff[] = 'Cannot deal Critical Hits';
-                if ($flagsExtra & 0x040000)
-                    $buff[] = 'Attacker does not gain weapon skill';
-                if ($flagsExtra & 0x080000)
-                    $buff[] = 'Taunt has diminishing returns';
-                if ($flagsExtra & 0x100000)
-                    $buff[] = 'Is subject to diminishing returns';
-
-                if ($buff)
-                    $infobox[] = 'Extra Flags'.Lang::main('colon').'[ul][li]'.implode('[/li][li]', $buff).'[/li][/ul]';
+                if ($flagsExtra & 0x000001) $buff[] = $_tt('ef-instance',  'Instance Bind',             'Attacker is bound to the instance when this creature dies');
+                if ($flagsExtra & 0x000002) $buff[] = $_tt('ef-civilian',  'Civilian',                  "Does not aggro\nDeath costs the attacker Honor points");
+                if ($flagsExtra & 0x000004) $buff[] = $_tt('ef-noparry',   'No Parry',                  'Cannot parry incoming melee attacks');
+                if ($flagsExtra & 0x000008) $buff[] = $_tt('ef-nophaste',  'No Parry Haste',            'Parrying does not accelerate the next attack');
+                if ($flagsExtra & 0x000010) $buff[] = $_tt('ef-noblock',   'No Block',                  'Cannot block incoming attacks with a shield');
+                if ($flagsExtra & 0x000020) $buff[] = $_tt('ef-nocrush',   'No Crushing Blows',         'Cannot deal crushing blows regardless of level difference');
+                if ($flagsExtra & 0x000040) $buff[] = $_tt('ef-noexp',     'No Experience',             'Killing this creature rewards no experience points');
+                if ($flagsExtra & 0x000080) $buff[] = $_tt('ef-trigger',   'Trigger Creature',          'Invisible trigger used to fire events; not a real combat unit');
+                if ($flagsExtra & 0x000100) $buff[] = $_tt('ef-notaunt',   'Immune to Taunt',           'Cannot be taunted by players or pets');
+                if ($flagsExtra & 0x008000) $buff[] = $_tt('ef-guard',     'Guard',                     "Engages attackers flagged for PvP\nIgnores enemy stealth, invisibility and Feign Death");
+                if ($flagsExtra & 0x020000) $buff[] = $_tt('ef-nocrit',    'No Critical Hits',          'Cannot deal critical strikes');
+                if ($flagsExtra & 0x040000) $buff[] = $_tt('ef-noskill',   'No Weapon Skill',           'Attacking this creature does not grant weapon skill increases');
+                if ($flagsExtra & 0x080000) $buff[] = $_tt('ef-tauntdr',   'Taunt Diminishing Returns', 'Successive taunts have reduced duration (diminishing returns)');
+                if ($flagsExtra & 0x100000) $buff[] = $_tt('ef-selfdr',    'Self Diminishing Returns',  'This creature is subject to crowd-control diminishing returns');
+                $_flagGroup('Extra Flags', $buff);
             }
 
-            // Mode dummy references
-            if ($_altNPCs)
+            if ($flagGroups)
+                $infobox[] = 'Flags'.Lang::main('colon').'[ul][li]'.implode('[/li][li]', $flagGroups).'[/li][/ul]';
+
+        }
+
+        // Version links (appended inside h1 after the fav-star, via JS for all users)
+        if ($_altNPCs)
+        {
+            $this->extendGlobalData($_altNPCs->getJSGlobals());
+
+            // Base entry
+            $_verBase  = Lang::npc('modes', $mapType, 0) ?: 'Normal';
+            $_baseName = $this->subject->getField('name', true);
+            $_versions = [['id' => $this->typeId, 'label' => $_verBase, 'name' => $_baseName]];
+
+            // Alt entries — iterate to pick up each NPC's name
+            foreach ($_altNPCs->iterate() as $_vId => $__)
             {
-                $this->extendGlobalData($_altNPCs->getJSGlobals());
-                $buff = 'Difficulty Versions'.Lang::main('colon').'[ul]';
-                foreach ($_altNPCs->iterate() as $id => $__)
-                    $buff .= '[li][npc='.$id.'][/li]';
-                $infobox[] = $buff.'[/ul]';
+                $_vMode  = $_altIds[$_vId];
+                $_vLabel = Lang::npc('modes', $mapType, $_vMode) ?: 'Mode '.$_vMode;
+                $_vName  = $_altNPCs->getField('name', true);
+                $_versions[] = ['id' => $_vId, 'label' => $_vLabel, 'name' => $_vName];
             }
+
+            $_verJson = Util::toJSON($_versions);
+            $_curId   = $this->typeId;
+
+            $this->addScript([SC_JS_STRING, "
+DomContentLoaded.addEvent(function() {
+    var versions = {$_verJson};
+    var curId    = {$_curId};
+    var isAltPage = (curId != versions[0].id);
+    var wrap = document.createElement('span');
+    wrap.id = 'npc-versions';
+    wrap.style.cssText = 'display:block;font-size:12px;font-weight:normal;color:#aaa;white-space:nowrap;';
+    for (var i = 0; i < versions.length; i++) {
+        if (i > 0) {
+            var dot = document.createElement('span');
+            dot.style.color = '#555';
+            dot.textContent = ' · ';
+            wrap.appendChild(dot);
+        }
+        var v = versions[i];
+        var ttText = v.label + ' - ' + v.name + ' (#' + v.id + ')';
+        var linkText = (isAltPage && i === 0) ? v.name : v.label;
+        if (v.id == curId) {
+            var cur = document.createElement('span');
+            cur.textContent = linkText;
+            cur.style.color = '#e8d47b';
+            cur.title = ttText;
+            wrap.appendChild(cur);
+        } else {
+            var lnk = document.createElement('span');
+            lnk.textContent = linkText;
+            lnk.title = ttText;
+            lnk.style.cssText = 'color:#aaa;cursor:pointer;';
+            lnk.onclick = (function(id) { return function() { location.href = '?npc=' + id; }; })(v.id);
+            wrap.appendChild(lnk);
+        }
+    }
+    var h1 = document.querySelector('.text h1');
+    if (h1) h1.appendChild(wrap);
+});
+"]);
+        }
+
+        // Placeholder message (appended inside h1 via JS, replaces the template <div>)
+        if ($placeholder)
+        {
+            $_phId   = (int)$placeholder[0];
+            $_phName = Util::toJSON($placeholder[1]);
+
+            $this->addScript([SC_JS_STRING, "
+DomContentLoaded.addEvent(function() {
+    var phName = {$_phName};
+    var wrap = document.createElement('span');
+    wrap.style.cssText = 'display:block;font-size:12px;font-weight:normal;color:#aaa;white-space:nowrap;';
+    wrap.innerHTML = 'This NPC is a placeholder for a different mode of <a href=\"?npc={$_phId}\" style=\"color:#a6c3e5\">' + phName + '<\\/a>.';
+    var h1 = document.querySelector('.text h1');
+    if (h1) h1.appendChild(wrap);
+});
+"]);
         }
 
         // > Stats
@@ -261,10 +488,12 @@ class NpcPage extends GenericPage
         // Health
         $health = $this->subject->getBaseStats('health');
         $stats['health'] = Util::ucFirst(Lang::spell('powerTypes', -2)).Lang::main('colon').($health[0] < $health[1] ? Lang::nf($health[0]).' - '.Lang::nf($health[1]) : Lang::nf($health[0]));
+        $maxHealthVal = max($health[0], $health[1]);
 
         // Mana (may be 0)
         $mana = $this->subject->getBaseStats('power');
         $stats['mana'] = $mana[0] ? Lang::spell('powerTypes', 0).Lang::main('colon').($mana[0] < $mana[1] ? Lang::nf($mana[0]).' - '.Lang::nf($mana[1]) : Lang::nf($mana[0])) : null;
+        $maxManaVal = $mana[0] ? max($mana[0], $mana[1]) : 0;
 
         // Armor
         $armor = $this->subject->getBaseStats('armor');
@@ -311,10 +540,16 @@ class NpcPage extends GenericPage
 
                     // Health
                     $health = $_altNPCs->getBaseStats('health');
+                    $_hMax = max($health[0], $health[1]);
+                    if ($_hMax > $maxHealthVal) $maxHealthVal = $_hMax;
                     $modes['health'][] = sprintf($modeRow, $m, $health[0] < $health[1] ? Lang::nf($health[0]).' - '.Lang::nf($health[1]) : Lang::nf($health[0]));
 
                     // Mana (may be 0)
                     $mana = $_altNPCs->getBaseStats('power');
+                    if ($mana[0]) {
+                        $_mMax = max($mana[0], $mana[1]);
+                        if ($_mMax > $maxManaVal) $maxManaVal = $_mMax;
+                    }
                     $modes['mana'][] = $mana[0] ? sprintf($modeRow, $m, $mana[0] < $mana[1] ? Lang::nf($mana[0]).' - '.Lang::nf($mana[1]) : Lang::nf($mana[0])) : null;
 
                     // Armor
@@ -352,9 +587,17 @@ class NpcPage extends GenericPage
         }
 
         if ($modes)
+        {
+            // Show highest value across all difficulties as the main label
+            if (!empty($modes['health']))
+                $stats['health'] = Util::ucFirst(Lang::spell('powerTypes', -2)).Lang::main('colon').Lang::nf($maxHealthVal);
+            if (!empty($modes['mana']) && $maxManaVal > 0)
+                $stats['mana'] = Lang::spell('powerTypes', 0).Lang::main('colon').Lang::nf($maxManaVal);
+
             foreach ($stats as $k => $v)
-                if ($v)
+                if ($v && !empty($modes[$k]))
                     $stats[$k] = sprintf($hint, implode('[/tr][tr]', $modes[$k]), $v, $k);
+        }
 
         // < Stats
         if ($stats)
@@ -405,6 +648,240 @@ class NpcPage extends GenericPage
         $this->quotes       = $this->getQuotes();
         $this->reputation   = $this->getOnKillRep($_altIds, $mapType);
         $this->smartAI      = $sai ? $sai->getMarkdown() : null;
+
+        // Gossip Menu — try creature_template first, then fall back to SmartAI scripts
+        $_gmId = (int)DB::World()->selectCell('SELECT `gossip_menu_id` FROM creature_template WHERE `entry` = ?d', $this->typeId);
+
+        if (!$_gmId)
+            $_gmId = (int)DB::World()->selectCell(
+                'SELECT `action_param1` FROM smart_scripts
+                  WHERE `source_type` = 0 AND `entryorguid` = ?d AND `action_type` IN (98, 240)
+                  ORDER BY `action_type` ASC LIMIT 1',
+                $this->typeId
+            );
+
+        if ($_gmId)
+        {
+            $_optTypes = [
+                0  => 'None',          1  => 'Gossip',          2  => 'Quest Giver',
+                3  => 'Vendor',        4  => 'Flight Master',   5  => 'Trainer',
+                6  => 'Spirit Healer', 7  => 'Spirit Guide',    8  => 'Innkeeper',
+                9  => 'Banker',        10 => 'Petitioner',      11 => 'Tabard Designer',
+                12 => 'Battlemaster',  13 => 'Auctioneer',      14 => 'Stable Master',
+                15 => 'Armorer',       16 => 'Unlearn Talents', 17 => 'Unlearn Pet Skills',
+                18 => 'Dual Spec',     19 => 'Outdoor PvP',
+            ];
+
+            // Markup.js text pipeline: _rawText → str.replace(/\\\[/g,'[') → _safeHtml(&<>") → \n→<br>
+            // So: escape [ as \[ (prevents Markup tag parsing), leave " & < > for _safeHtml to handle.
+            // WoW text tokens replaced with [span tooltip=X] using pre-defined [tooltip name=X] entries.
+            $_tokSpans = [
+                '$N' => '[span tooltip=tok-N][b]$N[/b][/span]',
+                '$n' => '[span tooltip=tok-n][b]$n[/b][/span]',
+                '$R' => '[span tooltip=tok-R][b]$R[/b][/span]',
+                '$r' => '[span tooltip=tok-r][b]$r[/b][/span]',
+                '$C' => '[span tooltip=tok-C][b]$C[/b][/span]',
+                '$c' => '[span tooltip=tok-c][b]$c[/b][/span]',
+            ];
+
+            $_formatText = function(string $s) use ($_tokSpans) : string {
+                // Escape [ so Markup parser doesn't treat user text as tags
+                $s = str_replace('[', '\\[', $s);
+                // $B/$b = paragraph break (_preText converts \n to <br/>)
+                $s = str_replace(['$B', '$b'], "\n", $s);
+                // $G male:female; — show both gender forms inline
+                $s = preg_replace('/\$[Gg]([^:]+):([^;]+);/', '[b]$1[/b][small](or "$2")[/small]', $s);
+                // Named character tokens → hoverable spans
+                foreach ($_tokSpans as $tok => $repl)
+                    if (str_contains($s, $tok))
+                        $s = str_replace($tok, $repl, $s);
+                return $s;
+            };
+
+            // BFS: collect all menus reachable via option ActionMenuIDs
+            $visited = [];
+            $queue   = [$_gmId];
+            $menus   = [];
+
+            while ($queue && count($visited) < 64)
+            {
+                $menuId = array_shift($queue);
+                if (isset($visited[$menuId])) continue;
+                $visited[$menuId] = true;
+
+                $textRows = DB::World()->select(
+                    'SELECT gm.`TextID`, nt.`text0_0`, nt.`text0_1`
+                     FROM gossip_menu gm
+                     LEFT JOIN npc_text nt ON nt.`ID` = gm.`TextID`
+                     WHERE gm.`MenuID` = ?d ORDER BY gm.`TextID`',
+                    $menuId
+                );
+                $opts = DB::World()->select(
+                    'SELECT `OptionID`, `OptionIcon`, `OptionText`, `OptionType`, `ActionMenuID`, `BoxText`, `BoxMoney`
+                     FROM gossip_menu_option WHERE `MenuID` = ?d ORDER BY `OptionID`',
+                    $menuId
+                );
+
+                $menus[$menuId] = [
+                    'textRows' => $textRows ?: [],
+                    'opts'     => $opts     ?: [],
+                ];
+
+                foreach ($opts ?: [] as $opt)
+                    if ($opt['ActionMenuID'] && !isset($visited[$opt['ActionMenuID']]))
+                        $queue[] = (int)$opt['ActionMenuID'];
+            }
+
+            // No sort needed — options tree renders in BFS/traversal order from the root menu
+
+            // Map OptionIcon byte → GossipFrame PNG filename (wowdev.wiki/SMSG_GOSSIP_MESSAGE)
+            $_staticUrl  = Cfg::get('STATIC_URL');
+            $_iconBase   = $_staticUrl . '/images/wow/Interface/GossipFrame/';
+            $_gossipIcons = [
+                0  => 'GossipGossipIcon',
+                1  => 'VendorGossipIcon',
+                2  => 'TaxiGossipIcon',
+                3  => 'TrainerGossipIcon',
+                4  => 'HealerGossipIcon',
+                5  => 'BinderGossipIcon',
+                6  => 'BankerGossipIcon',
+                7  => 'PetitionGossipIcon',
+                8  => 'TabardGossipIcon',
+                9  => 'BattleMasterGossipIcon',
+                10 => 'UnlearnGossipIcon',
+            ];
+            $_gossipIconMarkup = function(int $iconId) use ($_iconBase, $_gossipIcons) : string {
+                $file = $_gossipIcons[$iconId] ?? 'GossipGossipIcon';
+                return '[img src=' . $_iconBase . $file . '.png width=16 height=16 border=0]';
+            };
+
+            // Load conditions for all gossip menus via AoWoW's Conditions class
+            $cndObj = new Conditions();
+            foreach (array_keys($menus) as $mid)
+                $cndObj->getBySourceGroup($mid, Conditions::SRC_GOSSIP_MENU, Conditions::SRC_GOSSIP_MENU_OPTION);
+            $cndObj->prepare();
+            $this->extendGlobalData($cndObj->getJsGlobals());
+            $gossipCndResult = $cndObj->getResult();
+
+            // Build quick lookup: $cndHas[srcType][menuId][entryId] = true
+            $cndHas = [];
+            foreach ($gossipCndResult as $srcType => $groups)
+                foreach ($groups as $grpKey => $_)
+                {
+                    [$grp, $entry] = explode(':', $grpKey);
+                    $cndHas[$srcType][(int)$grp][(int)$entry] = true;
+                }
+
+            $this->gossipCndResult = $gossipCndResult;
+
+            // Pre-define tooltips for WoW character tokens (invisible; referenced by [span tooltip=X])
+            $tokenDefs =
+                '[tooltip name=tok-N label="Uses the player\'s name"][b]$N[/b][/tooltip]' .
+                '[tooltip name=tok-n label="Uses the player\'s name"][b]$n[/b][/tooltip]' .
+                '[tooltip name=tok-R label="Uses the character\'s race"][b]$R[/b][/tooltip]' .
+                '[tooltip name=tok-r label="Uses the character\'s race"][b]$r[/b][/tooltip]' .
+                '[tooltip name=tok-C label="Uses the character\'s class"][b]$C[/b][/tooltip]' .
+                '[tooltip name=tok-c label="Uses the character\'s class"][b]$c[/b][/tooltip]';
+
+            // Tab 1 — Greeting: only the starting menu's text entries
+            $menuTab  = '[tr][td header]Text ID[/td][td header]Text[/td][td header]Conditions[/td][/tr]';
+            $rootRows = $menus[$_gmId]['textRows'] ?? [];
+            if ($rootRows)
+            {
+                foreach ($rootRows as $row)
+                {
+                    $greeting = trim($row['text0_0'] ?? '') ?: trim($row['text0_1'] ?? '');
+                    $hasCnd   = !empty($cndHas[Conditions::SRC_GOSSIP_MENU][$_gmId][$row['TextID']]);
+                    $cndCell  = $hasCnd
+                        ? '[span id=cnd-14-' . $_gmId . '-' . $row['TextID'] . '][/span]'
+                        : '-';
+                    $menuTab .= '[tr][td]' . $row['TextID'] . '[/td][td]' .
+                        ($greeting ? '[i]"' . $_formatText($greeting) . '"[/i]' : '-') .
+                        '[/td][td]' . $cndCell . '[/td][/tr]';
+                }
+            }
+            else
+            {
+                $menuTab .= '[tr][td colspan=3][i]No greeting text defined.[/i][/td][/tr]';
+            }
+
+            // Tab 2 — Options: recursive tree rooted at the starting menu
+            // Each option shows its text; if it opens a sub-menu we show that menu's
+            // response text inline, and if that sub-menu has further options we show
+            // those recursively under a sub-section header.
+            $optsTab     = '[tr][td header]#[/td][td header]Option Text[/td][td header]Type[/td][td header]Opens Menu[/td][td header]Conditions[/td][/tr]';
+            $_treeVisit  = [];
+
+            $_renderTree = function(int $menuId) use (
+                &$_renderTree, &$_treeVisit,
+                $menus, $_formatText, $_optTypes, $_gossipIconMarkup, $cndHas
+            ) : string
+            {
+                if (isset($_treeVisit[$menuId]) || !isset($menus[$menuId])) return '';
+                $_treeVisit[$menuId] = true;
+
+                $out  = '';
+                $opts = $menus[$menuId]['opts'];
+                if (!$opts) return '';
+
+                foreach ($opts as $opt)
+                {
+                    $subId   = (int)$opt['ActionMenuID'];
+                    $icon    = $_gossipIconMarkup((int)$opt['OptionIcon']);
+                    $text    = $icon . ' ' . $_formatText($opt['OptionText'] ?: '');
+                    $type    = $_optTypes[$opt['OptionType']] ?? 'Type ' . $opt['OptionType'];
+                    $hasCnd  = !empty($cndHas[Conditions::SRC_GOSSIP_MENU_OPTION][$menuId][$opt['OptionID']]);
+                    $cndCell = $hasCnd
+                        ? '[span id=cnd-15-' . $menuId . '-' . $opt['OptionID'] . '][/span]'
+                        : '-';
+                    $notes   = [];
+                    if ($opt['BoxText'])  $notes[] = 'confirms: ' . $_formatText($opt['BoxText']);
+                    if ($opt['BoxMoney']) $notes[] = 'costs: [money=' . $opt['BoxMoney'] . ']';
+                    if ($notes) $text .= ' [small](' . implode(', ', $notes) . ')[/small]';
+
+                    $out .= '[tr][td]' . $opt['OptionID'] . '[/td][td]' . $text .
+                        '[/td][td]' . $type . '[/td][td]' .
+                        ($subId ? '[b]' . $subId . '[/b]' : '-') .
+                        '[/td][td]' . $cndCell . '[/td][/tr]';
+
+                    // Inline: show response text(s) from the sub-menu
+                    if ($subId && isset($menus[$subId]) && !isset($_treeVisit[$subId]))
+                    {
+                        foreach ($menus[$subId]['textRows'] as $row)
+                        {
+                            $resp = trim($row['text0_0'] ?? '') ?: trim($row['text0_1'] ?? '');
+                            if (!$resp) continue;
+                            $hasCndT  = !empty($cndHas[Conditions::SRC_GOSSIP_MENU][$subId][$row['TextID']]);
+                            $cndResp  = $hasCndT
+                                ? ' [span id=cnd-14-' . $subId . '-' . $row['TextID'] . '][/span]'
+                                : '';
+                            $out .= '[tr][td][/td][td colspan=4][i]"' .
+                                $_formatText($resp) . '"[/i]' . $cndResp . '[/td][/tr]';
+                        }
+
+                        // If the sub-menu itself has options, recurse under a sub-header
+                        if ($menus[$subId]['opts'])
+                        {
+                            $out .= '[tr][td header colspan=5]Menu ' . $subId . '[/td][/tr]';
+                            $out .= $_renderTree($subId);
+                        }
+                    }
+                }
+                return $out;
+            };
+
+            $optsTab .= $_renderTree($_gmId);
+            if ($optsTab === '[tr][td header]#[/td][td header]Option Text[/td][td header]Type[/td][td header]Opens Menu[/td][td header]Conditions[/td][/tr]')
+                $optsTab .= '[tr][td colspan=5][i]No options defined.[/i][/td][/tr]';
+
+            $tabs = '[tab name=Gossip_Menu][table class=grid width=940px]' . $menuTab . '[/table][/tab]' .
+                    '[tab name=Gossip_Options][table class=grid width=940px]' . $optsTab . '[/table][/tab]';
+
+            $this->gossipMenu = $tokenDefs .
+                '[style]#text-gossip .grid { clear:left; } #text-gossip .tabbed-contents { padding:0px; clear:left; }[/style][pad]' .
+                '[h3][toggler id=gm]Gossip[/toggler][/h3]' .
+                '[div id=gm clear=left][tabs name=npc-gossip width=942px]' . $tabs . '[/tabs][/div]';
+        }
         $this->redButtons   = array(
             BUTTON_WOWHEAD => true,
             BUTTON_LINKS   => ['type' => $this->type, 'typeId' => $this->typeId],

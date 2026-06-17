@@ -1015,7 +1015,48 @@ class ItemPage extends genericPage
         // tab: condition-for
         $cnd = new Conditions();
         $cnd->getByCondition(Type::ITEM, $this->typeId)->prepare();
-        if ($tab = $cnd->toListviewTab('condition-for', '$LANG.tab_condition_for'))
+
+        // For gossip conditions (srcType 14/15), find which NPCs use each referenced menu
+        $gossipMenuNpcs = [];
+        foreach ($cnd->getResult() as $srcType => $srcData)
+        {
+            if ($srcType !== Conditions::SRC_GOSSIP_MENU && $srcType !== Conditions::SRC_GOSSIP_MENU_OPTION)
+                continue;
+            foreach (array_keys($srcData) as $grpKey)
+            {
+                $menuId = (int)explode(':', $grpKey)[0];
+                if ($menuId && !isset($gossipMenuNpcs[$menuId]))
+                    $gossipMenuNpcs[$menuId] = [];
+            }
+        }
+        if ($gossipMenuNpcs)
+        {
+            $menuIds = array_keys($gossipMenuNpcs);
+            foreach (DB::World()->select('SELECT `entry`, `gossip_menu_id` FROM creature_template WHERE `gossip_menu_id` IN (?a)', $menuIds) as $r)
+                $gossipMenuNpcs[(int)$r['gossip_menu_id']][] = (int)$r['entry'];
+            foreach (DB::World()->select(
+                'SELECT `entryorguid`, `action_param1` FROM smart_scripts
+                  WHERE `source_type` = 0 AND `entryorguid` > 0 AND `action_type` IN (98, 240) AND `action_param1` IN (?a)',
+                $menuIds
+            ) as $r)
+                $gossipMenuNpcs[(int)$r['action_param1']][] = (int)$r['entryorguid'];
+            foreach ($gossipMenuNpcs as $mid => &$ids)
+            {
+                $ids = array_values(array_unique($ids));
+                if (!$ids)
+                    unset($gossipMenuNpcs[$mid]);
+            }
+            unset($ids);
+            if ($gossipMenuNpcs)
+            {
+                $allNpcIds = array_merge(...array_values($gossipMenuNpcs));
+                $this->extendGlobalData([Type::NPC => array_combine($allNpcIds, $allNpcIds)]);
+            }
+        }
+
+        $cndExtra = $gossipMenuNpcs ? ['gossipNpcs' => $gossipMenuNpcs] : [];
+
+        if ($tab = $cnd->toListviewTab('condition-for', '$LANG.tab_condition_for', $cndExtra))
         {
             $this->extendGlobalData($cnd->getJsGlobals());
             $this->lvTabs[] = $tab;

@@ -15,7 +15,7 @@
             <div class="text">
 <?php $this->brick('redButtons'); ?>
 
-                <h1><?=$this->name.($this->subname ? ' &lt;'.$this->subname.'&gt;' : null); ?></h1>
+                <h1<?=($this->expansion ? ' class="h1-icon">' : '>'); ?><?=($this->expansion ? '<span class="icon-'.$this->expansion.'-right">' : ''); ?><?=$this->name.($this->subname ? ' &lt;'.$this->subname.'&gt;' : null); ?><?=($this->expansion ? '</span>' : ''); ?></h1>
 
 <?php
     $this->brick('article');
@@ -27,7 +27,6 @@ if ($this->accessory):
 endif;
 
 if ($this->placeholder):
-    echo '                <div>'.Lang::npc('difficultyPH', $this->placeholder)."</div>\n";
 ?>
                 <div class="pad"></div>
 <?php
@@ -43,24 +42,9 @@ if ($this->quotes[0]):
                 <div id="quotes-generic" style="display: none"><ul>
 <?php
     foreach ($this->quotes[0] as $group):
-        if (count($group) > 1 && count($this->quotes[0]) > 1):
-            echo "<ul>\n";
-        endif;
-
-        echo '<li>';
-
-        $last = end($group);
         foreach ($group as $itr):
-            echo sprintf(sprintf($itr['text'], $itr['prefix']), $this->name);
-            echo ($itr == $last) ? null : "</li>\n<li>";
+            echo '<li>'.sprintf(sprintf($itr['text'], $itr['prefix']), $this->name)."</li>\n";
         endforeach;
-
-        echo "</li>\n";
-
-        if (count($group) > 1 && count($this->quotes[0]) > 1):
-            echo "</ul>\n";
-        endif;
-
     endforeach;
 ?>
                 </ul></div>
@@ -106,6 +90,38 @@ if (isset($this->smartAI)):
             allow: Markup.CLASS_ADMIN,
             dbpage: true
         });
+    //]]></script>
+
+    <div class="pad2"></div>
+<?php
+endif;
+
+if (isset($this->gossipMenu)):
+?>
+    <div id="text-gossip" class="left"></div>
+    <script type="text/javascript">//<![CDATA[
+        Markup.printHtml(<?=json_encode($this->gossipMenu); ?>, "text-gossip", {
+            allow: Markup.CLASS_ADMIN,
+            dbpage: true
+        });
+<?php if (!empty($this->gossipCndResult)): ?>
+        (function() {
+            var cndData = <?=Util::toJSON($this->gossipCndResult); ?>;
+            for (var srcType in cndData) {
+                for (var grpKey in cndData[srcType]) {
+                    var parts  = grpKey.split(':');
+                    var spanId = 'cnd-' + srcType + '-' + parts[0] + '-' + parts[1];
+                    var el     = document.getElementById(spanId);
+                    if (!el) continue;
+                    var subset = {};
+                    subset[srcType] = {};
+                    subset[srcType][grpKey] = cndData[srcType][grpKey];
+                    var markup = ConditionList.createCell(subset);
+                    if (markup) Markup.printHtml(markup, spanId, { allow: Markup.CLASS_ADMIN, dbpage: true });
+                }
+            }
+        })();
+<?php endif; ?>
     //]]></script>
 
     <div class="pad2"></div>

@@ -23672,7 +23672,8 @@ function g_getIngameLink(color, id, name) {
 var ConditionList = new function() {
     var
         self = this,
-        _conditions = null;
+        _conditions = null,
+        _extra = {};
 
     self.createCell = function(conditions) {
         if (!conditions)
@@ -23682,11 +23683,12 @@ var ConditionList = new function() {
 
         return _createCell();
     };
-    self.createTab = function(conditions) {
+    self.createTab = function(conditions, extra) {
         if (!conditions)
             return null;
 
         _conditions = conditions;
+        _extra = extra || {};
 
         return _createTab();
     };
@@ -23876,6 +23878,16 @@ var ConditionList = new function() {
                 let rand = $WH.rs();
 
                 buff += '[h3][toggler' + (k ? '=hidden' : '') + ' id=' + rand + ']' + $WH.sprintfa(src, srcGroup, srcEntry, srcId) + '[/toggler][/h3][div' + (k++ ? '=hidden' : '') + ' id=' + rand + ']';
+
+                // For gossip conditions, show which NPCs use this menu
+                if ((g == 14 || g == 15) && _extra.gossipNpcs && _extra.gossipNpcs[srcGroup]) {
+                    var gnpcs = _extra.gossipNpcs[srcGroup], gnpcBuff = '';
+                    for (var gi = 0; gi < gnpcs.length; gi++) {
+                        if (gi > 0) gnpcBuff += LANG.comma;
+                        gnpcBuff += '[npc=' + gnpcs[gi] + ']';
+                    }
+                    buff += '[p]Used by: ' + gnpcBuff + '[/p]';
+                }
 
                 if (nGroups > 1) {
                     buff += LANG.note_condition_group + '[br][br]';

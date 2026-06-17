@@ -323,7 +323,7 @@ class Conditions
     /* OUT */
     /*******/
 
-    public function toListviewTab(string $id = 'conditions', string $name = '') : array
+    public function toListviewTab(string $id = 'conditions', string $name = '', array $extra = []) : array
     {
         if (!$this->result)
             return [];
@@ -348,8 +348,10 @@ class Conditions
             }
         }
 
+        $extraJson = $extra ? ', ' . Util::toJSON($extra) : '';
+
         $data = "<script type=\"text/javascript\">\n" .
-                "    var markup = ConditionList.createTab(".Util::toJSON($out).");\n" .
+                "    var markup = ConditionList.createTab(".Util::toJSON($out).$extraJson.");\n" .
                 "    Markup.printHtml(markup, 'tab-".$id."', { allow: Markup.CLASS_STAFF })\n" .
                 "</script>";
 
@@ -403,6 +405,11 @@ class Conditions
     public function getJsGlobals() : array
     {
         return $this->jsGlobals;
+    }
+
+    public function getResult() : array
+    {
+        return $this->result;
     }
 
 
