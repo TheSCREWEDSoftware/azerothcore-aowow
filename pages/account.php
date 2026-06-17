@@ -414,7 +414,7 @@ Markup.printHtml("description text here", "description-generic", { allow: Markup
         if ($emailRequired || $email)
         {
             if (!Util::isValidEmail($email))
-                return $emailRequired ? Lang::account('emailInvalid') : null;
+                return Lang::account('emailInvalid');
         }
 
         // check ip

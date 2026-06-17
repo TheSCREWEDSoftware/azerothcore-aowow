@@ -532,7 +532,7 @@ class AjaxAdmin extends AjaxHandler
     // resp: '' on success, error string on failure
     protected function pageCfgUpdate() : string
     {
-        static $validGroups = [0, 1, 2, 4, 8, 16, 32, 50, 1726, 1727];
+        static $validGroups = [0, 1, 2, 4, 8, 16, 32, 50, 1726];
 
         $name    = trim(urldecode($this->_get['key'] ?: ''));
         $rawVal  = $this->_get['val'];

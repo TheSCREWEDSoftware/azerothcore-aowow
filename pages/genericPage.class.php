@@ -1082,7 +1082,7 @@ class GenericPage
 
             $data = array(
                 'timestamp' => time(),
-                'revision'  => AOWOW_REVISION,
+                'revision'  => CACHE_REVISION,
                 'isString'  => $saveString ? 1 : 0,
                 'data'      => $cache
             );
@@ -1092,7 +1092,7 @@ class GenericPage
 
         if (Cfg::get('CACHE_MODE') & CACHE_MODE_FILECACHE)
         {
-            $data  = time()." ".AOWOW_REVISION." ".($saveString ? '1' : '0')."\n";
+            $data  = time()." ".CACHE_REVISION." ".($saveString ? '1' : '0')."\n";
             $data .= gzcompress($saveString ? $cache : serialize($cache), 9);
 
             // on &refresh also clear related
@@ -1135,7 +1135,7 @@ class GenericPage
                 $type = $cache['isString'];
                 $data = $cache['data'];
 
-                if ($cache['timestamp'] + Cfg::get('CACHE_DECAY') <= time() || $cache['revision'] != AOWOW_REVISION)
+                if ($cache['timestamp'] + Cfg::get('CACHE_DECAY') <= time() || $cache['revision'] != CACHE_REVISION)
                     $cache = null;
                 else
                     $this->cacheLoaded = [CACHE_MODE_MEMCACHED, $cache['timestamp']];
@@ -1158,7 +1158,7 @@ class GenericPage
 
             [$time, $rev, $type] = explode(' ', $cache[0]);
 
-            if ($time + Cfg::get('CACHE_DECAY') <= time() || $rev != AOWOW_REVISION)
+            if ($time + Cfg::get('CACHE_DECAY') <= time() || $rev != CACHE_REVISION)
                 $cache = null;
             else
             {

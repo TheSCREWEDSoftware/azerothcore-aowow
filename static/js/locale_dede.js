@@ -3662,7 +3662,7 @@ var LANG = {
                             [4494, "Ahn'kahet: Das Alte Königreich"],[3790, "Auchenaikrypta"],              [4277, "Azjol-Nerub"],                  [3713, "Blutkessel"],                   [ 209, "Burg Schattenfang"],
                             [ 206, "Burg Utgarde"],                 [3715, "Dampfkammer"],                  [4100, "Das Ausmerzen von Stratholme"], [4228, "Das Oculus"],                   [2437, "Der Flammenschlund"],
                             [4265, "Der Nexus"],                    [2366, "Der schwarze Morast"],          [3848, "Die Arkatraz"],                 [3847, "Die Botanika"],                 [3849, "Die Mechanar"],
-                            [4809, "Die Seelenschmiede"],           [3714, "Die zerschmetterten Hallen"],   [2557, "Düsterbruch"],                  [4196, "Feste von Drak'Tharon"],        [3717, "Frostfürst Ahune"],
+                            [4809, "Die Seelenschmiede"],           [3714, "Die zerschmetterten Hallen"],   [2557, "Düsterbruch"],                  [4196, "Feste von Drak'Tharon"],
                             [ 721, "Gnomeregan"],                   [4813, "Grube von Saron"],              [4416, "Gundrak"],                      [4272, "Hallen der Blitze"],            [4820, "Hallen der Reflexion"],
                             [4264, "Hallen des Steins"],            [ 718, "Höhlen des Wehklagens"],        [3562, "Höllenfeuerbollwerk"],          [ 722, "Hügel der Klingenhauer"],       [ 491, "Kral der Klingenhauer"],
                             [3792, "Managruft"],                    [2100, "Maraudon"],                     [4723, "Prüfung des Champions"],        [ 796, "Scharlachrotes Kloster"],       [3789, "Schattenlabyrinth"],
@@ -3708,7 +3708,7 @@ var LANG = {
                             [4494, "Ahn'kahet: Das Alte Königreich"],[3790, "Auchenaikrypta"],              [4277, "Azjol-Nerub"],                  [206, "Burg Utgarde"],                  [4100, "Das Ausmerzen von Stratholme"],
                             [4228, "Das Oculus"],                   [3713, "Der Blutkessel"],               [4265, "Der Nexus"],                    [2366, "Der schwarze Morast"],          [3716, "Der Tiefensumpf"],
                             [3848, "Die Arkatraz"],                 [3847, "Die Botanika"],                 [3715, "Die Dampfkammer"],              [4272, "Die Hallen der Blitze"],        [4264, "Die Hallen des Steins"],
-                            [3849, "Die Mechanar"],                 [4809, "Die Seelenschmiede"],           [3717, "Die Sklavenunterkünfte"],       [4415, "Die Violette Festung"],         [3714, "Die zerschmetterten Hallen"],
+                            [3849, "Die Mechanar"],                 [4809, "Die Seelenschmiede"],           [3717, "Die Sklavenunterkünfte"],       [3717, "Frostfürst Ahune"],             [4415, "Die Violette Festung"],         [3714, "Die zerschmetterten Hallen"],
                             [4196, "Feste Drak'Tharon"],            [4813, "Grube von Saron"],              [4416, "Gundrak"],                      [4820, "Hallen der Reflexion"],         [3562, "Höllenfeuerbollwerk"],
                             [3792, "Managruft"],                    [4723, "Prüfung des Champions"],        [3789, "Schattenlabyrinth"],            [3791, "Sethekkhallen"],                [4131, "Terrasse der Magister"],
                             [1196, "Turm Utgarde"],                 [2367, "Vorgebirge des Alten Hügellands"]

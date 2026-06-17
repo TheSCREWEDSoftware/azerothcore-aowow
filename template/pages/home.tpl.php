@@ -47,7 +47,7 @@ endif;
 
 if ($this->featuredBox):
 ?>
-        <div class="home-featuredbox<?=(empty($this->featuredBox['extraWide']) ? null : ' home-featuredbox-extended'); ?>" style="background-image: url(<?=$this->featuredBox['boxBG']; ?>);" id="home-featuredbox">
+        <div class="home-featuredbox<?=(empty($this->featuredBox['extraWide']) ? null : ' home-featuredbox-extended'); ?>" id="home-featuredbox">
 <?php if ($this->featuredBox['overlays']): ?>
             <div class="home-featuredbox-links">
 <?php
@@ -82,14 +82,33 @@ endif;
 
     <div class="footer">
         <div class="footer-links linklist">
-            <a href="?aboutus"><?=Lang::main('aboutUs'); ?></a>|<a href="https://github.com/azerothcore/aowow" target="_blank">Github</a>|<a href="#" id="footer-links-language"><?=Lang::main('language'); ?></a>
+            <a href="?aboutus"><?=Lang::main('aboutUs'); ?></a>|<a href="https://github.com/azerothcore/aowow" target="_blank">Github</a>
         </div>
         <div class="footer-copy">
-            &#12484; 2025 Aowow<br />
-            rev. <?=AOWOW_REVISION; ?>
-            <br>
-            AzerothCore rev: <a href="https://github.com/azerothcore/azerothcore-wotlk/commit/804769400bcb">804769400bcb</a>
+            <?=date('Y'); ?> AoWoW fork from <a href="https://github.com/Sarjuuk">Sarjuuk</a>'s <a href="https://github.com/Sarjuuk/aowow">AoWoW</a><br />
+            AzerothCore rev: <?php if ($this->acRev && $this->acRev !== 'Custom build'): ?><a href="https://github.com/azerothcore/azerothcore-wotlk/commit/<?=$this->acRev; ?>"><?=$this->acRev; ?></a><?php else: ?><?=$this->acRev ?: 'Custom build'; ?><?php endif; ?>
         </div>
+<?php if ($this->dbTimes): ?>
+        <div class="footer-dbtimes">
+            <table>
+<?php if (isset($this->dbTimes['app'])): ?>
+                <tr><td class="label">Last modification of AoWoW:</td><td class="value"><?=$this->dbTimes['app']; ?></td></tr>
+<?php endif; ?>
+<?php if (isset($this->dbTimes['aowow_db'])): ?>
+                <tr><td class="label">Last modification of AoWoW DB:</td><td class="value"><?=$this->dbTimes['aowow_db']; ?></td></tr>
+<?php endif; ?>
+<?php if (isset($this->dbTimes['world'])): ?>
+                <tr><td class="label">Last modification of World DB:</td><td class="value"><?=$this->dbTimes['world']; ?></td></tr>
+<?php endif; ?>
+<?php if (isset($this->dbTimes['chars'])): ?>
+                <tr><td class="label">Last modification of Characters DB:</td><td class="value"><?=$this->dbTimes['chars']; ?></td></tr>
+<?php endif; ?>
+<?php if (isset($this->dbTimes['auth'])): ?>
+                <tr><td class="label">Last modification of Auth DB:</td><td class="value"><?=$this->dbTimes['auth']; ?></td></tr>
+<?php endif; ?>
+            </table>
+        </div>
+<?php endif; ?>
     </div>
 
 <?php $this->brick('pageTemplate'); ?>

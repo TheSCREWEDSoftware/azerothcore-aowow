@@ -5,9 +5,7 @@
 --   8    = mod,       16 = bureau,  32 = dev,      50  = employee (admin|bureau|dev)
 --   1726 = staff (admin|editor|mod|bureau|dev|blogger|localizer|salesagent)
 -- override_group: NULL = use default_group; any valid bitmask = staff override
-DROP TABLE IF EXISTS `aowow_page_config`;
-
-CREATE TABLE `aowow_page_config` (
+CREATE TABLE IF NOT EXISTS `aowow_page_config` (
     `name`           varchar(100)  NOT NULL                  COMMENT 'dot-notation key identifying the page element',
     `label`          varchar(200)  NOT NULL DEFAULT ''        COMMENT 'human-readable description shown in staff UI',
     `default_group`  int unsigned  NOT NULL DEFAULT 0         COMMENT 'hardcoded default U_GROUP_* bitmask from PHP source',
@@ -18,5 +16,5 @@ CREATE TABLE `aowow_page_config` (
 -- Only seed entries for genuinely optional user-facing features.
 -- Staff access controls (employee_info, excluded lists, etc.) stay as hardcoded
 -- User::isInGroup() checks in PHP — no need to expose them here.
-INSERT INTO `aowow_page_config` (`name`, `label`, `default_group`) VALUES
+INSERT IGNORE INTO `aowow_page_config` (`name`, `label`, `default_group`) VALUES
     ('npc.gossip', 'Show gossip dialogue section on NPC pages [Default: Everyone]', 0);
