@@ -12,8 +12,8 @@ class MapsPage extends GenericPage
     protected $path          = [1, 1];
     protected $mode          = CACHE_TYPE_NONE;
     protected $scripts       = array(
-        [SC_JS_FILE, 'js/maps.js'],
-        [SC_CSS_STRING, 'zone-picker { margin-left: 4px }']
+        [SC_JS_FILE,  'js/maps.js'],
+        [SC_CSS_FILE, 'css/maps.css']
     );
 
     public function __construct($pageCall, $__)

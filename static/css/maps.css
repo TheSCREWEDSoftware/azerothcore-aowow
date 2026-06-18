@@ -1,0 +1,245 @@
+/* ── Maps page nav ──────────────────────────────── */
+
+#maps-nav-wrapper {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    padding: 0;
+    margin-bottom: 10px;
+}
+
+#maps-nav {
+    display: flex;
+    list-style: none;
+    margin: 0; padding: 0;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ── Nav links ───────────────────────────────────── */
+
+#maps-nav > li > a,
+#maps-nav > li > .maps-nav-head,
+#maps-nav > li > span.maps-nav-head {
+    display: block;
+    padding: 8px 14px;
+    color: #ffd100;
+    text-decoration: none;
+    white-space: nowrap;
+    font-size: 14px;
+    cursor: pointer;
+    line-height: 1.4;
+    background: none;
+    border: none;
+}
+
+/* Simple links (Cosmic Map, Azeroth) */
+#maps-nav > li > a:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.06);
+}
+
+/* Hovered/open group header */
+#maps-nav > li.maps-nav-group:hover > .maps-nav-head,
+#maps-nav > li.maps-nav-group:hover > span.maps-nav-head,
+#maps-nav > li.maps-nav-group.open > .maps-nav-head,
+#maps-nav > li.maps-nav-group.open > span.maps-nav-head {
+    color: #fff;
+    background: rgba(255,255,255,0.06);
+}
+
+/* Non-clickable group headers (Raids, Dungeons, Battlegrounds) */
+#maps-nav > li > span.maps-nav-head {
+    cursor: default;
+}
+
+/* Down arrow on items with a dropdown */
+#maps-nav > li.maps-nav-group > .maps-nav-head::after,
+#maps-nav > li.maps-nav-group > span.maps-nav-head::after {
+    content: ' ▾';
+    font-size: 10px;
+    opacity: 0.7;
+}
+
+/* group — position context */
+#maps-nav > li.maps-nav-group {
+    position: relative;
+    align-self: flex-start;
+}
+
+/* ── Dropdown panel ─────────────────────────────── */
+
+.maps-nav-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    background: #0d0d0d;
+    border: 1px solid #444;
+    border-radius: 3px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.8);
+    z-index: 200;
+    min-width: 0;
+}
+
+/* Show when open — driven by JS .open class for reliability */
+#maps-nav > li.maps-nav-group.open > .maps-nav-dropdown {
+    display: block;
+}
+
+#maps-nav > li.maps-nav-group.open > .maps-nav-dropdown.maps-exp-grouped {
+    display: flex;
+}
+
+/* continent dropdowns — 2 columns, auto width */
+.maps-nav-dropdown:not(.maps-exp-grouped) {
+    columns: 2;
+    column-gap: 1px;
+    column-rule: 1px solid #444;
+    width: max-content;
+}
+
+.maps-nav-dropdown li {
+    break-inside: avoid;
+}
+
+/* General dropdown links — left-only shadow so each divider is owned by exactly one cell */
+.maps-nav-dropdown li a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 16px 4px 24px;
+    color: #ffd100;
+    text-decoration: none;
+    white-space: nowrap;
+    font-size: 14px;
+    line-height: 1.6;
+    box-shadow: -1px 0 0 0 #444;
+}
+
+.maps-nav-dropdown li a:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.06);
+}
+
+/* Last column also needs a right shadow */
+.maps-exp-col:last-child li a {
+    box-shadow: -1px 0 0 0 #444, 1px 0 0 0 #444;
+}
+
+/* Last cell per column: add bottom */
+.maps-exp-col > ul > li:last-child > a {
+    box-shadow: -1px 0 0 0 #444, 0 1px 0 0 #444;
+}
+.maps-exp-col:last-child > ul > li:last-child > a {
+    box-shadow: -1px 0 0 0 #444, 1px 0 0 0 #444, 0 1px 0 0 #444;
+}
+
+/* Expansion icon images */
+.maps-exp-img {
+    height: 13px;
+    width: auto;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+}
+
+/* ── Expansion-grouped (raids/dungeons/battlegrounds) */
+
+.maps-nav-dropdown.maps-exp-grouped {
+    display: none;
+    flex-direction: row;
+    align-items: flex-start;
+    columns: unset;
+    width: max-content;
+    min-width: unset;
+    padding: 0;
+    left: 0;
+}
+
+.maps-exp-col {
+    padding: 0;
+    width: max-content;
+}
+
+
+.maps-exp-col > ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Icon always sits after the name (right side) */
+.maps-nav-dropdown li a .maps-exp-img {
+    order: 1;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* ── Mapper layout ──────────────────────────────── */
+
+#mapper-wrap {
+    position: relative;
+}
+
+#mapper {
+    width: 778px;
+    margin: 0 auto;
+}
+
+#mapper-controls {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 180px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid #333;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+.mapper-ctrl-check {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 7px;
+    color: #ffd100;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 0 8px;
+    border-bottom: 1px solid #333;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.mapper-ctrl-check input[type=checkbox] {
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: #ffd100;
+}
+
+.mapper-ctrl-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 7px;
+    color: #ffd100;
+    text-decoration: none;
+    padding: 5px 0;
+    line-height: 1;
+}
+
+.mapper-ctrl-link:hover {
+    color: #fff;
+}
+
+.mapper-ctrl-link svg {
+    flex-shrink: 0;
+}

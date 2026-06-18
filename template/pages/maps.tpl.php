@@ -10,53 +10,62 @@
     $this->brick('pageTemplate');
 ?>
 
+            <nav id="maps-nav-wrapper">
+                <ul id="maps-nav">
+                    <li><a href="javascript:;" onclick="ma_SelectZone(-4); return false"><?=Lang::maps('CosmicMap'); ?></a></li>
+                    <li><a href="javascript:;" onclick="ma_SelectZone(-1); return false"><?=Lang::maps('Azeroth'); ?></a></li>
+                    <li class="maps-nav-group">
+                        <a class="maps-nav-head" href="javascript:;" onclick="ma_SelectZone(-3); return false"><?=Lang::maps('EasternKingdoms'); ?></a>
+                        <ul class="maps-nav-dropdown" id="maps-ek"></ul>
+                    </li>
+                    <li class="maps-nav-group">
+                        <a class="maps-nav-head" href="javascript:;" onclick="ma_SelectZone(-6); return false"><?=Lang::maps('Kalimdor'); ?></a>
+                        <ul class="maps-nav-dropdown" id="maps-kalimdor"></ul>
+                    </li>
+                    <li class="maps-nav-group">
+                        <a class="maps-nav-head" href="javascript:;" onclick="ma_SelectZone(-2); return false"><?=Lang::maps('Outland'); ?></a>
+                        <ul class="maps-nav-dropdown" id="maps-outland"></ul>
+                    </li>
+                    <li class="maps-nav-group">
+                        <a class="maps-nav-head" href="javascript:;" onclick="ma_SelectZone(-5); return false"><?=Lang::maps('Northrend'); ?></a>
+                        <ul class="maps-nav-dropdown" id="maps-northrend"></ul>
+                    </li>
+                    <li class="maps-nav-group">
+                        <span class="maps-nav-head"><?=Lang::maps('Raids'); ?></span>
+                        <ul class="maps-nav-dropdown" id="maps-raids"></ul>
+                    </li>
+                    <li class="maps-nav-group">
+                        <span class="maps-nav-head"><?=Lang::maps('Dungeons'); ?></span>
+                        <ul class="maps-nav-dropdown" id="maps-dungeons"></ul>
+                    </li>
+                    <li class="maps-nav-group">
+                        <span class="maps-nav-head"><?=Lang::maps('Battlegrounds'); ?></span>
+                        <ul class="maps-nav-dropdown" id="maps-battlegrounds"></ul>
+                    </li>
+                </ul>
+            </nav>
+
             <div class="text">
-                <div style="text-align: center">
-                    <div class="text">
-                        <div style="text-align: center">
-                            <select id="maps-ek" onchange="ma_ChooseZone(this)" class="zone-picker" style="margin: 0">
-                                <option value="0" style="color: #bbbbbb"><?=Lang::maps('EasternKingdoms'); ?></option>
-                            </select>
-                            <select id="maps-kalimdor" onchange="ma_ChooseZone(this)" class="zone-picker">
-                                <option value="0" style="color: #bbbbbb"><?=Lang::maps('Kalimdor'); ?></option>
-                            </select>
-                            <select id="maps-outland" onchange="ma_ChooseZone(this)" class="zone-picker">
-                                <option value="0" style="color: #bbbbbb"><?=Lang::maps('Outland'); ?></option>
-                            </select>
-                            <select id="maps-northrend" onchange="ma_ChooseZone(this)" class="zone-picker">
-                                <option value="0" style="color: #bbbbbb"><?=Lang::maps('Northrend'); ?></option>
-                            </select>
-                            <div style="padding-bottom: 4px"></div>
-                            <select onchange="ma_ChooseZone(this)" class="zone-picker">
-                                <option value="0" style="color: #bbbbbb"><?=Lang::maps('Instances'); ?></option>
-                                <optgroup label="<?=Lang::maps('Dungeons'); ?>" id="maps-dungeons"></optgroup>
-                                <optgroup label="<?=Lang::maps('Raids'); ?>" id="maps-raids"></optgroup>
-                            </select>
-                            <select onchange="ma_ChooseZone(this)" class="zone-picker">
-                                <option value="0" style="color: #bbbbbb"><?=Lang::maps('More'); ?></option>
-                                <optgroup label="<?=Lang::maps('Battlegrounds'); ?>" id="maps-battlegrounds"></optgroup>
-                                <optgroup label="<?=Lang::maps('Miscellaneous'); ?>">
-                                    <option value="-1"><?=Lang::maps('Azeroth'); ?></option>
-                                    <option value="-3"><?=Lang::maps('EasternKingdoms'); ?></option>
-                                    <option value="-6"><?=Lang::maps('Kalimdor'); ?></option>
-                                    <option value="-2"><?=Lang::maps('Outland'); ?></option>
-                                    <option value="-5"><?=Lang::maps('Northrend'); ?></option>
-                                    <option value="-4"><?=Lang::maps('CosmicMap'); ?></option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div id="mapper" style="display: none; width: 778px; margin: 0 auto">
-                            <div id="mapper-generic"></div>
-                            <div class="pad"></div>
-                            <div style="text-align: center; font-size: 13px">
-                                <a href="javascript:;" style="margin-right: 2em" id="link-to-this-map"><?=Lang::maps('linkToThisMap'); ?></a>
-                                <a href="javascript:;" onclick="myMapper.setCoords([])" onmousedown="return false"><?=Lang::maps('clear'); ?></a>
-                            </div>
-                        </div>
-                        <script type="text/javascript">ma_Init();</script>
+                <div id="mapper-wrap" style="display: none">
+                    <div id="mapper-controls">
+                        <label class="mapper-ctrl-check">
+                            <span>Scroll to map</span>
+                            <input type="checkbox" id="centre-on-change" checked>
+                        </label>
+                        <a href="javascript:;" id="link-to-this-map" class="mapper-ctrl-link">
+                            <?=Lang::maps('linkToThisMap'); ?>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        </a>
+                        <a href="javascript:;" class="mapper-ctrl-link" onclick="myMapper.setCoords([])" onmousedown="return false">
+                            <?=Lang::maps('clear'); ?>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </a>
                     </div>
-                    <div class="clear"></div>
+                    <div id="mapper">
+                        <div id="mapper-generic"></div>
+                    </div>
                 </div>
+                <script type="text/javascript">ma_Init();</script>
             </div>
 
         </div><!-- main-contents -->
