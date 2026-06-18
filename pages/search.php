@@ -45,6 +45,8 @@ class SearchPage extends GenericPage
         'opensearch' => ['filter' => FILTER_CALLBACK, 'options' => 'GenericPage::checkEmptySet']
     );
 
+    private const /* array */ SPECIAL_TOKENS = ['mankrik', 'wife'];
+
     private   $maxResults    = 500;
     private   $searchMask    = 0x0;
     private   $query         = '';                          // lookup
@@ -66,6 +68,18 @@ class SearchPage extends GenericPage
 
         $this->search =
         $this->query  = trim(urlDecode($pageParam));
+
+        // mankrik's beaten corpse easteregg
+        $i = 0;
+        foreach (self::SPECIAL_TOKENS as $tok)
+            if (stripos($this->query, $tok) !== false)
+                $i++;
+
+        if ($i == count(self::SPECIAL_TOKENS))
+        {
+            header('Location: ?maps=17:493504246248246262246275246287246302246314220234233234242234262234251234272234290236291248291260291277291289291310291322299277310277319277332254332240332267332277332318334300369236370275371310410312398312387306379306369295370258378238388236380266393266401266398234411234430236430279431316431297431254441233459234466246461258455269445281455295466306475316505229503304503287503273505256516234511310520314549312515267527267534267528233540233549233430267505240579330579347579366572390562403549419519407588328612374612353607388602405595425589436575454582446531413538421569491514487527493549491511473512458516425558491601326585481567467615335608322577475531314538314452229512438536493577491', true, 302);
+            exit;
+        }
 
         // sanitize stat weights
         if ($this->_get['wt'] && $this->_get['wtv'])
