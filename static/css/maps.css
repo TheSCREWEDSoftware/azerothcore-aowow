@@ -125,17 +125,10 @@
     background: rgba(255,255,255,0.06);
 }
 
-/* Last column also needs a right shadow */
-.maps-exp-col:last-child li a {
-    box-shadow: -1px 0 0 0 #444, 1px 0 0 0 #444;
-}
-
-/* Last cell per column: add bottom */
-.maps-exp-col > ul > li:last-child > a {
-    box-shadow: -1px 0 0 0 #444, 0 1px 0 0 #444;
-}
-.maps-exp-col:last-child > ul > li:last-child > a {
-    box-shadow: -1px 0 0 0 #444, 1px 0 0 0 #444, 0 1px 0 0 #444;
+/* Grouped dropdowns draw borders on the COLUMN, not the cell (see below),
+   so the per-cell divider shadow is cleared here to avoid doubling. */
+.maps-nav-dropdown.maps-exp-grouped li a {
+    box-shadow: none;
 }
 
 /* Expansion icon images */
@@ -158,11 +151,24 @@
     min-width: unset;
     padding: 0;
     left: 0;
+    border: none;           /* the columns supply every visible border */
+    overflow: hidden;       /* clip square column corners to the panel radius */
 }
 
+/* Each column owns a full box (left + right + top + bottom) at its own
+   natural height. A short neighbour therefore never leaves a taller
+   column's lower cells without a right edge. The bottom border sits under
+   the last rendered cell of every column. */
 .maps-exp-col {
     padding: 0;
     width: max-content;
+    border: 1px solid #444;
+}
+
+/* Overlap adjacent columns by 1px so the shared vertical divider
+   collapses to a single line instead of doubling up. */
+.maps-exp-col + .maps-exp-col {
+    margin-left: -1px;
 }
 
 
