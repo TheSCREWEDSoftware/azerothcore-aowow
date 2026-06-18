@@ -125,8 +125,8 @@
     background: rgba(255,255,255,0.06);
 }
 
-/* Grouped dropdowns draw borders on the COLUMN, not the cell (see below),
-   so the per-cell divider shadow is cleared here to avoid doubling. */
+/* Grouped dropdowns get every border from the column box (below), so the
+   inherited per-cell side shadow is cleared. */
 .maps-nav-dropdown.maps-exp-grouped li a {
     box-shadow: none;
 }
@@ -145,31 +145,31 @@
 .maps-nav-dropdown.maps-exp-grouped {
     display: none;
     flex-direction: row;
-    align-items: flex-start;
+    align-items: flex-start; /* each column keeps its own (ragged) height */
     columns: unset;
     width: max-content;
     min-width: unset;
     padding: 0;
     left: 0;
-    border: none;           /* the columns supply every visible border */
-    overflow: hidden;       /* clip square column corners to the panel radius */
+    border: none;            /* no outer frame — columns draw all borders, so
+                                the empty area below a short column is never
+                                boxed in */
 }
 
-/* Each column owns a full box (left + right + top + bottom) at its own
-   natural height. A short neighbour therefore never leaves a taller
-   column's lower cells without a right edge. The bottom border sits under
-   the last rendered cell of every column. */
+/* Each column is an independent box at its natural height. Top and bottom are
+   always drawn (bottom sits under the column's last cell). Left and right are
+   added only by the column that OWNS that seam — the taller of the two
+   neighbours, chosen in JS (ma_AddGroupedOptions). One owner per seam means
+   every divider is a single 1px line that can never double into a thick one,
+   and the divider still spans the taller column so no cell is left edgeless. */
 .maps-exp-col {
     padding: 0;
     width: max-content;
-    border: 1px solid #444;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
 }
-
-/* Overlap adjacent columns by 1px so the shared vertical divider
-   collapses to a single line instead of doubling up. */
-.maps-exp-col + .maps-exp-col {
-    margin-left: -1px;
-}
+.maps-exp-col.mec-bl { border-left: 1px solid #444; }
+.maps-exp-col.mec-br { border-right: 1px solid #444; }
 
 
 .maps-exp-col > ul {

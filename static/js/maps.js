@@ -154,6 +154,8 @@ function ma_AddOptions(container, ids, expIdx) {
 function ma_AddGroupedOptions(container, groups) {
     container.classList.add('maps-exp-grouped');
 
+    var cols = [];   // { el, count } for each rendered column
+
     groups.forEach(function (group) {
         var expIdx = group[0];
         var ids    = group[1].slice().sort(ma_Sort).filter(function (id) {
@@ -186,6 +188,22 @@ function ma_AddGroupedOptions(container, groups) {
         });
         col.appendChild(ul);
         container.appendChild(col);
+        cols.push({ el: col, count: ids.length });
+    });
+
+    // Assign each vertical seam to exactly one column — the taller of the two
+    // neighbours (ties go to the left). That column draws the shared border, so
+    // it stays a single 1px line (never doubled/thick) and it spans the taller
+    // column, so the shorter neighbour's cells are still edged. The outermost
+    // left/right edges are always drawn.
+    cols.forEach(function (c, i) {
+        var leftCount  = i > 0               ? cols[i - 1].count : -1;
+        var rightCount = i < cols.length - 1 ? cols[i + 1].count : -1;
+
+        if (i === 0 || c.count > leftCount)                 // owns left seam / outer left
+            c.el.classList.add('mec-bl');
+        if (i === cols.length - 1 || c.count >= rightCount) // owns right seam / outer right
+            c.el.classList.add('mec-br');
     });
 }
 
