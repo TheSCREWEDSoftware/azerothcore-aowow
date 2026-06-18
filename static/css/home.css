@@ -70,7 +70,6 @@
     font-size:12px;
 }
 
-/* TauriShoot-style card */
 .home-featuredbox {
     font-size:15px;
     position:relative;
@@ -157,7 +156,6 @@ body, html {
     border:0;
 }
 
-/* TauriShoot-style modification times — bottom right, table layout */
 .footer-dbtimes {
     position:fixed;
     bottom:0;
