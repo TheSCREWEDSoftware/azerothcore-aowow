@@ -46,15 +46,14 @@ endif;
 
 if (isset($this->smartAI)):
 ?>
-    <div id="text-generic" class="left"></div>
+                <h3><a class="disclosure-off" onclick="return g_disclose($WH.ge('text-generic'), this)">Smart AI</a></h3>
+                <div id="text-generic" class="left" style="display: none"></div>
     <script type="text/javascript">//<![CDATA[
         Markup.printHtml("<?=$this->smartAI; ?>", "text-generic", {
             allow: Markup.CLASS_ADMIN,
             dbpage: true
         });
     //]]></script>
-
-    <div class="pad2"></div>
 <?php
 endif;
 

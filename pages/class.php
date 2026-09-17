@@ -82,7 +82,7 @@ class ClassPage extends GenericPage
         $specList = [];
         $skills = new SkillList(array(['id', $this->subject->getField('skills')]));
         foreach ($skills->iterate() as $k => $__)
-            $specList[$k] = '[icon name='.$skills->getField('iconString').'][url=?spells=7.'.$this->typeId.'.'.$k.']'.$skills->getField('name', true).'[/url][/icon]';
+            $specList[$k] = '[icon name='.$skills->getField('iconString').' size=small][url=?spells=7.'.$this->typeId.'.'.$k.']'.$skills->getField('name', true).'[/url][/icon]';
 
         if ($specList)
             $infobox[] = Lang::game('specs').Lang::main('colon').'[ul][li]'.implode('[/li][li]', $specList).'[/li][/ul]';

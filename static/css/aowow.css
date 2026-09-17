@@ -1254,6 +1254,11 @@ Variations:
     background: url(../images/icons/alliance.gif) left center no-repeat;
 }
 
+/* Center 8px alliance icon in the .menu a's 24px left padding slot */
+.menu a.icon-alliance {
+    background-position: 8px center;
+}
+
 .icon-alliance-padded {
     padding-left: 18px;
     background: url(../images/icons/alliance.gif) 4px center no-repeat;
@@ -1357,6 +1362,11 @@ Variations:
 .icon-horde {
     padding-left: 18px;
     background: url(../images/icons/horde.gif) left center no-repeat;
+}
+
+/* Center 14px horde icon in the .menu a's 24px left padding slot */
+.menu a.icon-horde {
+    background-position: 5px center;
 }
 
 .icon-instance1,
@@ -2291,9 +2301,51 @@ div.live-search-icon-quest-horde {
 /* foreign pool members: same color, diamond shape */
 .mapper .pin-alt a { transform: rotate(45deg); border-radius: 1px; }
 
+/* ── Spawn-pool colours (15) ─────────────────────────────────────────────
+   Pools cycle through the 15 original mapper pin colours (rendered by the
+   existing global pin-N images/filters). The hex values below mirror what each
+   pin renders, so the legend text and tooltip text match the pin. */
+:root {
+    --pool-color-1:  #62c345;  --pool-color-2:  #ef4119;  --pool-color-3:  #2aadd7;  --pool-color-4:  #dd25e3;
+    --pool-color-5:  #ffb349;  --pool-color-6:  #a0d832;  --pool-color-7:  #69e64b;  --pool-color-8:  #2fedb3;
+    --pool-color-9:  #36e5f0;  --pool-color-10: #55d6ff;  --pool-color-11: #c2b1ff;  --pool-color-12: #fea1ff;
+    --pool-color-13: #ff93ec;  --pool-color-14: #ff97af;  --pool-color-15: #ffa376;
+}
+
 /* pool legend toggle */
 .pool-toggle { display: inline-block; }
 .pool-toggle-off { opacity: 0.35; text-decoration: line-through; }
+
+/* tooltip + legend text colour, one per pool (matches the pin) */
+.pool-c-1  { color: var(--pool-color-1);  }
+.pool-c-2  { color: var(--pool-color-2);  }
+.pool-c-3  { color: var(--pool-color-3);  }
+.pool-c-4  { color: var(--pool-color-4);  }
+.pool-c-5  { color: var(--pool-color-5);  }
+.pool-c-6  { color: var(--pool-color-6);  }
+.pool-c-7  { color: var(--pool-color-7);  }
+.pool-c-8  { color: var(--pool-color-8);  }
+.pool-c-9  { color: var(--pool-color-9);  }
+.pool-c-10 { color: var(--pool-color-10); }
+.pool-c-11 { color: var(--pool-color-11); }
+.pool-c-12 { color: var(--pool-color-12); }
+.pool-c-13 { color: var(--pool-color-13); }
+.pool-c-14 { color: var(--pool-color-14); }
+.pool-c-15 { color: var(--pool-color-15); }
+
+/* tip shown below the map when some pools live on other zones */
+#pool-other-maps-tip { margin: 2px 0 8px; font-size: 11px; color: #9d9d9d; }
+#pool-other-maps-tip b { color: #c0c0c0; font-weight: normal; }
+
+/* cursor-centred "pool zoom": only the inner map layer (span) scales, clipped to
+   the mapper box; buttons and tips stay in the parent and don't move. */
+.mapper.pool-zoom-on > span { transition: transform .05s linear; will-change: transform; backface-visibility: hidden; }
+.pool-zoom-hint {
+    position: absolute; bottom: 0; left: 2px; z-index: 50;
+    color: #fff; font-size: 11px; font-weight: bold; white-space: nowrap;
+    text-shadow: 0 0 2px #000, 0 0 3px #000, 1px 1px 2px #000;
+    pointer-events: none;
+}
 
 .mapper .pin-start a {
     background-image: url(../images/Mapper/quest-start.png);
@@ -2453,12 +2505,17 @@ z-index: 100000002;
 
 .menu a {
     display: block;
-    padding: 4px 4px 4px 24px;
+    padding: 4px 8px 4px 8px;
     text-decoration: none;
     border-top: 1px solid #484848;
     border-bottom: 1px solid #101010;
     white-space: nowrap;
     font-size: 13px;
+}
+
+/* Items with icons need left room for the icon */
+.menu a.tinyicon, .menu a.smallicon, .menu a.icon {
+    padding-left: 24px;
 }
 
 .menu a span {
@@ -2510,6 +2567,34 @@ z-index: 100000002;
     background-position: 4px center;
     background-repeat: no-repeat;
     padding-left: 24px;
+}
+
+/* Bordered tiny icons in menu items — same cell size as tinyicon, border via ::after */
+.menu a.smallicon {
+    background-position: 4px center;
+    background-repeat: no-repeat;
+    padding-left: 24px;
+    position: relative;
+}
+.menu a.smallicon::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    background-image: url(../images/Icon/tiny/border/default.gif);
+    background-repeat: no-repeat;
+    pointer-events: none;
+}
+
+/* Right-side expansion icons need explicit padding override (higher specificity than .icon-bc-right) */
+.menu a.icon-bc-right {
+    padding-right: 34px;
+}
+.menu a.icon-wotlk-right {
+    padding-right: 41px;
 }
 
 .menu a.socket-meta, .menu a.socket-red, .menu a.socket-yellow, .menu a.socket-blue, .menu a.socket-prismatic, .menu a.socket-hydraulic, .menu a.socket-cogwheel {

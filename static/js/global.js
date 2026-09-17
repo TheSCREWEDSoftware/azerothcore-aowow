@@ -17272,6 +17272,11 @@ var Menu = new function()
         {
             $a.addClass('checked');
         }
+        else if(opt.smallIcon)
+        {
+            $a.addClass('smallicon');
+            $a.css('background-image', 'url(' + g_staticUrl + '/images/wow/icons/tiny/' + opt.smallIcon.toLowerCase() + '.gif)');
+        }
         else if(opt.tinyIcon)
         {
             $a.addClass('tinyicon');
@@ -17358,7 +17363,7 @@ var Menu = new function()
             if(isSeparator(menuItem))
             {
                 groupedMenu = [];
-                result.push([0, menuItem[MENU_IDX_NAME], null, groupedMenu]);
+                result.push([0, menuItem[MENU_IDX_NAME], null, groupedMenu, menuItem[MENU_IDX_OPT]]);
             }
             else
             {
@@ -17610,8 +17615,16 @@ var Menu = new function()
             $a.addClass('separator');
             $a.text(menuItem[MENU_IDX_NAME]);
 
+            var opt = self.getItemOpt(menuItem);
+            if(opt.colBreak)
+                $a.addClass('col-break');
+
             return $a;
         }
+
+        var opt2 = self.getItemOpt(menuItem);
+        if(opt2.colBreak)
+            $a.addClass('col-break');
 
         var $span = $('<span></span>');
         $span.text(menuItem[MENU_IDX_NAME]);
@@ -17631,6 +17644,34 @@ var Menu = new function()
         var nItems = $menuItems.length;
         var availableHeight = $w.height() - (SIZE_BORDER_HEIGHT * 2) - SIZE_SHADOW_HEIGHT;
         var nItemsThatCanFit = Math.floor(Math.max(0, availableHeight) / SIZE_MENUITEM_HEIGHT);
+
+        // Forced column breaks (takes priority over auto-column calculation)
+        // Note: $menuItems contains jQuery objects (not raw DOM nodes), so .filter() won't
+        // match CSS classes — use .each() with $(this).hasClass() instead.
+        var hasColBreaks = false;
+        $menuItems.each(function() { if($(this).hasClass('col-break')) { hasColBreaks = true; return false; } });
+        if(hasColBreaks)
+        {
+            var $holder = $('<div></div>');
+            var $outerDiv = $('<div class="menu-outer"></div>');
+            var $innerDiv = $('<div class="menu-inner"></div>');
+
+            $menuItems.each(function()
+            {
+                if($(this).hasClass('col-break') && $innerDiv.children().length > 0)
+                {
+                    $outerDiv.append($innerDiv);
+                    $holder.append($outerDiv);
+                    $outerDiv = $('<div class="menu-outer"></div>');
+                    $innerDiv = $('<div class="menu-inner"></div>');
+                }
+                $innerDiv.append(this);
+            });
+
+            $outerDiv.append($innerDiv);
+            $holder.append($outerDiv);
+            return $holder;
+        }
 
         // 1 column
         if(nItemsThatCanFit >= nItems)
@@ -17931,7 +17972,7 @@ var Menu = new function()
         $.each(implodedMenu, function(idx, menuItem)
         {
             if(menuItem[MENU_IDX_NAME])
-                menu.push([, menuItem[MENU_IDX_NAME]]); // Heading
+                menu.push([, menuItem[MENU_IDX_NAME],,,menuItem[MENU_IDX_OPT]]); // Heading
 
             $.each(menuItem[MENU_IDX_SUB], function(idx, menuItem)
             {

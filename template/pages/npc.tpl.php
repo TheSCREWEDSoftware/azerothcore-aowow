@@ -84,21 +84,20 @@ endif;
 
 if (isset($this->smartAI)):
 ?>
-    <div id="text-generic" class="left"></div>
+                <h3><a class="disclosure-off" onclick="return g_disclose($WH.ge('text-generic'), this)">Smart AI</a></h3>
+                <div id="text-generic" class="left" style="display: none"></div>
     <script type="text/javascript">//<![CDATA[
         Markup.printHtml("<?=$this->smartAI; ?>", "text-generic", {
             allow: Markup.CLASS_ADMIN,
             dbpage: true
         });
     //]]></script>
-
-    <div class="pad2"></div>
 <?php
 endif;
 
-if (isset($this->gossipMenu) && PageCfg::can('npc.gossip', U_GROUP_EVERYONE)):
+if (isset($this->gossipMenu) && PageCfg::can('npc.gossip', U_GROUP_NONE)):
 ?>
-    <div id="text-gossip" class="left"></div>
+                <div id="text-gossip" class="left"></div>
     <script type="text/javascript">//<![CDATA[
         Markup.printHtml(<?=json_encode($this->gossipMenu); ?>, "text-gossip", {
             allow: Markup.CLASS_ADMIN,
@@ -123,8 +122,6 @@ if (isset($this->gossipMenu) && PageCfg::can('npc.gossip', U_GROUP_EVERYONE)):
         })();
 <?php endif; ?>
     //]]></script>
-
-    <div class="pad2"></div>
 <?php
 endif;
 ?>

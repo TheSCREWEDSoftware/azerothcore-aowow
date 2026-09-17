@@ -325,9 +325,10 @@ class ObjectPage extends GenericPage
                     $floor  = (int)$fs['floor'];
                     $opts   = [
                         'type'    => $fd['type'],
-                        'alt'     => true,
+                        'alt'     => true,                  // rotate 45° — foreign object sharing this pool
                         'tooltip' => [$fd['name'] => ['info' => [
-                            6 => 'Pool'.Lang::main('colon').$fd['pool'].' (max '.$fd['max'].' active)',
+                            6 => '<span class="pool-c-'.$fd['type'].'">Pool'.Lang::main('colon').$fd['pool'].' (max '.$fd['max'].' active)</span>',
+                            7 => '<span class="q0">shares this pool with '.$this->subject->getField('name', true).'</span>',
                         ]]],
                     ];
                     if (!isset($spawns[$areaId]))
@@ -357,6 +358,79 @@ class ObjectPage extends GenericPage
             foreach ($poolLegend as &$p)
                 $p['areas'] = array_keys($typeAreas[$p['type']] ?? []);
             unset($p);
+        }
+
+        // Merge pool spawns that share the same map grid cell (coords rounded to
+        // 1 decimal, as shown in tooltips, e.g. 41.0, 64.7). When a cell holds
+        // more than one distinct object, render a single 45° pin whose tooltip
+        // lists every object there — the searched object always first — which
+        // naturally covers one or several pools sharing that spot.
+        if ($poolLegend && $spawns)
+        {
+            $curName = $this->subject->getField('name', true);
+            foreach ($spawns as &$areaData)
+            {
+                foreach ($areaData as &$floorData)
+                {
+                    $cells = [];                            // "x|y" => [coord index, ...]
+                    foreach ($floorData['coords'] as $idx => $coord)
+                        $cells[number_format((float)$coord[0], 1).'|'.number_format((float)$coord[1], 1)][] = $idx;
+
+                    $newCoords = [];
+                    foreach ($cells as $idxs)
+                    {
+                        // collect the distinct objects (by tooltip name) in this cell
+                        $entries = [];
+                        $curType = $anyType = null;
+                        foreach ($idxs as $i)
+                        {
+                            $o = $floorData['coords'][$i][2];
+                            if (empty($o['tooltip']))
+                                continue;
+                            foreach ($o['tooltip'] as $nm => $data)
+                            {
+                                if (!isset($entries[$nm]))
+                                    $entries[$nm] = $data;
+                                if (isset($o['type']))
+                                {
+                                    if ($nm === $curName)  $curType = $o['type'];
+                                    if ($anyType === null) $anyType = $o['type'];
+                                }
+                            }
+                        }
+
+                        // 0 or 1 distinct object -> leave this cell's pins untouched
+                        if (count($entries) <= 1)
+                        {
+                            foreach ($idxs as $i)
+                                $newCoords[] = $floorData['coords'][$i];
+                            continue;
+                        }
+
+                        // >1 distinct object -> one 45° pin, searched object first
+                        $tt = [];
+                        if (isset($entries[$curName]))
+                        {
+                            $tt[$curName] = $entries[$curName];
+                            unset($entries[$curName]);
+                        }
+                        foreach ($entries as $nm => $data)
+                            $tt[$nm] = $data;
+
+                        $base = $floorData['coords'][$idxs[0]];
+                        $newCoords[] = [$base[0], $base[1], [
+                            'type'    => $curType ?? $anyType,
+                            'alt'     => true,
+                            'tooltip' => $tt,
+                        ]];
+                    }
+
+                    $floorData['coords'] = $newCoords;
+                    $floorData['count']  = count($newCoords);
+                }
+                unset($floorData);
+            }
+            unset($areaData);
         }
 
         $relBoss = null;
