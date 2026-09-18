@@ -1274,20 +1274,18 @@ var mn_guides = [
 
 var mn_tools = [
     [0,"Talent Calculator","?talent",mn_talentCalc],
+    [0,"Dressing Room [PH]",null],
+    [0,"Gear Planner [PH]",null],
+    [0,"Item Finder [PH]",null],
     [2,"Hunter Pet Calculator","?petcalc",mn_petCalc],
-    [3,"Item Comparison","?compare"],
-    [5,"Profiler","?profiler",[
-        [0,"Characters","?profiles"],
-        [2,"Guilds","?guilds"],
-        [3,"Arena Teams","?arena-teams"],
-        [1,"New","?profile&new"]
-    ]],
+    [0,"Quest Completion Tracker [PH]",null],
+    [0,"Raid Composition [PH]",null],
     [1,"Maps","?maps"],
-    [,"Other"],
-    [8,"Utilities",,[
-        [,"Database"],
-        // [0,"Latest Additions","?latest-additions"],
-        // [1,"Latest Articles","?latest-articles"],
+    [,"Other",,,{colBreak:true}],
+    [0,"Aowow Client [PH]",null],
+    [0,"Discord Webhook [PH]",null],
+    [0,"Tooltips [PH]",null],
+    [8,"Latest","?latest-comments",[
         [2,"Latest Comments","?latest-comments"],
         [3,"Latest Screenshots","?latest-screenshots"],
         [11,"Latest Videos","?latest-videos"],
@@ -1295,7 +1293,16 @@ var mn_tools = [
             [1,"Yesterday","?most-comments"],
             [7,"Past 7 Days","?most-comments=7"],
             [30,"Past 30 Days","?most-comments=30"]
-        ]],
+        ]]
+    ]],
+    [3,"Item Comparison","?compare"],
+    [5,"Profiler","?profiler",[
+        [0,"Characters","?profiles"],
+        [2,"Guilds","?guilds"],
+        [3,"Arena Teams","?arena-teams"],
+        [1,"New","?profile&new"]
+    ]],
+    [9,"Utilities",,[
         [5,"Unrated Comments","?unrated-comments"],
         [13,"Missing Screenshots","?missing-screenshots"],
         [4,"Random Page","?random"],
