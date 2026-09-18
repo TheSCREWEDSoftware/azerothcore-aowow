@@ -121,7 +121,9 @@ spl_autoload_register(function ($class) {
         require_once 'pages/' . strtr($class, ['page' => '']) . '.php';
 });
 
-set_error_handler(function ($errNo, $errStr, $errFile, $errLine) {
+$requestHadError = false;
+
+set_error_handler(function ($errNo, $errStr, $errFile, $errLine) use (&$requestHadError) {
     // either from test function or handled separately
     if (strstr($errStr, 'mysqli_connect') && $errNo == E_WARNING)
         return true;
@@ -147,6 +149,8 @@ set_error_handler(function ($errNo, $errStr, $errFile, $errLine) {
         case E_USER_DEPRECATED:
             return true;
     }
+
+    $requestHadError = true;
 
     if (DB::isConnected(DB_AOWOW))
         DB::Aowow()->query(
@@ -175,7 +179,8 @@ set_error_handler(function ($errNo, $errStr, $errFile, $errLine) {
 }, E_ALL);
 
 // handle exceptions
-set_exception_handler(function ($e) {
+set_exception_handler(function ($e) use (&$requestHadError) {
+    $requestHadError = true;
     if (DB::isConnected(DB_AOWOW))
         DB::Aowow()->query(
             'INSERT INTO ?_errors (`date`, `version`, `phpError`, `file`, `line`, `query`, `post`, `userGroups`, `message`) VALUES (UNIX_TIMESTAMP(), ?d, ?d, ?, ?d, ?, ?, ?d, ?) ON DUPLICATE KEY UPDATE `date` = UNIX_TIMESTAMP()',
@@ -198,8 +203,9 @@ set_exception_handler(function ($e) {
 });
 
 // handle fatal errors
-register_shutdown_function(function () {
+register_shutdown_function(function () use (&$requestHadError) {
     if ($e = error_get_last()) {
+        $requestHadError = true;
         if (DB::isConnected(DB_AOWOW))
             DB::Aowow()->query(
                 'INSERT INTO ?_errors (`date`, `version`, `phpError`, `file`, `line`, `query`, `post`, `userGroups`, `message`) VALUES (UNIX_TIMESTAMP(), ?d, ?d, ?, ?d, ?, ?, ?d, ?) ON DUPLICATE KEY UPDATE `date` = UNIX_TIMESTAMP()',
@@ -217,6 +223,30 @@ register_shutdown_function(function () {
             fwrite(STDERR, "\nFatal Error - " . $e['message'] . ' @ ' . $e['file'] . ':' . $e['line'] . "\n\n");
         else if (User::isInGroup(U_GROUP_EMPLOYEE))
             echo "\nFatal Error - " . $e['message'] . ' @ ' . $e['file'] . ':' . $e['line'] . "\n\n";
+    }
+});
+
+// auto-clear: if this request completed without triggering any errors for its query string, remove old entries for it;
+// also periodically purge entries older than ERRLOG_TTL (at most once per hour)
+register_shutdown_function(function () use (&$requestHadError) {
+    if (CLI || !DB::isConnected(DB_AOWOW))
+        return;
+
+    // per-query cleanup
+    if (!$requestHadError && !empty($_SERVER['QUERY_STRING']))
+        DB::Aowow()->query('DELETE FROM ?_errors WHERE `query` = ?', $_SERVER['QUERY_STRING']);
+
+    // periodic gc: delete entries older than errlog_ttl
+    $ttl = (int)Cfg::get('errlog_ttl');
+    if ($ttl > 0)
+    {
+        $gcFile = 'cache/setup/errlog_gc_ts';
+        $lastGc = file_exists($gcFile) ? (int)file_get_contents($gcFile) : 0;
+        if (time() - $lastGc >= 3600)
+        {
+            DB::Aowow()->query('DELETE FROM ?_errors WHERE `date` < ?d', time() - $ttl);
+            @file_put_contents($gcFile, time());
+        }
     }
 });
 

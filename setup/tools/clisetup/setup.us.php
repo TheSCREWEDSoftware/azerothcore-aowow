@@ -23,7 +23,8 @@ CLISetup::registerUtility(new class extends UtilityScript
 
     public const SITE_LOCK     = CLISetup::LOCK_ON;
 
-    private $startStep  = 0;
+    private $startStep    = 0;
+    private $optionalSteps = [];                             // isOptional scripts, presented for user selection
     private $dynArgs    = ['doSql' => [], 'doBuild' => []]; // ref to pass commands from 'update' to 'sync'
     private $steps      = array(
      // [staticUS, $name, [...args]]
@@ -64,13 +65,21 @@ CLISetup::registerUtility(new class extends UtilityScript
         foreach (CLISetup::getSubScripts() as $name => [$invoker, $ssRef])
         {
             if ($ssRef->isOptional)
+            {
+                // collect for user selection step
+                $this->optionalSteps[$name] = [$invoker, $ssRef];
                 continue;
+            }
 
             if ($invoker == 'sql')
                 array_splice($this->steps, -3, 0, [[$invoker, $name, ['doSql' => $name]]]);
             else if ($invoker == 'build')
                 array_splice($this->steps, -3, 0, [[$invoker, $name, ['doBuild' => $name]]]);
         }
+
+        # insert optional-selection step right after 'configure'
+        if (!empty($this->optionalSteps))
+            array_splice($this->steps, 2, 0, [['_optional_select', 'select optional data', []]]);
     }
 
     // args: null, null, null, null // nnnn
@@ -87,6 +96,20 @@ CLISetup::registerUtility(new class extends UtilityScript
 
                 if (file_exists('config/config.php'))
                 {
+                    // show current saved config so user knows what they're keeping or discarding
+                    $AoWoWconf = [];
+                    include 'config/config.php';
+                    CLI::write();
+                    CLI::write('  Current database configuration:');
+                    $dbOrder = ['aowow', 'world', 'auth', 'characters'];
+                    foreach ($dbOrder as $db)
+                    {
+                        if (empty($AoWoWconf[$db]))
+                            continue;
+                        $entry = is_array(reset($AoWoWconf[$db])) ? reset($AoWoWconf[$db]) : $AoWoWconf[$db];
+                        CLI::write('    '.str_pad(ucfirst($db).':', 14).' '.$entry['user'].'@'.$entry['host'].'/'.$entry['db']);
+                    }
+                    CLI::write();
                     CLI::read(['x' => ['Keep existing database configuration? [Y / N]', true, true, '/y|n/i']], $uiKeep);
                     if (!$uiKeep || strtolower($uiKeep['x']) == 'n')
                         unlink('config/config.php');
@@ -109,10 +132,76 @@ CLISetup::registerUtility(new class extends UtilityScript
         /* run */
         /*******/
 
-        foreach ($this->steps as $idx => [$usName, , $param])
+        for ($idx = $this->startStep; $idx < count($this->steps); $idx++)
         {
-            if ($this->startStep > $idx)
+            [$usName, , $param] = $this->steps[$idx];
+
+            /*****************************/
+            /* optional step selection   */
+            /*****************************/
+
+            if ($usName === '_optional_select')
+            {
+                CLI::write('[setup] step '.($idx + 1).' / '.count($this->steps).' (optional data selection)');
+                CLI::write();
+
+                $i = 1;
+                $optList = [];
+                foreach ($this->optionalSteps as $name => [$invoker, $ssRef])
+                {
+                    $desc = '';
+                    foreach ($ssRef->info ?? [] as $info)
+                        if (isset($info[2])) { $desc = $info[2]; break; }
+
+                    CLI::write('  ['.CLI::bold($i).'] '.str_pad($name, 16).' '.$desc);
+                    $optList[$i] = [$invoker, $name];
+                    $i++;
+                }
+                CLI::write();
+
+                $toInsert = [];
+                if (!CLI::read(['x' => ['Include all optional steps? [Y / N] (default: Y)', false, true, '/y|n/i']], $uiAll) || !$uiAll || strtolower($uiAll['x']) != 'n')
+                {
+                    $toInsert = array_values($optList);
+                }
+                else
+                {
+                    CLI::write('[setup] Enter numbers to include (comma-separated), or press ENTER to skip all:');
+                    if (CLI::read(['x' => ['', false, false, null]], $uiSel) && $uiSel && trim($uiSel['x']) !== '')
+                    {
+                        foreach (array_map('intval', explode(',', $uiSel['x'])) as $n)
+                            if (isset($optList[$n]))
+                                $toInsert[] = $optList[$n];
+                    }
+                }
+
+                // splice chosen optional steps in right after this selection step
+                $spliceSteps = [];
+                foreach ($toInsert as [$invoker, $name])
+                {
+                    if ($invoker == 'sql')
+                        $spliceSteps[] = [$invoker, $name, ['doSql' => $name]];
+                    else if ($invoker == 'build')
+                        $spliceSteps[] = [$invoker, $name, ['doBuild' => $name]];
+                }
+
+                if (!empty($spliceSteps))
+                    array_splice($this->steps, $idx + 1, 0, $spliceSteps);
+
+                // log skipped optional steps
+                $includedNames = array_column($toInsert, 1);
+                foreach ($this->optionalSteps as $name => [$invoker])
+                    if (!in_array($name, $includedNames))
+                        CLI::write('[Optional] ['.ucfirst($name).'] - Skipping', CLI::LOG_INFO);
+
+                CLI::write();
+                $this->saveProgress($idx);
                 continue;
+            }
+
+            /*******************/
+            /* regular step    */
+            /*******************/
 
             while (true)
             {

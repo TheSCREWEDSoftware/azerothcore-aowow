@@ -11,6 +11,8 @@ CLISetup::registerSetup("sql", new class extends SetupScript
 {
     use TrCustomData;                                       // import custom data from DB
 
+    public $isOptional = true;
+
     protected $info = array(
         'sounds' => [[], CLISetup::ARGV_PARAM, 'Compiles data for type: Sound from dbc.']
     );

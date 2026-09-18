@@ -63,6 +63,15 @@ CLISetup::registerUtility(new class extends UtilityScript
 
         if ($isFirstRun)
         {
+            CLI::write('  Default AzerothCore credentials:');
+            CLI::write('    Host:      localhost');
+            CLI::write('    User:      acore');
+            CLI::write('    Password:  acore');
+            CLI::write();
+            CLI::write('  Databases:');
+            CLI::write('    AzerothCore:  acore_world / acore_auth / acore_characters');
+            CLI::write('    Aowow:        acore_aowow');
+            CLI::write();
             CLI::read(['useDefaults' => ['Use default AzerothCore credentials and databases? [Y / N]', false, true, '/y|n/i']], $answer);
             $useDefaults = empty($answer['useDefaults']) || strtolower($answer['useDefaults']) === 'y';
 

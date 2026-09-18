@@ -13,6 +13,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
         'soundfiles' => [[], CLISetup::ARGV_PARAM, 'Links converted sound files to database and moves them to destination.']
     );
 
+    public    $isOptional   = true;
     protected $requiredDirs = ['static/wowsounds/'];
     protected $setupAfter   = [['sounds'], []];
 

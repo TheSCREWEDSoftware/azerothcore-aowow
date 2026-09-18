@@ -121,7 +121,38 @@ class AdminPage extends GenericPage
             [SC_CSS_STRING, '.grid a.tip:hover  { opacity:1; }'],
             [SC_CSS_STRING, '.grid tr { height:30px; }'],
             [SC_CSS_STRING, '.grid .disabled { opacity:0.4 !important; }'],
-            [SC_CSS_STRING, '.grid .status { position:absolute; right:5px; }']
+            [SC_CSS_STRING, '.grid .status { position:absolute; right:5px; }'],
+            [SC_CSS_STRING, '.grid td dfn.w { font-style:normal; border-bottom:none; cursor:default; }'],
+            [SC_CSS_STRING, '.grid td.cfg-time-td { position:relative; }'],
+            [SC_CSS_STRING, '.cfg-time-preview { position:absolute; left:265px; top:50%; transform:translateY(-50%); white-space:nowrap; color:#aaa; font-style:italic; font-size:12px; pointer-events:none; }'],
+            [SC_JS_STRING,  '
+function cfgFormatSeconds(secs) {
+    secs = parseInt(secs, 10);
+    if (isNaN(secs) || secs < 0) return \'\';
+    if (secs === 0) return \'0 (disabled)\';
+    var units = [
+        [31536000, \'Year\'],  [2592000, \'Month\'],
+        [604800,   \'Week\'],  [86400,   \'Day\'],
+        [3600,     \'Hour\'],  [60,      \'Minute\'],
+        [1,        \'Second\']
+    ];
+    var parts = [];
+    for (var i = 0; i < units.length; i++) {
+        var n = Math.floor(secs / units[i][0]);
+        if (n > 0) {
+            parts.push(n + \' \' + units[i][1] + (n !== 1 ? \'s\' : \'\'));
+            secs %= units[i][0];
+        }
+    }
+    if (!parts.length) return \'0 Seconds\';
+    if (parts.length === 1) return parts[0];
+    return parts.slice(0, -1).join(\', \') + \' and \' + parts[parts.length - 1];
+}
+function cfgTimePreview(el) {
+    var span = document.getElementById(\'tp_\' + el.id);
+    if (span) span.textContent = cfgFormatSeconds(el.value);
+}
+']
         );
 
         $head = '<tr><th><b>Key</b></th><th><b>Value</b></th><th style="width:150px;"><b>Options</b></th></tr>';
@@ -318,6 +349,14 @@ class AdminPage extends GenericPage
         $info = explode(' - ', $comment);
         $key  = $flags & Cfg::FLAG_PHP ? strtolower($key) : strtoupper($key);
 
+        // detect time-in-seconds fields: INT type, key matches a time-suffix pattern or comment says "in sec", but not milliseconds
+        $isTimeSecs = ($flags & Cfg::FLAG_TYPE_INT)
+            && (preg_match('/_(ttl|delay|decay|lifetime|timeout|block)$/i', $key)
+                || preg_match('/^ttl_/i', $key)
+                || stripos($comment ?? '', 'in sec') !== false)
+            && stripos($comment ?? '', '(in ms)') === false
+            && stripos($comment ?? '', 'millisecond') === false;
+
         // name
         if (!empty($info[0]))
             $buff .= '<td>'.sprintf(Util::$dfnString, $info[0], $key).'</td>';
@@ -348,7 +387,15 @@ class AdminPage extends GenericPage
             $buff .= '</div></td>';
         }
         else
-            $buff .= '<td><input id="'.$key.'" type="'.($flags & Cfg::FLAG_TYPE_STRING ? 'text" placeholder="<empty>' : 'number'.($flags & Cfg::FLAG_TYPE_FLOAT ? '" step="any' : '')).'" name="'.$key.'" value="'.$value.'" /></td>';
+        {
+            $inputAttrs = ' id="'.$key.'" type="'.($flags & Cfg::FLAG_TYPE_STRING ? 'text" placeholder="<empty>' : 'number'.($flags & Cfg::FLAG_TYPE_FLOAT ? '" step="any' : '')).'" name="'.$key.'" value="'.$value.'"';
+            if ($isTimeSecs)
+                $inputAttrs .= ' oninput="cfgTimePreview(this)"';
+            $buff .= '<td'.($isTimeSecs ? ' class="cfg-time-td"' : '').'><input'.$inputAttrs.' />';
+            if ($isTimeSecs)
+                $buff .= '<span class="cfg-time-preview" id="tp_'.$key.'">'.$this->cfgFormatSeconds((int)$value).'</span>';
+            $buff .= '</td>';
+        }
 
         // actions
         $buff .= '<td style="position:relative;">';
@@ -366,6 +413,34 @@ class AdminPage extends GenericPage
         $buff .= '<span class="status"></span></td></tr>';
 
         return $buff;
+    }
+
+    private function cfgFormatSeconds(int $secs) : string
+    {
+        if ($secs <= 0)
+            return $secs === 0 ? '0 (disabled)' : '';
+
+        $units = [
+            [31536000, 'Year'],  [2592000, 'Month'],
+            [604800,   'Week'],  [86400,   'Day'],
+            [3600,     'Hour'],  [60,      'Minute'],
+            [1,        'Second'],
+        ];
+        $parts = [];
+        foreach ($units as [$div, $name])
+        {
+            $n = intdiv($secs, $div);
+            if ($n > 0)
+            {
+                $parts[] = $n.' '.$name.($n !== 1 ? 's' : '');
+                $secs   %= $div;
+            }
+        }
+        if (!$parts)
+            return '0 Seconds';
+        if (count($parts) === 1)
+            return $parts[0];
+        return implode(', ', array_slice($parts, 0, -1)).' and '.end($parts);
     }
 
     private function handlePageConfig() : void

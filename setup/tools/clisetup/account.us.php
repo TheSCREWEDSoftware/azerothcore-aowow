@@ -82,6 +82,14 @@ CLISetup::registerUtility(new class extends UtilityScript
     {
         Lang::load(Locale::EN);
 
+        // skip if an admin account already exists
+        if (DB::Aowow()->selectCell('SELECT `id` FROM ?_account WHERE `userPerms` = 1'))
+        {
+            CLI::write('[account] admin account already exists, skipping creation.', CLI::LOG_INFO);
+            CLI::write();
+            return true;
+        }
+
         $name  = $args[0] ?? '';
         $passw = $args[1] ?? '';
         $email = $args[2];
