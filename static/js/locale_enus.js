@@ -269,6 +269,28 @@ var mn_itemSets = [
     [9,"Warlock",,,{className:"c9",smallIcon:"class_warlock"}],
     [1,"Warrior",,,{className:"c1",smallIcon:"class_warrior"}]
 ];
+// [PH] placeholder sub-menus for pages not yet implemented in aowow
+var mn_gearsets_ph = [
+    [,"By Class"],
+    [6,"Death Knight",,,{className:"c6",smallIcon:"class_deathknight"}],
+    [11,"Druid",,,{className:"c11",smallIcon:"class_druid"}],
+    [3,"Hunter",,,{className:"c3",smallIcon:"class_hunter"}],
+    [8,"Mage",,,{className:"c8",smallIcon:"class_mage"}],
+    [2,"Paladin",,,{className:"c2",smallIcon:"class_paladin"}],
+    [5,"Priest",,,{className:"c5",smallIcon:"class_priest"}],
+    [4,"Rogue",,,{className:"c4",smallIcon:"class_rogue"}],
+    [7,"Shaman",,,{className:"c7",smallIcon:"class_shaman"}],
+    [9,"Warlock",,,{className:"c9",smallIcon:"class_warlock"}],
+    [1,"Warrior",,,{className:"c1",smallIcon:"class_warrior"}]
+];
+var mn_outfits_ph = [
+    [,"By Armor Type"],
+    [1,"Cloth",null],
+    [2,"Leather",null],
+    [3,"Mail",null],
+    [4,"Plate",null]
+];
+
 var mn_npcs = [
     [1,"Beasts",,[
         [24,"Bat","?npcs=1&filter=fa=24"],
@@ -1177,14 +1199,17 @@ var mn_database = [
     [, "Items"],
     [0,"Items","?items",mn_items],
     [2,"Item Sets","?itemsets",mn_itemSets],
-    [101,"Enchantments","?enchantments",mn_enchantments],
+    [0,"Gear Sets [PH]",null,mn_gearsets_ph],
+    [0,"Item Appearance Sets [PH]",null],
+    [0,"Item Appearances [PH]",null],
+    [0,"Outfits [PH]",null,mn_outfits_ph],
     [, "Character",,,{colBreak:true}],
     [9,"Achievements","?achievements",mn_achievements],
     [12,"Classes","?classes",mn_classes],
-    [100,"Emotes","?emotes",null],
     [8,"Hunter Pets","?pets",mn_pets],
     [14,"Professions & Skills","?skills",mn_skills],
     [13,"Races","?races",mn_races],
+    [0,"Resources [PH]",null],
     [1,"Spells","?spells",mn_spells],
     [10,"Titles","?titles",mn_titles],
     [, "World",,,{colBreak:true}],
@@ -1201,6 +1226,8 @@ var mn_database = [
     [6,"Zones","?zones",mn_zones],
     [, "Other",,,{colBreak:true}],
     [15,"Currencies","?currencies",mn_currencies],
+    [100,"Emotes","?emotes",null],
+    [101,"Enchantments","?enchantments",mn_enchantments],
     [11,"World Events","?events",mn_holidays],
     [31, "Icons", "?icons", mn_icons],
     [19,"Sounds","?sounds",mn_sounds],
