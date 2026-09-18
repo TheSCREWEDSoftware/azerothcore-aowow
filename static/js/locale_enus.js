@@ -284,11 +284,35 @@ var mn_gearsets_ph = [
     [1,"Warrior",,,{className:"c1",smallIcon:"class_warrior"}]
 ];
 var mn_outfits_ph = [
-    [,"By Armor Type"],
-    [1,"Cloth",null],
-    [2,"Leather",null],
-    [3,"Mail",null],
-    [4,"Plate",null]
+    [,"By Class"],
+    [6,"Death Knight",null,,{className:"c6",smallIcon:"class_deathknight"}],
+    [11,"Druid",null,,{className:"c11",smallIcon:"class_druid"}],
+    [3,"Hunter",null,,{className:"c3",smallIcon:"class_hunter"}],
+    [8,"Mage",null,,{className:"c8",smallIcon:"class_mage"}],
+    [2,"Paladin",null,,{className:"c2",smallIcon:"class_paladin"}],
+    [5,"Priest",null,,{className:"c5",smallIcon:"class_priest"}],
+    [4,"Rogue",null,,{className:"c4",smallIcon:"class_rogue"}],
+    [7,"Shaman",null,,{className:"c7",smallIcon:"class_shaman"}],
+    [9,"Warlock",null,,{className:"c9",smallIcon:"class_warlock"}],
+    [1,"Warrior",null,,{className:"c1",smallIcon:"class_warrior"}]
+];
+var mn_resources_ph = [
+    [0,"Blood Rune",null],
+    [0,"Combo Points",null],
+    [0,"Energy",null],
+    [0,"Focus",null],
+    [0,"Frost Rune",null],
+    [0,"Happiness",null],
+    [0,"Health",null],
+    [0,"Mana",null],
+    [0,"Rage",null],
+    [0,"Runic Power",null],
+    [0,"Unholy Rune",null]
+];
+var mn_achievements_wh = [
+    [0,"Character Achievements","?achievements",mn_achievements],
+    [0,"Character Statistics [PH]",null],
+    [0,"Guild Achievements [PH]",null]
 ];
 
 var mn_npcs = [
@@ -1204,12 +1228,13 @@ var mn_database = [
     [0,"Item Appearances [PH]",null],
     [0,"Outfits [PH]",null,mn_outfits_ph],
     [, "Character",,,{colBreak:true}],
-    [9,"Achievements","?achievements",mn_achievements],
+    [9,"Achievements","?achievements",mn_achievements_wh],
+    [0,"Battle Pets [PH]",null],
     [12,"Classes","?classes",mn_classes],
     [8,"Hunter Pets","?pets",mn_pets],
     [14,"Professions & Skills","?skills",mn_skills],
     [13,"Races","?races",mn_races],
-    [0,"Resources [PH]",null],
+    [0,"Resources [PH]",null,mn_resources_ph],
     [1,"Spells","?spells",mn_spells],
     [10,"Titles","?titles",mn_titles],
     [, "World",,,{colBreak:true}],
