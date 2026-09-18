@@ -1260,16 +1260,79 @@ var mn_database = [
     [103, 'Mails', '?mails'],                                // aowow - custom
 ];
 
+var mn_guides_classes = [
+    [6, "Death Knight","?guides=1",[
+        [0,"Blood Tank",   "?guides=1",,{smallIcon:"Spell_Deathknight_BloodPresence"}],
+        [0,"Frost DPS",    "?guides=1",,{smallIcon:"Spell_Deathknight_FrostPresence"}],
+        [0,"Unholy DPS",   "?guides=1",,{smallIcon:"Spell_Deathknight_UnholyPresence"}]
+    ],{className:"c6",smallIcon:"class_deathknight"}],
+    [11,"Druid","?guides=1",[
+        [0,"Balance",      "?guides=1",,{smallIcon:"Spell_Nature_StarFall"}],
+        [0,"Feral DPS",    "?guides=1",,{smallIcon:"Ability_Druid_CatForm"}],
+        [0,"Feral Tank",   "?guides=1",,{smallIcon:"Ability_Racial_BearForm"}],
+        [0,"Restoration",  "?guides=1",,{smallIcon:"Spell_Nature_HealingWave"}]
+    ],{className:"c11",smallIcon:"class_druid"}],
+    [3, "Hunter","?guides=1",[
+        [0,"Beast Mastery","?guides=1",,{smallIcon:"Ability_Hunter_BeastMastery"}],
+        [0,"Marksmanship", "?guides=1",,{smallIcon:"Ability_Marksmanship"}],
+        [0,"Survival",     "?guides=1",,{smallIcon:"Ability_Hunter_Cleverness"}]
+    ],{className:"c3",smallIcon:"class_hunter"}],
+    [8, "Mage","?guides=1",[
+        [0,"Arcane",       "?guides=1",,{smallIcon:"Spell_Holy_MagicSentry"}],
+        [0,"Fire",         "?guides=1",,{smallIcon:"Spell_Fire_Fireball02"}],
+        [0,"Frost",        "?guides=1",,{smallIcon:"Spell_Frost_FrostBolt02"}]
+    ],{className:"c8",smallIcon:"class_mage"}],
+    [2, "Paladin","?guides=1",[
+        [0,"Holy",         "?guides=1",,{smallIcon:"Spell_Holy_HolyBolt"}],
+        [0,"Protection",   "?guides=1",,{smallIcon:"Spell_Holy_DevotionAura"}],
+        [0,"Retribution",  "?guides=1",,{smallIcon:"Spell_Holy_AuraOfLight"}]
+    ],{className:"c2",smallIcon:"class_paladin"}],
+    [5, "Priest","?guides=1",[
+        [0,"Discipline",   "?guides=1",,{smallIcon:"Spell_Holy_WordFortitude"}],
+        [0,"Holy",         "?guides=1",,{smallIcon:"Spell_Holy_GuardianSpirit"}],
+        [0,"Shadow",       "?guides=1",,{smallIcon:"Spell_Shadow_ShadowWordPain"}]
+    ],{className:"c5",smallIcon:"class_priest"}],
+    [4, "Rogue","?guides=1",[
+        [0,"Assassination","?guides=1",,{smallIcon:"Ability_Rogue_Mutilate"}],
+        [0,"Combat",       "?guides=1",,{smallIcon:"Ability_BackStab"}],
+        [0,"Subtlety",     "?guides=1",,{smallIcon:"Ability_Stealth"}]
+    ],{className:"c4",smallIcon:"class_rogue"}],
+    [7, "Shaman","?guides=1",[
+        [0,"Elemental",    "?guides=1",,{smallIcon:"Spell_Nature_Lightning"}],
+        [0,"Enhancement",  "?guides=1",,{smallIcon:"Spell_Shaman_ImprovedStormstrike"}],
+        [0,"Restoration",  "?guides=1",,{smallIcon:"Spell_Nature_MagicImmunity"}]
+    ],{className:"c7",smallIcon:"class_shaman"}],
+    [9, "Warlock","?guides=1",[
+        [0,"Affliction",   "?guides=1",,{smallIcon:"Spell_Shadow_DeathCoil"}],
+        [0,"Demonology",   "?guides=1",,{smallIcon:"Spell_Shadow_Metamorphosis"}],
+        [0,"Destruction",  "?guides=1",,{smallIcon:"Spell_Shadow_RainOfFire"}]
+    ],{className:"c9",smallIcon:"class_warlock"}],
+    [1, "Warrior","?guides=1",[
+        [0,"Arms",         "?guides=1",,{smallIcon:"Ability_Warrior_Savageblow"}],
+        [0,"Fury",         "?guides=1",,{smallIcon:"Ability_Warrior_InnerRage"}],
+        [0,"Protection",   "?guides=1",,{smallIcon:"Ability_Warrior_DefensiveStance"}]
+    ],{className:"c1",smallIcon:"class_warrior"}]
+];
+
 var mn_guides = [
-    [7, "Achievements", '?guides=7'],
-    [1, "Classes", '?guides=1'],
-    [6, "Economy & Money", '?guides=6'],
-    [4, "New Players & Leveling", '?guides=4'],
-    [2, "Professions", '?guides=2'],
-    [5, "Raid & Boss Fights", '?guides=5'],
-    [8, "Vanity Items, Pets & Mounts", '?guides=8'],
-    [3, "World Events", '?guides=3'],
-    [9, "Other", '?guides=9']
+    [0,  "Create New Guide",        '?guide&new'],
+    [7,  "Achievements",            '?guides=7'],
+    [1,  "Classes",                 '?guides=1', mn_guides_classes],
+    [0,  "Dungeons [PH]",           null],
+    [0,  "Glyphs [PH]",             null],
+    [6,  "Gold Making",             '?guides=6'],
+    [4,  "Leveling",                '?guides=4'],
+    [2,  "Professions",             '?guides=2'],
+    [0,  "PvP [PH]",               null],
+    [0,  "Quests [PH]",            null],
+    [5,  "Raids",                  '?guides=5'],
+    [0,  "Reputation [PH]",        null],
+    [0,  "The Argent Tournament [PH]", null],
+    [0,  "TBC Guides [PH]",        null],
+    [0,  "Classic Guides [PH]",    null],
+    [8,  "Vanity Items, Pets & Mounts", '?guides=8'],
+    [3,  "World Events",           '?guides=3'],
+    [9,  "Other",                  '?guides=9']
 ];
 
 var mn_tools = [
@@ -1362,8 +1425,8 @@ var mn_more = [
 var mn_path = [
     [0, "Database",  null     , mn_database ],
     [1, "Tools",     null     , mn_tools    ],
-    [3, "Community", null     , mn_community],
     [6, "Guides",    '?guides', mn_guides   ],
+    [3, "Community", null     , mn_community],
     [2, "More",      null     , mn_more     ]
 /* Note: ID 4 is used by the Staff menu - Skip it. It's added by staff.js */
 ];
