@@ -72,9 +72,97 @@ class SkillPage extends GenericPage
         if ($_ = $this->subject->getField('description', true))
             $this->extraText = $_;
 
+        // Riding (skill 762): add Ranks section
+        if ($this->typeId == 762)
+        {
+            // Query training costs live from world DB (server may have custom pricing)
+            $ridingSpellIds = [33388, 33391, 34090, 34091, 54197];
+            $trainCosts = DB::World()->selectCol(
+                'SELECT SpellID AS ARRAY_KEY, MIN(MoneyCost)
+                 FROM trainer_spell
+                 WHERE SpellID IN (?a) AND MoneyCost > 0
+                 GROUP BY SpellID',
+                $ridingSpellIds
+            ) ?: [];
+
+            // Query cheapest vendor mount cost per riding tier (class=15 subclass=5 = mount items)
+            $mountCosts = DB::World()->selectCol(
+                'SELECT it.RequiredSkillRank AS ARRAY_KEY, MIN(it.BuyPrice)
+                 FROM item_template it
+                 JOIN npc_vendor nv ON nv.item = it.entry
+                 WHERE it.RequiredSkill = 762
+                   AND it.RequiredSkillRank IN (75, 150, 225, 300)
+                   AND it.class = 15 AND it.subclass = 5
+                   AND (nv.ExtendedCost = 0 OR nv.ExtendedCost IS NULL)
+                   AND it.BuyPrice > 0
+                 GROUP BY it.RequiredSkillRank',
+                []
+            ) ?: [];
+
+            // Fallback costs (copper) if DB returns nothing
+            $defTrain  = [33388 => 40000, 33391 => 500000, 34090 => 2500000, 34091 => 50000000, 54197 => 10000000];
+            $defMounts = [75 => 10000, 150 => 100000, 225 => 500000, 300 => 1000000];
+
+            // Helper: return [money=N] BBCode or n/a
+            $money = function(int $copper) : string {
+                return $copper > 0 ? '[money='.$copper.']' : 'n/a';
+            };
+
+            $tc = function(int $spellId) use ($trainCosts, $defTrain, $money) : string {
+                return $money($trainCosts[$spellId] ?? $defTrain[$spellId]);
+            };
+            $mc = function(int $rank) use ($mountCosts, $defMounts, $money) : string {
+                return $money($mountCosts[$rank] ?? $defMounts[$rank]);
+            };
+
+            $sep = isset($this->extraText) ? '[br][br]' : '';
+
+            // Query Tome of Cold Weather Flight cost from item_template
+            $tomeCost = (int)(DB::World()->selectCell('SELECT BuyPrice FROM item_template WHERE entry = ?d', 49177) ?: 10000000);
+
+            // Shared header row — all columns centered; Speed/Rare speed equal explicit widths
+            // Note: .grid th[align=center] CSS rule overrides the default text-align:left on <th>
+            $hdr  = '[td=header]Name[/td]';
+            $hdr .= '[td=header align=center]Type[/td]';
+            $hdr .= '[td=header align=center]Learned at[/td]';
+            $hdr .= '[td=header align=center]Mount type[/td]';
+            $hdr .= '[td=header align=center width=9%]Speed[/td]';
+            $hdr .= '[td=header align=center width=9%]Rare speed[/td]';
+            $hdr .= '[td=header align=center]Training cost[/td]';
+            $hdr .= '[td=header align=center]Required level[/td]';
+            $hdr .= '[td=header align=center]Mount cost[/td]';
+
+            $t  = $sep . '[h2]Ranks[/h2]';
+            $t .= '[table class=grid]';
+            $t .= '[tr]'.$hdr.'[/tr]';
+            $t .= '[tr][td][spell=33388][/td][td align=center]Spell[/td][td align=center]75 skill[/td][td align=center]Ground[/td][td colspan=2 align=center]60%[/td][td align=center]'.$tc(33388).'[/td][td align=center]20[/td][td align=center]'.$mc(75).'[/td][/tr]';
+            $t .= '[tr][td][spell=33391][/td][td align=center]Spell[/td][td align=center]150 skill[/td][td align=center]Ground[/td][td colspan=2 align=center]100%[/td][td align=center]'.$tc(33391).'[/td][td align=center]40[/td][td align=center]'.$mc(150).'[/td][/tr]';
+            $t .= '[tr][td][spell=34090][/td][td align=center]Spell[/td][td align=center]225 skill[/td][td align=center]Flying[/td][td colspan=2 align=center]150%[/td][td align=center]'.$tc(34090).'[/td][td align=center]60[/td][td align=center]'.$mc(225).'[/td][/tr]';
+            $t .= '[tr][td][spell=34091][/td][td align=center]Spell[/td][td align=center]300 skill[/td][td align=center]Flying[/td][td align=center]280%[/td][td align=center]310%[/td][td align=center]'.$tc(34091).'[/td][td align=center]70[/td][td align=center]'.$mc(300).'[/td][/tr]';
+            $t .= '[/table]';
+            $t .= '[br]Rare speed applies to special mounts only (e.g. [item=44177], [item=32458]).[br][br]';
+
+            $t .= '[h2]Cold Weather Flying[/h2]';
+            $t .= 'Required to use flying mounts in Northrend.[br]';
+            $t .= '[table class=grid]';
+            $t .= '[tr]'.$hdr.'[/tr]';
+            $t .= '[tr][td][spell=54197][/td][td align=center]Spell[/td][td align=center]225 skill[/td][td align=center]n/a[/td][td colspan=2 align=center]n/a[/td][td align=center]'.$tc(54197).'[/td][td align=center]77[/td][td align=center]n/a[/td][/tr]';
+            $t .= '[tr][td][item=49177][/td][td align=center]Item[/td][td align=center]225 skill[/td][td align=center]n/a[/td][td colspan=2 align=center]n/a[/td][td align=center]'.$money($tomeCost).'[/td][td align=center]68[/td][td align=center]n/a[/td][/tr]';
+            $t .= '[/table]';
+
+            $this->extraText = (isset($this->extraText) ? $this->extraText : '') . $t;
+
+            // Ensure spell/item tooltip data is loaded
+            $this->extendGlobalIds(Type::SPELL, 33388, 33391, 34090, 34091, 54197);
+            $this->extendGlobalIds(Type::ITEM, 49177, 44177, 32458);
+
+        }
+
         /**************/
         /* Extra Tabs */
         /**************/
+
+        $recipeItemsTab = null;                                 // appended after trainers tab (see below)
 
         if (in_array($this->cat, [-5, 9, 11]))
         {
@@ -121,7 +209,7 @@ class SkillPage extends GenericPage
                 if ($_ = array_search($this->typeId, $filterRecipe))
                     $tabData['note'] = sprintf(Util::$filterResultString, "?items=9.".$_);
 
-                $this->lvTabs[] = [ItemList::$brickFile, $tabData];
+                $recipeItemsTab = [ItemList::$brickFile, $tabData];
             }
 
             // tab: crafted items [items]
@@ -280,6 +368,10 @@ class SkillPage extends GenericPage
                 }
             }
         }
+
+        // recipe-items tab deferred: append after trainers so order is Required by → Spells → Trainers → Recipe items
+        if (!empty($recipeItemsTab))
+            $this->lvTabs[] = $recipeItemsTab;
 
         // tab: quests [quests]
         if (in_array($this->cat, [9, 11]))                  // only for professions

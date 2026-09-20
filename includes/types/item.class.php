@@ -650,6 +650,8 @@ class ItemList extends BaseType
         }
         else if ($_slot && $_class != ITEM_CLASS_CONTAINER) // yes, slot can occur on random items and is then also displayed <_< .. excluding Bags >_>
             $x .= '<br />'.Lang::item('inventoryType', $_slot).'<br />';
+        else if ($_class == ITEM_CLASS_MISC && $_subClass == 5)
+            $x .= '<br />Mount<br />';
         else
             $x .= '<br />';
 
@@ -924,7 +926,7 @@ class ItemList extends BaseType
             $x .= sprintf(Lang::item('reqRating', $reqRating[1]), $reqRating[0]).'<br />';
 
         // item level
-        if (in_array($_class, [ITEM_CLASS_ARMOR, ITEM_CLASS_WEAPON]))
+        if (in_array($_class, [ITEM_CLASS_ARMOR, ITEM_CLASS_WEAPON]) || ($_class == ITEM_CLASS_MISC && $_subClass == 5))
             $x .= sprintf(Lang::item('itemLevel'), $this->curTpl['itemLevel']).'<br />';
 
         // required skill
@@ -1178,13 +1180,16 @@ class ItemList extends BaseType
         if ($this->curTpl['pageTextId'])
             $xMisc[] = '<span class="q2">'.Lang::item('readClick').'</span>';
 
-        // charges
-        for ($i = 1; $i < 6; $i++)
+        // charges (skip for mount items)
+        if (!($_class == ITEM_CLASS_MISC && $_subClass == 5))
         {
-            if (in_array($this->curTpl['spellTrigger'.$i], [SPELL_TRIGGER_USE, SPELL_TRIGGER_SOULSTONE, SPELL_TRIGGER_USE_NODELAY, SPELL_TRIGGER_LEARN]) && $this->curTpl['spellCharges'.$i])
+            for ($i = 1; $i < 6; $i++)
             {
-                $xMisc[] = '<span class="q1">'.Lang::item('charges', [abs($this->curTpl['spellCharges'.$i])]).'</span>';
-                break;
+                if (in_array($this->curTpl['spellTrigger'.$i], [SPELL_TRIGGER_USE, SPELL_TRIGGER_SOULSTONE, SPELL_TRIGGER_USE_NODELAY, SPELL_TRIGGER_LEARN]) && $this->curTpl['spellCharges'.$i])
+                {
+                    $xMisc[] = '<span class="q1">'.Lang::item('charges', [abs($this->curTpl['spellCharges'.$i])]).'</span>';
+                    break;
+                }
             }
         }
 

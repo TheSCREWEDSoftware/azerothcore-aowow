@@ -1348,7 +1348,7 @@ var mn_tools = [
     [0,"Aowow Client [PH]",null],
     [0,"Discord Webhook [PH]",null],
     [0,"Tooltips [PH]",null],
-    [8,"Latest","?latest-comments",[
+    [9,"Latest","?latest-comments",[
         [2,"Latest Comments","?latest-comments"],
         [3,"Latest Screenshots","?latest-screenshots"],
         [11,"Latest Videos","?latest-videos"],
@@ -1365,7 +1365,7 @@ var mn_tools = [
         [3,"Arena Teams","?arena-teams"],
         [1,"New","?profile&new"]
     ]],
-    [9,"Utilities",,[
+    [8,"Utilities",,[
         [5,"Unrated Comments","?unrated-comments"],
         [13,"Missing Screenshots","?missing-screenshots"],
         [4,"Random Page","?random"],

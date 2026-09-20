@@ -1739,10 +1739,74 @@ function g_addPages(d, opt) {
 }
 
 function g_disclose(el, _this) {
-    _this.className = 'disclosure-' + (g_toggleDisplay(el) ? 'on' : 'off');
+    // Inside a table cell: toggle visibility (keeps layout space) instead of display:none.
+    // This prevents rows from changing height when condition groups are collapsed/expanded.
+    if (el && el.closest && el.closest('td')) {
+        var $el = $(el);
+        // On first use the element may still have display:none from initial render — clear it.
+        if ($el[0].style.display === 'none') {
+            $el[0].style.display = '';
+            $el[0].style.visibility = 'hidden';
+        }
+        var nowHidden = $el.css('visibility') === 'hidden';
+        $el.css('visibility', nowHidden ? '' : 'hidden');
+        _this.className = 'disclosure-' + (nowHidden ? 'on' : 'off');
+        return false;
+    }
 
+    _this.className = 'disclosure-' + (g_toggleDisplay(el) ? 'on' : 'off');
     return false;
 }
+
+// On load: convert display:none → visibility:hidden for disclosure targets inside table cells
+// so that rows are always at their fully-expanded height from the start.
+DomContentLoaded.addEvent(function() {
+    var offLinks = document.querySelectorAll('td a.disclosure-off');
+    for (var i = 0; i < offLinks.length; i++) {
+        var m = (offLinks[i].getAttribute('onclick') || '').match(/ge\('([^']+)'\)/);
+        if (!m) continue;
+        var div = document.getElementById(m[1]);
+        if (div && div.style.display === 'none') {
+            div.style.display     = '';
+            div.style.visibility  = 'hidden';
+        }
+    }
+
+    // Upgrade icontiny icon links (img + tinyicontxt span) to iconsmall with WoW border.
+    // Applies globally — covers race/item/spell references in conditions, skill pages, etc.
+    var iconLinks = document.querySelectorAll('a.icontiny');
+    for (var j = 0; j < iconLinks.length; j++) {
+        var a        = iconLinks[j];
+        var img      = a.querySelector('img');
+        var nameSpan = a.querySelector('span.tinyicontxt');
+        if (!img || !nameSpan) continue;
+
+        var smallUrl = img.src.replace('/icons/tiny/', '/icons/small/').replace(/\.gif$/, '.jpg');
+
+        var iconSpan = document.createElement('span');
+        iconSpan.className = 'iconsmall';
+        iconSpan.style.cssText = 'display:inline-block;vertical-align:middle;margin-right:3px;';
+
+        var ins = document.createElement('ins');
+        ins.style.backgroundImage = 'url(' + smallUrl + ')';
+        iconSpan.appendChild(ins);
+        iconSpan.appendChild(document.createElement('del'));
+
+        a.replaceChild(iconSpan, img);
+        // Remove whitespace text nodes between iconSpan and nameSpan
+        var node = iconSpan.nextSibling;
+        while (node && node !== nameSpan) {
+            var next = node.nextSibling;
+            a.removeChild(node);
+            node = next;
+        }
+
+        a.style.textDecoration = 'none';
+        a.style.display        = 'inline-block';
+        a.style.verticalAlign  = 'middle';
+        a.style.whiteSpace     = 'nowrap';
+    }
+});
 
 /* Displays a warning when the user attempts to leave the page if some elements are modified, unless the user leaves the page
  * by submitting the form.
@@ -11928,6 +11992,9 @@ Listview.templates = {
             {
                 id: 'experience',
                 name: LANG.exp,
+                compute: function(quest, td) {
+                    if (quest.xp) $WH.ae(td, $WH.ct(quest.xp));
+                },
                 value: 'xp'
             },
             {
@@ -16877,11 +16944,13 @@ Listview.templates = {
                 value: 'name',
                 compute: function(classs, td, tr) {
                     var i = $WH.ce('td');
-                    i.style.width = '1px';
+                    i.style.width = '44px';
                     i.style.padding = '0';
                     i.style.borderRight = 'none';
 
-                    $WH.ae(i, Icon.create('class_' + g_file_classes[classs.id], 0, null, this.getItemLink(classs)));
+                    var ic = Icon.create('class_' + g_file_classes[classs.id], 1, null, this.getItemLink(classs));
+                    ic.style.cssFloat = ic.style.styleFloat = 'left';
+                    $WH.ae(i, ic);
                     $WH.ae(tr, i);
                     td.style.borderLeft = 'none';
 
@@ -16927,8 +16996,6 @@ Listview.templates = {
                 compute: function(classs, td) {
                     if (classs.races) {
                         var races = Listview.funcBox.assocBinFlags(classs.races, g_chr_races);
-
-                        td.className = 'q1';
                         for (var i = 0, len = races.length; i < len; ++i) {
                             if (i > 0) {
                                 $WH.ae(td, $WH.ct(LANG.comma));
@@ -17275,7 +17342,7 @@ var Menu = new function()
         else if(opt.smallIcon)
         {
             $a.addClass('smallicon');
-            $a.css('background-image', 'url(' + g_staticUrl + '/images/wow/icons/tiny/' + opt.smallIcon.toLowerCase() + '.gif)');
+            $a.css({'background-image': 'url(' + g_staticUrl + '/images/wow/icons/small/' + opt.smallIcon.toLowerCase() + '.jpg)', 'background-size': '15px 15px'});
         }
         else if(opt.tinyIcon)
         {
@@ -17552,7 +17619,39 @@ var Menu = new function()
         .mouseover(menuDivOver)
         .mouseleave(menuDivOut)
         .delegate('a', 'mouseenter', { depth: depth }, menuItemOver)
-        .delegate('a', 'click', menuItemClick);
+        .delegate('a', 'click', menuItemClick)
+        .delegate('a', 'mouseenter', function()
+        {
+            var $a = $(this);
+            if($a.hasClass('separator') || $a.find('.hassubmenu').length) return;
+            var $inner = $a.closest('.menu-inner.dim-ok');
+            if(!$inner.length) return;
+            clearTimeout($inner.data('dimTimer'));
+            if($inner.hasClass('dim-siblings'))
+            {
+                // Already dimmed — transfer highlight to new item immediately
+                $inner.find('.dim-current').removeClass('dim-current');
+                $a.addClass('dim-current');
+            }
+            else
+            {
+                $inner.data('dimTimer', setTimeout(function() {
+                    $inner.addClass('dim-siblings');
+                    $a.addClass('dim-current');
+                }, 400));
+            }
+        })
+        .delegate('a', 'mouseleave', function()
+        {
+            var $inner = $(this).closest('.menu-inner.dim-ok');
+            if($inner.length) clearTimeout($inner.data('dimTimer'));
+        })
+        .delegate('.menu-inner.dim-ok', 'mouseleave', function()
+        {
+            var $inner = $(this);
+            clearTimeout($inner.data('dimTimer'));
+            $inner.removeClass('dim-siblings').find('.dim-current').removeClass('dim-current');
+        });
 
         $div.appendTo(document.body);
 
@@ -17677,7 +17776,7 @@ var Menu = new function()
         if(nItemsThatCanFit >= nItems)
         {
             var $outerDiv = $('<div class="menu-outer"></div>');
-            var $innerDiv = $('<div class="menu-inner"></div>');
+            var $innerDiv = $('<div class="menu-inner dim-ok"></div>');
 
             $menuItems.each(function () { $innerDiv.append(this) });
             $outerDiv.append($innerDiv);
@@ -23921,7 +24020,7 @@ var ConditionList = new function() {
                 let src  = desc.replace(/\$T([^:]*):([^;]*);/, (_, t1, t2) => (target ? t2 : t1).replace('%', targets[target]));
                 let rand = $WH.rs();
 
-                buff += '[h3][toggler' + (k ? '=hidden' : '') + ' id=' + rand + ']' + $WH.sprintfa(src, srcGroup, srcEntry, srcId) + '[/toggler][/h3][div' + (k++ ? '=hidden' : '') + ' id=' + rand + ']';
+                buff += '[h3][toggler=hidden id=' + rand + ']' + $WH.sprintfa(src, srcGroup, srcEntry, srcId) + '[/toggler][/h3][div=hidden id=' + rand + ']'; k++;
 
                 // For gossip conditions, show which NPCs use this menu
                 if ((g == 14 || g == 15) && _extra.gossipNpcs && _extra.gossipNpcs[srcGroup]) {

@@ -4,6 +4,18 @@ if (isset($this->map) && empty($this->map)):
 elseif (!empty($this->map['data'])):
     if ($this->type == Type::QUEST) :
         echo "            <div id=\"mapper-zone-generic\"></div>\n";
+    elseif ($this->type == Type::ITEM):
+        echo "            <h2 class=\"clear\">Vendor Locations</h2>\n";
+        echo '            <div>This item can be purchased in <span id="mapper-zone-generic">';
+
+        $extra = $this->map['extra'];
+        echo Lang::concat($this->map['mapperData'], true, function ($areaData, $areaId) use ($extra) {
+            $count = array_sum(array_column($areaData, 'count'));
+            $label = $extra[$areaId] . ($count > 0 ? '&nbsp;('.$count.')' : '');
+            return '<a href="javascript:;" onclick="myMapper.update({zone: '.$areaId.'}); g_setSelectedLink(this, \'mapper\'); return false" onmousedown="return false">'.$label.'</a>';
+        });
+
+        echo ".</span></div>\n";
     elseif ($this->type != Type::ZONE):
         echo '            <div>';
 

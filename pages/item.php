@@ -288,6 +288,19 @@ class ItemPage extends genericPage
             else if ($stack > 1)
                 $each = '[color=q0] ('.$stack.')[/color]';
 
+            // If multiple entries are all pure gold, collapse to a min-max range
+            if (count($costList) > 1)
+            {
+                $pureGold = array_filter($costList, function($c) { return (bool)preg_match('/^\[money=[\d.]+\]$/', $c); });
+                if (count($pureGold) == count($costList))
+                {
+                    $amounts = array_map(function($c) { return (float)preg_replace('/[^\d.]/', '', $c); }, $pureGold);
+                    $minCost = (int)min($amounts);
+                    $maxCost = (int)max($amounts);
+                    $costList = $minCost == $maxCost ? ['[money='.$minCost.']'] : ['[money='.$minCost.'] - [money='.$maxCost.']'];
+                }
+            }
+
             if (count($costList) == 1)
                 $infobox[] = Lang::item('cost').Lang::main('colon').$costList[0].$each;
             else if (count($costList) > 1)
@@ -670,40 +683,6 @@ class ItemPage extends genericPage
             }
         }
 
-        // tab: see also
-        $conditions = array(
-            ['id', $this->typeId, '!'],
-            [
-                'OR',
-                ['name_loc'.Lang::getLocale()->value, $this->subject->getField('name', true)],
-                [
-                    'AND',
-                    ['class',         $_class],
-                    ['subClass',      $_subClass],
-                    ['slot',          $_slot],
-                    ['itemLevel',     $_ilvl - 15, '>'],
-                    ['itemLevel',     $_ilvl + 15, '<'],
-                    ['quality',       $this->subject->getField('quality')],
-                    ['requiredClass', $this->subject->getField('requiredClass') ?: -1]  // todo: fix db data in setup and not on fetch
-                ]
-            ]
-        );
-
-        if ($_ = $this->subject->getField('itemset'))
-            $conditions[1][] = ['AND', ['slot', $_slot], ['itemset', $_]];
-
-        $saItems = new ItemList($conditions);
-        if (!$saItems->error)
-        {
-            $this->extendGlobalData($saItems->getJSGlobals(GLOBALINFO_SELF));
-
-            $this->lvTabs[] = [ItemList::$brickFile, array(
-                'data' => array_values($saItems->getListviewData()),
-                'name' => '$LANG.tab_seealso',
-                'id'   => 'see-also'
-            )];
-        }
-
         // tab: starts (quest)
         if ($qId = $this->subject->getField('startQuest'))
         {
@@ -837,6 +816,36 @@ class ItemPage extends genericPage
                     'extraCols'  => $extraCols,
                     'hiddenCols' => ['level', 'type']
                 )];
+
+                // vendor map: show spawn pins for all selling NPCs
+                $vendorNpcIds = array_keys($vendors);
+                $rawSpawns = DB::Aowow()->select(
+                    "SELECT `typeId`, `areaId`, `floor`, `posX`, `posY` FROM ?_spawns WHERE `type` = ?d AND `typeId` IN (?a) AND `areaId` > 0",
+                    Type::NPC, $vendorNpcIds
+                );
+                if ($rawSpawns)
+                {
+                    $vendorMapData = [];
+                    foreach ($rawSpawns as $s)
+                    {
+                        if (!isset($vendorMapData[$s['areaId']][$s['floor']]))
+                            $vendorMapData[$s['areaId']][$s['floor']] = ['coords' => [], 'count' => 0];
+                        if ($s['posX'] > 0 && $s['posY'] > 0)
+                        {
+                            $vendorMapData[$s['areaId']][$s['floor']]['coords'][] = [$s['posX'], $s['posY']];
+                            $vendorMapData[$s['areaId']][$s['floor']]['count']++;
+                        }
+                    }
+                    uasort($vendorMapData, function($a, $b) {
+                        $ca = array_sum(array_column($a, 'count'));
+                        $cb = array_sum(array_column($b, 'count'));
+                        return $ca == $cb ? 0 : ($ca < $cb ? 1 : -1);
+                    });
+                    $vendorMap = ['data' => ['parent' => 'mapper-generic'], 'mapperData' => $vendorMapData];
+                    foreach ($vendorMapData as $areaId => $areaData)
+                        $vendorMap['extra'][$areaId] = ZoneList::getName($areaId);
+                    $this->map = $vendorMap;
+                }
             }
         }
 
@@ -925,6 +934,40 @@ class ItemPage extends genericPage
                     'visibleCols' => $visCols
                 )];
             }
+        }
+
+        // tab: see also
+        $conditions = array(
+            ['id', $this->typeId, '!'],
+            [
+                'OR',
+                ['name_loc'.Lang::getLocale()->value, $this->subject->getField('name', true)],
+                [
+                    'AND',
+                    ['class',         $_class],
+                    ['subClass',      $_subClass],
+                    ['slot',          $_slot],
+                    ['itemLevel',     $_ilvl - 15, '>'],
+                    ['itemLevel',     $_ilvl + 15, '<'],
+                    ['quality',       $this->subject->getField('quality')],
+                    ['requiredClass', $this->subject->getField('requiredClass') ?: -1]  // todo: fix db data in setup and not on fetch
+                ]
+            ]
+        );
+
+        if ($_ = $this->subject->getField('itemset'))
+            $conditions[1][] = ['AND', ['slot', $_slot], ['itemset', $_]];
+
+        $saItems = new ItemList($conditions);
+        if (!$saItems->error)
+        {
+            $this->extendGlobalData($saItems->getJSGlobals(GLOBALINFO_SELF));
+
+            $this->lvTabs[] = [ItemList::$brickFile, array(
+                'data' => array_values($saItems->getListviewData()),
+                'name' => '$LANG.tab_seealso',
+                'id'   => 'see-also'
+            )];
         }
 
         // tab: Shared cooldown
