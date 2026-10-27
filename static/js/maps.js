@@ -14,7 +14,7 @@ function ma_Init() {
     MA_EXP[1].src = g_staticUrl + MA_EXP[1].src;
     MA_EXP[2].src = g_staticUrl + MA_EXP[2].src;
 
-    // Continents — plain alphabetical list, no icons
+    // Continents — alphabetical, expansion icon on the newer zones (g_map_info.exp)
     ma_AddOptions($WH.ge('maps-ek'), [
         1, 3, 4, 8, 10, 11, 12, 28, 33, 36, 38, 40, 41, 44, 45, 46, 47, 51,
         85, 130, 139, 267, 1497, 1519, 1537, 3430, 3433, 3487, 4080, 4298
@@ -147,11 +147,11 @@ function ma_AddOptions(container, ids, expIdx) {
 
         a.appendChild(document.createTextNode(name));
 
-        if (expIdx !== undefined) {
-            var icon = ma_ExpIcon(expIdx);
-            if (icon)
-                a.appendChild(icon);
-        }
+        // continents mix old and new zones (Silvermoon, The Exodar, ..): fall back to the zone's own expansion
+        var exp = expIdx !== undefined ? expIdx : ((typeof g_map_info != 'undefined' && g_map_info.exp[id]) || 0);
+        var icon = ma_ExpIcon(exp);
+        if (icon)
+            a.appendChild(icon);
         a.onclick = (function (zoneId) {
             return function () { ma_SelectZone(zoneId); return false; };
         })(id);
