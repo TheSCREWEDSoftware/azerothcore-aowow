@@ -30,7 +30,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
 
     protected $setupAfter      = [['spawns', 'creature', 'objects', 'zones', 'factions'], ['zoneshapes']];
     protected $dbcSourceFiles  = ['areatrigger'];
-    protected $worldDependency = ['npc_vendor', 'transports', 'areatrigger_teleport', 'spell_target_position', 'spell_scripts', 'gameobject', 'graveyard_zone'];
+    protected $worldDependency = ['npc_vendor', 'transports', 'areatrigger_teleport', 'spell_target_position', 'spell_scripts', 'gameobject', 'gameobject_template_addon', 'graveyard_zone'];
     protected $requiredDirs = ['datasets/', 'static/js/zone-pois/', 'static/js/zone-nb/', 'static/js/zone-routes/'];
     protected $localized    = true;
 
@@ -463,7 +463,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
                 $src = $this->entrancePos((int)$t['mapId'], (float)$t['posX'], (float)$t['posY']);
                 $dst = $this->entrancePos((int)$tp['target_map'], (float)$tp['tx'], (float)$tp['ty']);
                 if ($src && $dst && ($t['mapId'] != $tp['target_map'] || $src[0] != $dst[0]))
-                    $out[] = [$src[0], ['t' => 'portal', 'x' => round($src[1], 1), 'y' => round($src[2], 1), 'z' => $dst[0], '_src' => ['name_loc0' => $tp['Name']]]];
+                    $out[] = [$src[0], ['t' => 'portal', 'x' => round($src[1], 1), 'y' => round($src[2], 1), 'z' => $dst[0], 'r' => [1, 1], '_src' => ['name_loc0' => $tp['Name']]]];   // area triggers: anyone
             }
         }
 
@@ -494,14 +494,14 @@ CLISetup::registerSetup("build", new class extends SetupScript
                 $far = end($exits);
                 $src = $this->entrancePos((int)$pos[$id]['mapId'], (float)$pos[$id]['posX'], (float)$pos[$id]['posY']);
                 if ($src && $src[0] != $far[2])
-                    $out[] = [$src[0], ['t' => 'portal', 'x' => round($src[1], 1), 'y' => round($src[2], 1), 'z' => $far[2], '_src' => ['name_loc0' => $label]]];
+                    $out[] = [$src[0], ['t' => 'portal', 'x' => round($src[1], 1), 'y' => round($src[2], 1), 'z' => $far[2], 'r' => [1, 1], '_src' => ['name_loc0' => $label]]];
             }
         }
 
         // portal objects (spellcasters) and teleport orbs (goobers casting a spell, e.g. Orb of Translocation Silvermoon <-> Undercity)
         $gos = DB::World()->select(
-            'SELECT g.`map`, g.`position_x` AS "x", g.`position_y` AS "y", gt.`name`, IF(gt.`type` = 22, gt.`Data0`, gt.`Data10`) AS "spell"
-             FROM   gameobject g JOIN gameobject_template gt ON gt.`entry` = g.`id`
+            'SELECT g.`map`, g.`position_x` AS "x", g.`position_y` AS "y", gt.`name`, IF(gt.`type` = 22, gt.`Data0`, gt.`Data10`) AS "spell", IFNULL(gta.`faction`, 0) AS "faction"
+             FROM   gameobject g JOIN gameobject_template gt ON gt.`entry` = g.`id` LEFT JOIN gameobject_template_addon gta ON gta.`entry` = gt.`entry`
              WHERE  ((gt.`type` = 22 AND gt.`Data0` > 0) OR (gt.`type` = 10 AND gt.`Data10` > 0)) AND g.`map` IN (?a)',
             [0, 1, 530, 571]
         );
@@ -521,6 +521,10 @@ CLISetup::registerSetup("build", new class extends SetupScript
 
             $dest = DB::World()->select('SELECT `ID` AS ARRAY_KEY, `MapID`, `PositionX`, `PositionY` FROM spell_target_position WHERE `ID` IN (?a) AND `MapID` IN (?a) GROUP BY `ID`', array_unique($ids), [0, 1, 530, 571]) ?: [];
 
+            // who may use it: not hostile to the faction (no faction: everyone)
+            $facs = array_values(array_filter(array_unique(array_map('intval', array_column($gos, 'faction')))));
+            $react = $facs ? (DB::Aowow()->select('SELECT `id` AS ARRAY_KEY, `A`, `H` FROM ?_factiontemplate WHERE `id` IN (?a)', $facs) ?: []) : [];
+
             foreach ($gos as $g)
             {
                 $d = $dest[$g['spell']] ?? null;
@@ -532,23 +536,33 @@ CLISetup::registerSetup("build", new class extends SetupScript
                 $src = $this->entrancePos((int)$g['map'], (float)$g['x'], (float)$g['y']);
                 $dst = $this->entrancePos((int)$d['MapID'], (float)$d['PositionX'], (float)$d['PositionY']);
                 if ($src && $dst && $src[0] != $dst[0])
-                    $out[] = [$src[0], ['t' => 'portal', 'x' => round($src[1], 1), 'y' => round($src[2], 1), 'z' => $dst[0], '_src' => ['name_loc0' => $g['name']]]];
+                {
+                    $ft = $react[$g['faction']] ?? null;
+                    $r  = $ft ? [$ft['A'] >= 0 ? 1 : -1, $ft['H'] >= 0 ? 1 : -1] : [1, 1];
+                    $out[] = [$src[0], ['t' => 'portal', 'x' => round($src[1], 1), 'y' => round($src[2], 1), 'z' => $dst[0], 'r' => $r, '_src' => ['name_loc0' => $g['name']]]];
+                }
             }
         }
 
-        // the same way out twice (portal object on an area trigger): keep one
+        // the same way out twice (portal object on an area trigger): keep one - the faction-locked one if there is one
         $seen = [];
         foreach ($out as $i => [$zoneId, $p])
         {
             if ($p['t'] != 'portal')
                 continue;
-            foreach ($seen[$zoneId.'-'.$p['z']] ?? [] as [$x, $y])
+            foreach ($seen[$zoneId.'-'.$p['z']] ?? [] as $k => [$x, $y, $j])
                 if (abs($x - $p['x']) < 1.5 && abs($y - $p['y']) < 1.5)
                 {
-                    unset($out[$i]);
+                    if (in_array(-1, $p['r'] ?? []) && !in_array(-1, $out[$j][1]['r'] ?? []))
+                    {
+                        unset($out[$j]);
+                        $seen[$zoneId.'-'.$p['z']][$k][2] = $i;
+                    }
+                    else
+                        unset($out[$i]);
                     continue 2;
                 }
-            $seen[$zoneId.'-'.$p['z']][] = [$p['x'], $p['y']];
+            $seen[$zoneId.'-'.$p['z']][] = [$p['x'], $p['y'], $i];
         }
 
         return array_values($out);

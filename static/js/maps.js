@@ -1670,7 +1670,7 @@ function ma_DrawRoutes(mapper) {
 
 // small Alliance / Horde icons above a marker: who can use it (npc reaction, transport faction, graveyard faction)
 function ma_PoiBadges(p) {
-    if (!ma_poiOn.badges || ['ta', 'th', 'pvp', 'dg', 'rd', 'qh', 'mail', 'stone', 'portal'].indexOf(p.t) != -1)
+    if (!ma_poiOn.badges || ['ta', 'th', 'pvp', 'dg', 'rd', 'qh', 'mail', 'stone'].indexOf(p.t) != -1)   // portals: who may use them
         return '';
 
     var f = p.t == 'sh' ? (p.f || 0) : (p.r ? (p.r[0] > 0 ? 1 : 0) | (p.r[1] > 0 ? 2 : 0) : 0);
