@@ -1091,8 +1091,8 @@ i.zs-poi-swatch.zs-spell {
     cursor: help;
     z-index: 1;
 }
-.zs-route-no b, .zs-route-no { text-shadow: none; }
-.zs-route-no-a { color: #4da6ff; }
-.zs-route-no-h { color: #ff4d4d; }
-.zs-route-no-n { color: #ffd100; }
+.zs-route-no { text-shadow: none; }
+.zs-route-arrows .zs-route-no-a, .zs-route-no-tip.zs-route-no-a { color: #4da6ff; }
+.zs-route-arrows .zs-route-no-h, .zs-route-no-tip.zs-route-no-h { color: #ff4d4d; }
+.zs-route-arrows .zs-route-no-n, .zs-route-no-tip.zs-route-no-n { color: #ffd100; }
 .zs-route-no.zs-route-no-tip { position: static; display: inline-block; transform: none; vertical-align: 1px; color: inherit; }

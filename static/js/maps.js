@@ -1459,7 +1459,8 @@ function ma_BindRoute(g, rt, zone, all) {
         stops.forEach(function (p) { if (p.n && names.indexOf(p.n) == -1) names.push(p.n); });
 
         var mins = function (sec) { var m = Math.round(sec / 6) / 10; return m + (m == 1 ? ' minute' : ' minutes'); };
-        var h = '<b class="q"><span class="zs-route-no zs-route-no-tip">' + (rt.id || rt._no) + '</span> ' + (rt.n || names.join(' / ') || kind) + '</b>';
+        var side = rt.r && rt.r[0] > 0 && rt.r[1] < 0 ? 'a' : (rt.r && rt.r[1] > 0 && rt.r[0] < 0 ? 'h' : 'n');
+        var h = '<b class="q"><span class="zs-route-no zs-route-no-tip zs-route-no-' + side + '">' + (rt.id || rt._no) + '</span> ' + (rt.n || names.join(' / ') || kind) + '</b>';
         h += '<br /><span class="q1">' + (stops[0] && stops[0].k || kind) + '</span>' + (rt.r ? ' &nbsp;' + ma_ReactHtml(rt.r) : '');
 
         // stops: every dock names the next one, so their destinations are all stops of the line (this zone first)
@@ -1517,12 +1518,40 @@ function ma_DrawRoutes(mapper) {
         var GAP = 110;
 
         var num = 0;
+        var placed = [];                                    // labels so far: rotated boxes {x, y, w, h, a} (px, rad)
+
+        // do two rotated boxes overlap (separating axis test)
+        var boxHit = function (p, q) {
+            var corners = function (b) {
+                var c = Math.cos(b.a), s = Math.sin(b.a), hw = b.w / 2, hh = b.h / 2;
+                return [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]].map(function (v) { return [b.x + v[0] * c - v[1] * s, b.y + v[0] * s + v[1] * c]; });
+            };
+            var A = corners(p), B = corners(q);
+            return ![p.a, p.a + Math.PI / 2, q.a, q.a + Math.PI / 2].some(function (ang) {
+                var ax = Math.cos(ang), ay = Math.sin(ang);
+                var pa = A.map(function (v) { return v[0] * ax + v[1] * ay; }), pb = B.map(function (v) { return v[0] * ax + v[1] * ay; });
+                return Math.max.apply(null, pa) < Math.min.apply(null, pb) || Math.max.apply(null, pb) < Math.min.apply(null, pa);
+            });
+        };
+
+        // point at a share of a line (px along it): [x %, y %, angle]
+        var pointAt = function (l, at) {
+            var run = 0;
+            for (var j = 2; j < l.length; j += 2) {
+                var dx = (l[j] - l[j - 2]) * W / 100, dy = (l[j + 1] - l[j - 1]) * H / 100;
+                var len = Math.sqrt(dx * dx + dy * dy);
+                if (len && at <= run + len)
+                    return [l[j - 2] + (l[j] - l[j - 2]) * (at - run) / len, l[j - 1] + (l[j + 1] - l[j - 1]) * (at - run) / len, Math.atan2(dy, dx) * 180 / Math.PI];
+                run += len;
+            }
+            return null;
+        };
+
         list.forEach(function (rt) {
             if (ma_poiOn[rt.t] === false)
                 return;
 
             rt._no = ++num;                                 // line number on this map (badge + tooltip)
-            var bestLen = -1, bestAt = null;
 
             var side = rt.r && rt.r[0] > 0 && rt.r[1] < 0 ? 'a' : (rt.r && rt.r[1] > 0 && rt.r[0] < 0 ? 'h' : 'n');
             var g = document.createElementNS(MA_ZS_SVGNS, 'g');
@@ -1544,18 +1573,9 @@ function ma_DrawRoutes(mapper) {
 
                 var next = GAP / 2;
                 var run  = 0;
-                var total = 0;
-                for (var k = 2; k < l.length; k += 2)
-                    total += Math.hypot((l[k] - l[k - 2]) * W / 100, (l[k + 1] - l[k - 1]) * H / 100);
-                var half = Math.min(total * .5 + GAP / 4, total * .75);   // badge between two arrows, near the middle
                 for (var j = 2; j < l.length; j += 2) {
                     var dx = (l[j] - l[j - 2]) * W / 100, dy = (l[j + 1] - l[j - 1]) * H / 100;
                     var len = Math.sqrt(dx * dx + dy * dy);
-                    if (total > bestLen && half >= run && half <= run + len && len) {
-                        bestLen = total;
-                        bestAt  = [l[j - 2] + (l[j] - l[j - 2]) * (half - run) / len, l[j - 1] + (l[j + 1] - l[j - 1]) * (half - run) / len,
-                                   Math.atan2(dy, dx) * 180 / Math.PI];
-                    }
                     while (len && next <= run + len) {
                         var f = (next - run) / len;
                         var a = document.createElement('i');
@@ -1570,10 +1590,50 @@ function ma_DrawRoutes(mapper) {
                 }
             });
 
+            // label: near the middle of the longest piece, else the first spot along any piece that is clear of the other labels
+            var text = String(rt.id || rt._no);             // transport ID once the build has it, else the line number
+            var bw = text.length * 6.5 + 12, bh = 17;       // label box incl. a little gap
+            var flip = function (a) { return a > 90 ? a - 180 : (a < -90 ? a + 180 : a); };
+            var pieces = rt.l.map(function (l) {
+                var t = 0;
+                for (var k = 2; k < l.length; k += 2)
+                    t += Math.hypot((l[k] - l[k - 2]) * W / 100, (l[k + 1] - l[k - 1]) * H / 100);
+                return [l, t];
+            }).sort(function (a, b) { return b[1] - a[1]; });
+
+            var bestAt = null, bestBox = null;
+            // on the line first, then pushed off it sideways (parallel lines, short stubs near the docks)
+            [0, 1, -1, 2, -2].some(function (off) {
+                return pieces.some(function (pc) {
+                    if (!off && pc[1] < bw * .8)            // too short to carry the label on it
+                        return false;
+                    return [.5, .42, .58, .34, .66, .26, .74, .18, .82, .1, .9].some(function (f) {
+                        var p = pointAt(pc[0], pc[1] * f);
+                        if (!p)
+                            return false;
+                        var a  = flip(p[2]) * Math.PI / 180;
+                        var dx = -Math.sin(a) * off * bh, dy = Math.cos(a) * off * bh;   // perpendicular to the line
+                        var box = { x: p[0] * W / 100 + dx, y: p[1] * H / 100 + dy, w: bw, h: bh, a: a };
+                        if (!bestAt) {                      // nothing clear: keep the middle of the longest piece
+                            bestAt  = p;
+                            bestBox = box;
+                        }
+                        if (box.x < bw / 2 || box.y < bh || box.x > W - bw / 2 || box.y > H - bh || placed.some(function (q) { return boxHit(q, box); }))
+                            return false;
+                        bestAt  = [box.x * 100 / W, box.y * 100 / H, p[2]];
+                        bestBox = box;
+                        return true;
+                    });
+                });
+            });
+            if (!bestAt && pieces.length && (bestAt = pointAt(pieces[0][0], pieces[0][1] / 2)))
+                bestBox = { x: bestAt[0] * W / 100, y: bestAt[1] * H / 100, w: bw, h: bh, a: flip(bestAt[2]) * Math.PI / 180 };
+
             if (bestAt) {
-                var b = document.createElement('b');
+                placed.push(bestBox);
+                var b = document.createElement('span');     // not <b>: page text styles recolour bold text
                 b.className = 'zs-route-no zs-route-no-' + side;
-                b.textContent = rt.id || rt._no;            // transport ID once the build has it, else the line number
+                b.textContent = text;
                 b.style.left = bestAt[0] + '%';
                 b.style.top  = bestAt[1] + '%';
                 var ang = bestAt[2];                        // along the line, but never upside down
