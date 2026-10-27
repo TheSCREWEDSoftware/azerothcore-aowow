@@ -357,6 +357,7 @@ $lang = array(
         'roles'         => "Roles",                         // LFG_TOOLTIP_ROLES
         'specs'         => "Specializations",
         '_roles'        => ["Healer", "Melee DPS", "Ranged DPS", "Tank"],
+        'tooltip_reqlevel' => "Required Level",
 
         'phases'        => "Phases",
         'mode'          => "Mode",

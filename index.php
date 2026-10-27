@@ -95,6 +95,7 @@ switch ($pageCall)
     case 'contactus':
     case 'comment':
     case 'edit':                                            // guide editor: targeted by QQ fileuploader, detail-page article editor
+    case 'trainerrank':                                       // tool: class trainer spell ranks
     case 'get-description':                                 // guide editor: shorten fulltext into description
     case 'filter':                                          // pre-evaluate filter POST-data; sanitize and forward as GET-data
     case 'go-to-reply':                                     // find page the reply is on and forward

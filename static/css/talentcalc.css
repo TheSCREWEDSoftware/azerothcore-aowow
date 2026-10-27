@@ -95,10 +95,20 @@ a.talentcalc-button-summary {
 }
 
 .talentcalc-upper {
-    background-color:#141414;
-    margin-bottom:5px;
-    padding:6px 8px;
-    font-size:14px;
+    display:none; /* replaced by #tc-navbar */
+}
+
+/* Hide sidebar controls — replaced by navbar buttons */
+.talentcalc-sidebar-controls,
+.talentcalc-sidebar-controls2,
+a.talentcalc-button-help {
+    display:none;
+}
+
+/* Collapse sidebar background once glyph panel is moved to sections */
+.talentcalc-sidebar {
+    background-color:transparent;
+    padding:0;
 }
 
 .talentcalc-upper span {

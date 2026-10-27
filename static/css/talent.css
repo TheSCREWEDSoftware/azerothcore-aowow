@@ -1,51 +1,389 @@
-#tc-classes {
-    width:946px;
-    margin:0 auto;
-    padding-bottom:10px;
-}
+/* =====================================================
+   Talent Calculator – talent.css
+   ===================================================== */
 
-#tc-classes-inner {
-    width:460px;
-    margin:0 auto;
-    text-align:center;
-    z-index:3;
-}
+/* Hide the talent tree while still on the class-chooser screen */
+#tc-itself.choose { display:none; }
 
+/* ── Choose-a-class screen ───────────────────────────────────────── */
+#tc-classes { width:100%; margin:0 auto; padding-bottom:10px; }
+#tc-classes-inner { margin:0 auto; text-align:center; z-index:3; }
+
+#tc-classes.choose { position:static; padding:40px 0 24px; }
+#tc-classes.choose #tc-classes-outer { width:auto; }
+#tc-classes.choose #tc-classes-inner { position:static; width:700px; margin:0 auto; text-align:center; }
+
+/* "CHOOSE A CLASS" heading with decorative side-lines */
 #tc-classes p {
-    font-size:32px;
-    margin:0 0 16px 0;
-    padding:0;
+    display:flex; align-items:center;
+    font-size:22px; font-weight:bold; letter-spacing:5px;
+    color:#c8c8c8; text-transform:uppercase;
+    margin:0 0 30px; padding:0;
+}
+#tc-classes.choose p::before,
+#tc-classes.choose p::after {
+    content:''; flex:1; height:1px; background:#5a5a5a; margin:0 16px;
 }
 
-#tc-classes .iconmedium {
-    float:left;
-    margin-right:2px;
-    margin-bottom:2px;
-    opacity:.6666;
-    filter:alpha(opacity=66);
+/* Class grid items */
+#tc-classes.choose .tc-class-item { display:inline-block; width:120px; text-align:center; margin:0 8px 20px; vertical-align:top; }
+#tc-classes.choose .tc-class-name { display:block; margin-top:9px; font-size:13px; font-weight:bold; cursor:pointer; line-height:1.3; }
+#tc-classes.choose .iconlarge     { opacity:1; filter:alpha(opacity=100); display:inline-block; cursor:pointer; }
+
+/* Non-choose compact strip (hidden via JS after selection) */
+#tc-classes .tc-class-item  { display:inline-block; vertical-align:top; margin:0 1px; }
+#tc-classes .tc-class-name  { display:none; }
+#tc-classes .iconlarge      { opacity:.6666; filter:alpha(opacity=66); display:inline-block; }
+#tc-classes .iconlarge-gold-selected { opacity:1; filter:alpha(opacity=100); }
+
+/* Subtitle */
+#tc-classes p.tc-choose-desc {
+    display:block; font-size:13px; font-weight:normal; color:#d0d0d0;
+    text-align:center; text-transform:none; letter-spacing:normal;
+    line-height:1.6; margin:12px 0 0; padding:0; flex:none;
 }
 
-#tc-classes .iconmedium-gold-selected {
-    opacity: 1;
-    filter:alpha(opacity=100);
+/* ── Navbar (post-selection, full-width) ─────────────────────────── */
+#tc-navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #141414;
+    border-bottom: 1px solid #2a2a2a;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    /* bleed to left/right edges of .main-contents */
+    margin: 0 -10px;
+    padding: 8px 14px;
+    width: calc(100% + 20px);
+    box-sizing: border-box;
+    min-height: 64px;
 }
 
-#tc-classes.choose {
-    position:relative;
-    padding:0;
+/* Left: medium class icon strip */
+.tc-navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex: 1;
+    flex-wrap: nowrap;
 }
 
-#tc-classes.choose #tc-classes-outer {
-    width:614px;
+/* Icons sit directly in the flex row; gold border via iconmedium-gold-selected (built-in) */
+.tc-navbar-left .iconmedium { display: inline-block; cursor: pointer; }
+
+/* Center: level control */
+.tc-navbar-center {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex: 0 0 auto;
+    margin: 0 20px;
+}
+.tc-level-label {
+    font-size: 14px;
+    color: #ccc;
+    white-space: nowrap;
+    font-weight: bold;
+}
+.tc-level-wrap { display: flex; align-items: center; gap: 3px; }
+
+a.tc-level-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    background: #2a2a2a; border: 1px solid #555;
+    color: #ddd; font-size: 18px; text-decoration: none; border-radius: 3px;
+}
+a.tc-level-btn:hover { background: #3e3e3e; color: #fff; border-color: #888; }
+
+input.tc-level-input {
+    width: 44px; text-align: center;
+    background: #1a1a1a; border: 1px solid #555;
+    color: #fff; font-size: 15px; font-weight: bold;
+    padding: 2px 0; border-radius: 2px;
 }
 
-#tc-classes.choose #tc-classes-inner {
-    position:absolute;
-    left:77px;
-    top:150px;
+/* Right: action buttons */
+.tc-navbar-right {
+    display: flex; align-items: center; gap: 5px; flex: 0 0 auto;
+}
+a.tc-nav-btn {
+    display: inline-block; padding: 4px 10px; font-size: 12px;
+    background: #272727; border: 1px solid #484848;
+    color: #c0c0c0; text-decoration: none; border-radius: 3px; white-space: nowrap;
+}
+a.tc-nav-btn:hover { background: #3a3a3a; color: #fff; border-color: #777; }
+a.tc-nav-btn-abilities { color: #ffd100; border-color: #7a6000; font-weight: bold; }
+a.tc-nav-btn-abilities:hover { background: #2a2200; color: #ffe566; }
+.tc-nav-sep {
+    display: inline-block; width: 1px; height: 20px;
+    background: #3a3a3a; margin: 0 4px; vertical-align: middle;
 }
 
-#tc-classes.choose .iconmedium {
-    opacity:1;
-    filter:alpha(opacity=100);
+/* ── Class Banner (full-width bleed, single spec image) ──────────── */
+#tc-banner {
+    position: relative;
+    margin: 0 -10px;
+    width: calc(100% + 20px);
+    height: 150px;
+    overflow: hidden;
+    background: #0a0a0a;
+}
+
+/* Gradient background — swapped per dominant spec */
+.tc-banner-bg {
+    position: absolute;
+    inset: 0;
+}
+
+.tc-banner-overlay {
+    position: absolute;
+    inset: 0;
+    /* gradient from left AND right so both text sides are readable */
+    background:
+        linear-gradient(to right,  rgba(0,0,0,.82) 0%, rgba(0,0,0,.45) 30%, rgba(0,0,0,0) 55%),
+        linear-gradient(to left,   rgba(0,0,0,.75) 0%, rgba(0,0,0,.35) 30%, rgba(0,0,0,0) 55%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+}
+
+#tc-banner-classname {
+    font-size: 30px;
+    font-weight: bold;
+    text-shadow: 2px 2px 6px #000, 0 0 20px rgba(0,0,0,.9);
+    letter-spacing: 2px;
+}
+
+#tc-banner-specname {
+    font-size: 16px;
+    font-weight: bold;
+    color: #d8d8d8;
+    text-shadow: 1px 1px 4px #000, 0 0 12px rgba(0,0,0,.9);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.85;
+}
+
+/* ── Sections (3-column, full-width) ─────────────────────────────── */
+#tc-sections {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin: 10px 0;
+    align-items: flex-start;
+}
+
+/* Trainer: takes the room left by the (hidden) talents card */
+#tc-sections .tc-section:nth-child(1) { flex: 1 1 auto; min-width: 0; }
+/* Talents: flexible center */
+#tc-sections .tc-section:nth-child(2) { flex: 1; }
+/* Glyphs: medium fixed */
+#tc-sections .tc-section:nth-child(3) { flex: 0 0 300px; }
+
+.tc-section-header {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-bottom: none;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #c8c8c8;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.tc-pts-left {
+    font-size: 11px; font-weight: normal; color: #aaa;
+    text-transform: none; letter-spacing: 0;
+}
+
+.tc-section-body {
+    background: #111;
+    border: 1px solid #333;
+    padding: 8px;
+    font-size: 12px;
+    color: #ccc;
+    min-height: 60px;
+}
+
+/* Trainer table */
+.tc-trainer-table { border-collapse: collapse; width: 100%; font-size: 11px; }
+.tc-trainer-table th {
+    background: #1a1a1a; color: #888; text-align: left;
+    padding: 3px 5px; border-bottom: 1px solid #2a2a2a; font-weight: normal;
+}
+.tc-trainer-table td { padding: 2px 5px; border-bottom: 1px solid #1a1a1a; color: #ccc; }
+.tc-trainer-table tr:hover td { background: #1a1a1a; }
+.tc-trainer-table a { color: #ffd100; text-decoration: none; }
+.tc-trainer-table a:hover { text-decoration: underline; }
+.tc-trainer-lvl { color: #888; width: 24px; }
+
+/* Replace bubble2.png with a dark bar at the bottom of the icon that also closes the rank frame */
+#tc-itself .iconmedium div.icon-bubble {
+    background: rgba(0, 0, 0, 0.78) !important;
+    /* the rank frame (border.gif) has no bottom edge - the old bubble covered that spot - so the bar draws it:
+       sides + bottom in the frame colour, which TalentCalc sets inline as borderColor (green / gold) */
+    border-style: solid !important;
+    border-width: 0 1px 1px 1px !important;
+    border-radius: 0 0 3px 3px !important;
+    box-sizing: border-box !important;
+    left: 1px !important;
+    top: auto !important;
+    bottom: 1px !important;
+    width: 42px !important;
+    height: 16px !important;
+    line-height: 15px !important;
+    padding: 0 !important;
+    font-size: 10px !important;
+    font-weight: bold;
+    letter-spacing: 0 !important;
+    text-align: center !important;
+}
+
+/* Cell sizing: 56×56 (icon=44px, gives 6px breathing room per side) */
+#tc-itself.talentcalc-default table:not([class*="talentcalc-arrow"]) > tbody > tr > td {  /* talent grid only: the arrow tables size their own cells */
+    width: 56px !important;
+    height: 56px !important;
+}
+#tc-itself.talentcalc-default .talentcalc-main {
+    width: 686px !important;
+    height: 620px !important;
+}
+
+/* Talents bar — 686px wide, two rows, sits directly above .talentcalc-main */
+#tc-talents-bar {
+    width: 686px;
+    box-sizing: border-box;
+    background: #111;
+    border: 1px solid #404040;
+    border-bottom: none; /* merges flush with .talentcalc-main border */
+}
+
+/* Row 1: "Talents" label on left, "Points left: X" on right */
+.tc-bar-row1 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border-bottom: 1px solid #2a2a2a;
+    min-height: 26px;
+}
+.tc-bar-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #e8e8e8;
+}
+.tc-bar-pts-left {
+    font-size: 12px;
+    color: #d0d0d0;
+    white-space: nowrap;
+}
+.tc-bar-pts-left b { color: #ff5555; }
+
+/* Row 2: three 228px spec cells aligned with the tree columns below */
+.tc-bar-row2 {
+    display: flex;
+}
+.tc-bar-tree {
+    width: 228px;
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 8px;
+    box-sizing: border-box;
+    border-left: 1px solid #404040;
+}
+.tc-bar-tree:first-child { border-left: none; }
+
+.tc-bar-tree img { display: block; flex: none; }
+.tc-bar-tree-name {
+    flex: 1;
+    font-size: 11px;
+    font-weight: bold;
+    color: #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tc-bar-tree-pts {
+    font-size: 11px;
+    color: #888;
+    white-space: nowrap;
+}
+
+/* Glyphs section */
+#tc-sec-glyphs .talentcalc-sidebar-inner { width: auto; }
+#tc-sec-glyphs h3 { font-size: 12px; margin: 0 0 6px; }
+#tc-sec-glyphs .talentcalc-sidebar-majorglyphs,
+#tc-sec-glyphs .talentcalc-sidebar-minorglyphs { float: left; width: 140px; }
+
+/* trainer list: icon + name, rank, level */
+.tc-trainer-table td { vertical-align: middle; font-size: 12px; }
+.tc-trainer-spell { display: inline-flex; align-items: center; gap: 6px; }
+.tc-trainer-spell img { width: 18px; height: 18px; border: 1px solid #000; border-radius: 3px; flex-shrink: 0; }
+.tc-trainer-rank { color: #aaa; white-space: nowrap; width: 80px; }
+.tc-trainer-table td.tc-trainer-lvl { color: #888; width: 70px; text-align: right; white-space: nowrap; }
+.tc-trainer-table th:last-child { text-align: right; }
+
+/* trainer spells: one column per talent tree */
+.tc-tr-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.tc-tr-filter {
+    flex: 0 1 240px; height: 26px; padding: 0 8px; font-size: 12px;
+    color: inherit; background: rgba(0,0,0,.35); border: 1px solid #3a3a3a; border-radius: 4px;
+}
+.tc-tr-filter:focus { outline: 0; border-color: var(--th-accent, #ffd100); }
+.tc-tr-count { font-size: 11px; color: #888; }
+.tc-tr-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; align-items: start; }
+.tc-tr-col { background: rgba(255,255,255,.025); border: 1px solid #2a2a2a; border-radius: 4px; overflow: hidden; }
+.tc-tr-head {
+    padding: 6px 8px; font-size: 11px; font-weight: bold; letter-spacing: .06em; text-transform: uppercase;
+    color: #ddd; border-bottom: 2px solid var(--th-accent, #ffd100); background: rgba(0,0,0,.25);
+}
+.tc-tr-head i { font-style: normal; font-weight: normal; color: #888; margin-left: 4px; }
+.tc-tr-row {
+    display: grid; grid-template-columns: 18px 1fr 64px 34px; align-items: center; gap: 7px;
+    padding: 3px 8px; font-size: 12px; text-decoration: none; color: #ffd100;
+    border-top: 1px solid rgba(255,255,255,.04);
+}
+a.tc-tr-row:hover { background: rgba(255,255,255,.06); color: #fff; }
+.tc-tr-row img { width: 18px; height: 18px; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
+.tc-tr-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-tr-rank { font-size: 11px; color: #9aa; }
+.tc-tr-lvl { font-size: 11px; color: #777; text-align: right; }
+
+.tc-tr-row { display: grid; grid-template-columns: 18px 1fr 64px 34px; align-items: center; gap: 7px; padding: 3px 8px; }
+.tc-tr-cols-head { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #777; padding-top: 4px; padding-bottom: 4px; }
+.tc-tr-cols-head span:nth-child(4) { text-align: right; }
+.tc-tr-rank { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* talent trees + Glyphs card side by side */
+#tc-itself.tc-with-glyphs {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 16px;
+    width: auto;
+}
+#tc-itself.tc-with-glyphs .talentcalc-sidebar-anchor { display: none; }
+#tc-itself.tc-with-glyphs .talentcalc-main { overflow: visible; }
+.tc-glyph-card { flex: 0 0 300px; margin-top: 0; }
+#tc-sections .tc-section:nth-child(1) { flex: 1 1 auto; }
+/* the trees are wider than the old fixed wrapper (4-column trees): size the wrapper to its content */
+#tc-itself.tc-with-glyphs .talentcalc-wrapper {
+    flex: 0 0 auto;
+    width: max-content !important;
+}
+#tc-itself.tc-with-glyphs .talentcalc-lower { width: auto; }
+
+/* tree artwork is 204x554, the trees are wider/taller (4 columns + extra rows): stretch it over the whole tree */
+.talentcalc-main > div > div {
+    background-size: 100% 100% !important;
 }

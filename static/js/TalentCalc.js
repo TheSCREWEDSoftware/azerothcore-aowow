@@ -555,6 +555,15 @@ function TalentCalc() {
         _setLevelCap(lvl);
     };
 
+    this.getCurrentLevel = function () {
+        return _maxLevel;
+    };
+
+    this.setLevelAndNotify = function (lvl) {
+        _setLevelCap(lvl);
+        _onChange();
+    };
+
     this.setLock = function (locked) {
         if (_currentClass == -1) {
             return;
@@ -1186,7 +1195,7 @@ function TalentCalc() {
             }
 
             d2.style.overflow = 'hidden';
-            d2.style.width = (_mode == MODE_DEFAULT ? '204px' : '244px');
+            d2.style.width = (_mode == MODE_DEFAULT ? '228px' : '244px');
 
             $WH.ae(d2, _createTable(4, _nTiers));
 
@@ -1221,6 +1230,40 @@ function TalentCalc() {
                 link.onmousedown = $WH.rf;
                 link.onclick = $WH.rf;
                 g_onClick(link, _iconClick.bind(link, talent));
+
+                // Intercept shift+left-click to fill all remaining points in one go.
+                // g_onClick normally routes shift-click to right-click (decrement), so we
+                // override onmouseup before g_onClick's handler can act on shift.
+                (function(lnk, tal) {
+                    var _orig = lnk.onmouseup;
+                    lnk.onmouseup = function(e) {
+                        e = $WH.$E(e);
+                        if (e.shiftKey && e._button !== 3 && !_locked && tal.enabled) {
+                            // Shift+left-click: fill all remaining points
+                            while (tal.enabled && tal.k < tal.m && _data[tal.classId].k < _pointsToSpend) {
+                                _incrementTalent(tal, false, lnk);
+                            }
+                            _updateTree(tal.tree, true, tal, tal.classId);
+                            _showTooltip(lnk, tal);
+                            _onChange();
+                            return false;
+                        }
+                        if (e.shiftKey && e._button === 3 && !_locked && tal.k > 0) {
+                            // Shift+right-click: drain all points
+                            var prev;
+                            do {
+                                prev = tal.k;
+                                _decrementTalent(tal, false, lnk);
+                            } while (tal.k > 0 && tal.k < prev);
+                            _updateTree(tal.tree, true, tal, tal.classId);
+                            _showTooltip(lnk, tal);
+                            _onChange();
+                            return false;
+                        }
+                        return _orig.call(this, e);
+                    };
+                })(link, talent);
+
                 link.onmouseover = _showTooltip.bind(null, link, talent);
                 link.onmouseout = $WH.Tooltip.hide;
 
@@ -1228,7 +1271,7 @@ function TalentCalc() {
                     border = $WH.ce('div'),
                     bubble = $WH.ce('div');
 
-                $WH.ae(bubble, $WH.ct('0'));
+                $WH.ae(bubble, $WH.ct('0/' + talent.m));
 
                 border.className = 'icon-border';
                 bubble.className = 'icon-bubble';
@@ -1293,8 +1336,8 @@ function TalentCalc() {
                         h = (Math.abs(dY) - 1) * 60;
                     }
                     else {
-                        w = (Math.abs(dX) - 1) * 50;
-                        h = (Math.abs(dY) - 1) * 50;
+                        w = (Math.abs(dX) - 1) * 56;
+                        h = (Math.abs(dY) - 1) * 56;
                     }
 
                     if (_mode == MODE_PET) {
@@ -2664,10 +2707,12 @@ function TalentCalc() {
                     if (talent.k == talent.m) {
                         talent.border.style.backgroundPosition = '-42px 0';
                         talent.bubble.style.color = '#E7BA00';
+                        talent.bubble.style.borderColor = '#DAAF02';   // same gold as the rank frame (border.gif)
                     }
                     else {
                         talent.border.style.backgroundPosition = '-84px 0';
                         talent.bubble.style.color = '#17FD17';
+                        talent.bubble.style.borderColor = '#18D517';   // same green as the rank frame (border.gif)
                     }
 
                     Icon.moveTexture(talent.icon, 1, i, 0);
@@ -2687,6 +2732,7 @@ function TalentCalc() {
                     Icon.moveTexture(talent.icon, 1, i, 1);
                     talent.link.className = '';
                     talent.bubble.style.visibility = 'hidden';
+                    talent.bubble.style.borderColor = '';
 
                     if (talent.r) {
                         var _ = talent.arrow.firstChild;
@@ -2696,7 +2742,7 @@ function TalentCalc() {
                     }
                 }
 
-                talent.bubble.firstChild.nodeValue = talent.k;
+                talent.bubble.firstChild.nodeValue = talent.k + '/' + talent.m;
                 talent.link.href = '?spell=' + talent.s[Math.max(0, talent.k - 1)];
             }
         }
@@ -2843,8 +2889,12 @@ Listview.templates.glyph = {
                 if (a.none) {
                     return -1;
                 }
+                if (b.none) {
+                    return 1;
+                }
 
-                return $WH.strcmp(a.name, b.name);
+                // aowow: by required level, then alphabetically
+                return (a.level || 0) - (b.level || 0) || $WH.strcmp(a.name, b.name);
             }
         },
         {

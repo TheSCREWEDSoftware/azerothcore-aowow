@@ -5333,7 +5333,7 @@ var LANG = {
     tc_tier:        "Requires $1 points in $2 Talents",
     tc_prereq:      "Requires $1 point in $2",
     tc_prereqpl:    "Requires $1 points in $2",
-    tc_learn:       "Click to learn",
+    tc_learn:       "Click for 1 point · Shift-click for all points",
     tc_unlearn:     "Right-click to unlearn",
     tc_unlearn2:    "Shift-click to unlearn",
     tc_nextrank:    "Next rank: ",

@@ -1955,6 +1955,8 @@ class SpellList extends BaseType
         if ($reqItems)
             $xTmp[] = Lang::game('requires2').' '.$reqItems;
 
+        $xTmp[] = Lang::game('tooltip_reqlevel').' '.((int)$this->curTpl['spellLevel'] ?: 1);
+
         if ($desc[0])
             $xTmp[] = '<span class="q">'.$desc[0].'</span>';
 
