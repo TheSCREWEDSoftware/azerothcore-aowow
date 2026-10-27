@@ -38,7 +38,7 @@ class RacePage extends GenericPage
 
     protected function generateTitle()
     {
-        array_unshift($this->title, $this->subject->getField('name', true), Util::ucFirst(Lang::game('class')));
+        array_unshift($this->title, $this->subject->getField('name', true), Util::ucFirst(Lang::game('race')));
     }
 
     protected function generateContent()
@@ -92,7 +92,7 @@ class RacePage extends GenericPage
             $infobox[] = Lang::race('startZone').Lang::main('colon').'[zone='.$_.']';
         }
 
-        // Race ID (like Wowhead — below Starting zone)
+        // Race ID (below Starting zone)
         $infobox[] = 'Race ID' . Lang::main('colon') . $this->typeId;
 
         /****************/
@@ -121,13 +121,18 @@ class RacePage extends GenericPage
 
             // Cache class data for the article section
             $classDataForArticle = [];
-            foreach ($classes->iterate() as $__)
-                $classDataForArticle[] = ['id' => $classes->id, 'name' => $classes->getField('name', true), 'roles' => (int)$classes->getField('roles')];
+            foreach ($classes->iterate() as $k => $row)
+                $classDataForArticle[] = ['id' => $k, 'name' => Util::localizedString($row, 'name'), 'roles' => (int)($row['roles'] ?? 0)];
         }
 
-        // Racials
-        $conditions = array(
+        // Racials — by the race's own racial skill line (SkillLine.dbc): the race masks of some racials also
+        // include other races (e.g. Draenei racials showed up on Humans)
+        $racialSkill = [1 => 754, 2 => 125, 3 => 101, 4 => 126, 5 => 220, 6 => 124, 7 => 753, 8 => 733, 10 => 756, 11 => 760];
+        $conditions = isset($racialSkill[$this->typeId]) ? array(
             ['typeCat', -4],                               // racial traits
+            ['skillLine1', $racialSkill[$this->typeId]]
+        ) : array(
+            ['typeCat', -4],
             ['reqRaceMask', $ra->toMask(), '&']
         );
 
@@ -185,7 +190,7 @@ class RacePage extends GenericPage
             )];
         }
 
-        // Quests — only quests exclusive to this race (reqRaceMask == this race's mask exactly, like Wowhead)
+        // Quests — only quests exclusive to this race (reqRaceMask == this race's mask exactly)
         $conditions = array(
             ['reqRaceMask', $ra->toMask()]
         );
@@ -264,6 +269,8 @@ class RacePage extends GenericPage
         if (isset($lore[$this->typeId]))
             $articleText .= $lore[$this->typeId] . '[br][br]';
 
+        // Build racial name→ID map while generating the Racials section
+        $racialIdByName = [];
         if (!$racials->error)
         {
             $articleRacials = '';
@@ -274,6 +281,7 @@ class RacePage extends GenericPage
                 if (isset($seen[$name]))
                     continue;
                 $seen[$name] = true;
+                $racialIdByName[$name] = $racials->id;  // capture ID by localized name
 
                 $parsed = $racials->parseText('description');
                 $desc   = !empty($parsed[0]) ? strip_tags($parsed[0]) : '';
@@ -285,6 +293,125 @@ class RacePage extends GenericPage
 
             if ($articleRacials)
                 $articleText .= '[h2]' . Lang::spell('cat', -4) . '[/h2]' . $articleRacials;
+        }
+
+        // Per-race Benefits blurbs — spell IDs resolved from racials already in DB, plus any extra lookups
+        // Shared shorthands used by all race branches below
+        $S = function(string $name) use ($racialIdByName): string {
+            $id = $racialIdByName[$name] ?? 0;
+            return $id ? '[spell='.$id.']' : $name;
+        };
+        $C = function(int $id): string { return '[class='.$id.']'; };
+        $R = function(int $id): string { return '[race='.$id.']'; };
+
+        if ($this->typeId == 1) // Human
+        {
+            // Spiritual Guidance rank 1 (priest talent, not a racial) — load so [spell=14901] renders correctly
+            $this->extendGlobalIds(Type::SPELL, 14901);
+            // Druid (class 11) is not Human-playable and thus absent from $classes globals — load for [class=11]
+            $this->extendGlobalIds(Type::CHR_CLASS, 11);
+
+            $articleText .=
+                '[h2]Benefits[/h2][ul]' .
+                '[li]'.$R(1).' '.$C(5).' are a popular choice due to '.$S('The Human Spirit').' having good synergy with [spell=14901] and providing additional mana regeneration.[/li]' .
+                '[li]'.$R(1).' '.$C(4).' are a popular choice due to '.$S('Mace Specialization').' and '.$S('Sword Specialization').' increasing your melee damage potential. These racials also benefit Protection and Retribution '.$C(2).'.[/li]' .
+                '[li]'.$R(1).' '.$C(1).' are also a popular choice due to '.$S('Mace Specialization').' and '.$S('Sword Specialization').' as the extra weapon damage from the racials will improve their threat generation.[/li]' .
+                '[li]'.$S('Perception').' is a solid racial for PvP in detecting '.$C(11).' and '.$C(4).'.[/li]' .
+                '[li]'.$S('Diplomacy').' helps you hit Exalted faster on those reputation grinds--great if you are a collector interested in rewards like mounts.[/li]' .
+                '[/ul]';
+        }
+        elseif ($this->typeId == 2) // Orc
+        {
+            $articleText .=
+                '[h2]Benefits[/h2][ul]' .
+                '[li]'.$R(2).' '.$C(1).' are one of the strongest choices due to '.$S('Axe Specialization').' providing free expertise with axes and fist weapons, and '.$S('Blood Fury').' offering a powerful on-use attack power cooldown.[/li]' .
+                '[li]'.$R(2).' '.$C(3).' benefit greatly from '.$S('Command').' increasing pet damage and '.$S('Blood Fury').' boosting attack power during burn phases.[/li]' .
+                '[li]'.$R(2).' '.$C(9).' enjoy '.$S('Command').' for improved pet damage and the spell power version of '.$S('Blood Fury').' for additional burst.[/li]' .
+                '[li]'.$S('Hardiness').' reduces stun duration by 15%, making it one of the strongest PvP racials in the game and beneficial for all '.$R(2).' classes.[/li]' .
+                '[/ul]';
+        }
+        elseif ($this->typeId == 3) // Dwarf
+        {
+            $articleText .=
+                '[h2]Benefits[/h2][ul]' .
+                '[li]'.$R(3).' '.$C(3).' are the top Alliance Hunter choice -- '.$S('Gun Specialization').' provides free expertise with guns, reducing the gear investment needed to reach the expertise cap.[/li]' .
+                '[li]'.$R(3).' '.$C(1).' and '.$C(2).' benefit from '.$S('Mace Specialization').' providing free expertise with maces, reducing the gear investment needed to reach the expertise cap.[/li]' .
+                '[li]'.$S('Stoneform').' is one of the best defensive PvP racials, removing bleeds, poisons, and diseases while granting a 10% armor bonus -- making '.$R(3).' '.$C(5).' and '.$C(4).' particularly resilient in arena.[/li]' .
+                '[li]'.$S('Find Treasure').' is a handy quality-of-life perk that highlights nearby chests on the minimap, useful for treasure hunters and collectors.[/li]' .
+                '[/ul]';
+        }
+        elseif ($this->typeId == 4) // Night Elf
+        {
+            $articleText .=
+                '[h2]Benefits[/h2][ul]' .
+                '[li]'.$R(4).' '.$C(11).' are a popular raiding choice for '.$S('Shadowmeld').' which can be used mid-combat to drop threat, giving healers a critical window during progression encounters.[/li]' .
+                '[li]'.$R(4).' '.$C(4).' can combine '.$S('Shadowmeld').' with Stealth for powerful PvP openers and escapes, and benefit from '.$S('Quickness').' adding a passive 2% dodge.[/li]' .
+                '[li]'.$R(4).' '.$C(3).' appreciate '.$S('Quickness').' for passive survivability and '.$S('Shadowmeld').' as an emergency threat drop or repositioning tool.[/li]' .
+                '[li]'.$S('Wisp Spirit').' makes Night Elves the fastest corpse-running race -- a meaningful quality-of-life bonus during extended dungeon and raid progression.[/li]' .
+                '[/ul]';
+        }
+        elseif ($this->typeId == 5) // Undead
+        {
+            $articleText .=
+                '[h2]Benefits[/h2][ul]' .
+                '[li]'.$S('Will of the Forsaken').' is one of the most powerful PvP racials available, breaking fear, charm, and sleep effects -- making '.$R(5).' '.$C(9).' and '.$C(5).' exceptionally resilient against CC-heavy arena compositions.[/li]' .
+                '[li]'.$R(5).' '.$C(5).' are highly competitive for Shadow Priest play, as '.$S('Will of the Forsaken').' provides critical fear immunity that frees up the trinket slot for other options.[/li]' .
+                '[li]'.$R(5).' '.$C(4).' are a classic PvP combination, pairing '.$S('Will of the Forsaken').' with the Rogue toolkit for exceptional control and survivability.[/li]' .
+                '[li]'.$S('Cannibalize').' provides free out-of-combat healing by consuming nearby humanoid or undead corpses, saving on food consumables while leveling or soloing.[/li]' .
+                '[li]'.$S('Underwater Breathing').' allows '.$R(5).' to remain submerged far longer than other races, a handy edge for underwater quests and exploration.[/li]' .
+                '[/ul]';
+        }
+        elseif ($this->typeId == 6) // Tauren
+        {
+            $articleText .=
+                '[h2]Benefits[/h2][ul]' .
+                '[li]'.$R(6).' '.$C(1).' benefit from '.$S('Endurance').' increasing base health, giving Warriors a larger health pool that directly improves survivability for both tanking and PvP.[/li]' .
+                '[li]'.$R(6).' '.$C(11).' are a popular PvP choice -- '.$S('War Stomp').' provides an on-demand AoE stun useful for creating distance or interrupting casts, while '.$S('Endurance').' adds to the Druid\'s already considerable survivability.[/li]' .
+                '[li]'.$R(6).' '.$C(7).' benefit from '.$S('War Stomp').' as a PvP interrupt and from '.$S('Endurance').' for increased health in both PvP and PvE.[/li]' .
+                '[li]'.$S('Cultivation').' grants '.$R(6).' a bonus to Herbalism skill, making it easier to level the profession and gather herbs at a higher speed.[/li]' .
+                '[/ul]';
+        }
+        elseif ($this->typeId == 7) // Gnome
+        {
+            $articleText .=
+                '[h2]Benefits[/h2][ul]' .
+                '[li]'.$R(7).' '.$C(8).' benefit from '.$S('Expansive Mind').' granting +5% Intellect, directly increasing the mana pool and scaling with every piece of gear -- one of the few passives that gets stronger the more you progress.[/li]' .
+                '[li]'.$R(7).' '.$C(9).' also enjoy '.$S('Expansive Mind').' for a larger mana pool and more consistent output through long encounters.[/li]' .
+                '[li]'.$S('Escape Artist').' is a strong PvP racial for all '.$R(7).' classes, breaking roots and snares -- making '.$R(7).' '.$C(4).' and '.$C(8).' particularly elusive in arena.[/li]' .
+                '[li]'.$S('Engineering Specialization').' grants '.$R(7).' a bonus to Engineering skill, reducing the investment needed to level the profession and unlock powerful Engineering items earlier.[/li]' .
+                '[/ul]';
+        }
+        elseif ($this->typeId == 8) // Troll
+        {
+            $articleText .=
+                '[h2]Benefits[/h2][ul]' .
+                '[li]'.$R(8).' '.$C(3).' are considered one of the best Horde Hunter options: '.$S('Bow Specialization').' provides free expertise with bows, '.$S('Berserking').' is a strong on-use haste cooldown, and '.$S('Beast Slaying').' adds bonus damage against the many beast-type raid and dungeon bosses.[/li]' .
+                '[li]'.$R(8).' '.$C(7).' make strong use of '.$S('Berserking').' as a haste cooldown that can be timed with Bloodlust or aligned with key rotation windows.[/li]' .
+                '[li]'.$R(8).' '.$C(5).' benefit from '.$S('Berserking').' to increase casting speed, and '.$S('Da Voodoo Shuffle').' reduces movement impairing effects -- a meaningful edge in PvP.[/li]' .
+                '[li]'.$S('Regeneration').' allows '.$R(8).' to regenerate a portion of their health even while in combat, saving on food and consumables while leveling or soloing content.[/li]' .
+                '[/ul]';
+        }
+        elseif ($this->typeId == 10) // Blood Elf
+        {
+            $articleText .=
+                '[h2]Benefits[/h2][ul]' .
+                '[li]'.$R(10).' '.$C(2).' are the only Horde Paladin option, and '.$S('Arcane Torrent').' provides a unique AoE silence useful for disrupting casters in PvP, plus mana restoration -- making '.$R(10).' '.$C(2).' strong in both arena and PvE.[/li]' .
+                '[li]'.$R(10).' '.$C(9).' and '.$C(8).' appreciate '.$S('Arcane Torrent').' for the on-demand mana restoration and AoE silence utility in PvP situations.[/li]' .
+                '[li]'.$R(10).' '.$C(4).' can use '.$S('Arcane Torrent').' as an additional interrupt in arena, with the energy restoration providing a small but useful combat boost.[/li]' .
+                '[li]'.$S('Magic Resistance').' reduces the chance to be hit by spells by 2%, providing passive magical durability for all '.$R(10).' classes.[/li]' .
+                '[li]'.$S('Arcane Affinity').' grants a bonus to Enchanting skill, reducing the investment needed to level the profession and access powerful enchants sooner.[/li]' .
+                '[/ul]';
+        }
+        elseif ($this->typeId == 11) // Draenei
+        {
+            $articleText .=
+                '[h2]Benefits[/h2][ul]' .
+                '[li]'.$S('Heroic Presence').' grants increased Hit Chance to all party members, making '.$R(11).' among the most sought-after races for group composition -- melee DPS, casters, and healers all benefit from having a '.$R(11).' in the group.[/li]' .
+                '[li]'.$R(11).' '.$C(2).' and '.$C(7).' are particularly strong for raiding -- '.$S('Heroic Presence').' reduces the hit rating needed from gear while both classes bring powerful raid buffs of their own.[/li]' .
+                '[li]'.$R(11).' '.$C(3).' benefit from '.$S('Heroic Presence').' freeing up hit rating from gear to invest in agility, crit, or other secondary stats.[/li]' .
+                '[li]'.$S('Gift of the Naaru').' provides a heal-over-time that scales with attack power or spell power, offering a small but meaningful survival tool for all classes.[/li]' .
+                '[li]'.$S('Gemcutting').' grants a bonus to Jewelcrafting skill, reducing the investment to level the profession and unlocking powerful gems sooner.[/li]' .
+                '[/ul]';
         }
 
         // Available Classes section

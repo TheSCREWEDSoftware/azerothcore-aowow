@@ -52,30 +52,30 @@ var l_guide_states_color = [
 ];
 
 var mn_classes = [
-    [6,"Caballero de la muerte",,,{className:"c6",smallIcon:"class_deathknight"}],
-    [11,"Druida",,,{className:"c11",smallIcon:"class_druid"}],
-    [3,"Cazador",,,{className:"c3",smallIcon:"class_hunter"}],
-    [8,"Mago",,,{className:"c8",smallIcon:"class_mage"}],
-    [2,"Paladín",,,{className:"c2",smallIcon:"class_paladin"}],
-    [5,"Sacerdote",,,{className:"c5",smallIcon:"class_priest"}],
-    [4,"Pícaro",,,{className:"c4",smallIcon:"class_rogue"}],
-    [7,"Chamán",,,{className:"c7",smallIcon:"class_shaman"}],
-    [9,"Brujo",,,{className:"c9",smallIcon:"class_warlock"}],
-    [1,"Guerrero",,,{className:"c1",smallIcon:"class_warrior"}]
+    [6,"Caballero de la muerte","?class=6",,{className:"c6",smallIcon:"class_deathknight"}],
+    [11,"Druida","?class=11",,{className:"c11",smallIcon:"class_druid"}],
+    [3,"Cazador","?class=3",,{className:"c3",smallIcon:"class_hunter"}],
+    [8,"Mago","?class=8",,{className:"c8",smallIcon:"class_mage"}],
+    [2,"Paladín","?class=2",,{className:"c2",smallIcon:"class_paladin"}],
+    [5,"Sacerdote","?class=5",,{className:"c5",smallIcon:"class_priest"}],
+    [4,"Pícaro","?class=4",,{className:"c4",smallIcon:"class_rogue"}],
+    [7,"Chamán","?class=7",,{className:"c7",smallIcon:"class_shaman"}],
+    [9,"Brujo","?class=9",,{className:"c9",smallIcon:"class_warlock"}],
+    [1,"Guerrero","?class=1",,{className:"c1",smallIcon:"class_warrior"}]
 ];
 var mn_races = [
     [,"Alianza",,,{tinyIcon:"side_alliance"}],
-    [11,"Draenei",,,{smallIcon:"race_draenei_female"}],
-    [3,"Enano",,,{smallIcon:"race_dwarf_female"}],
-    [7,"Gnomo",,,{smallIcon:"race_gnome_female"}],
-    [1,"Humano",,,{smallIcon:"race_human_female"}],
-    [4,"Elfo de la noche",,,{smallIcon:"race_nightelf_female"}],
+    [11,"Draenei","?race=11",,{smallIcon:"race_draenei_female"}],
+    [3,"Enano","?race=3",,{smallIcon:"race_dwarf_female"}],
+    [7,"Gnomo","?race=7",,{smallIcon:"race_gnome_female"}],
+    [1,"Humano","?race=1",,{smallIcon:"race_human_female"}],
+    [4,"Elfo de la noche","?race=4",,{smallIcon:"race_nightelf_female"}],
     [,"Horda",,,{tinyIcon:"side_horde",colBreak:true}],
-    [10,"Elfo de sangre",,,{smallIcon:"race_bloodelf_female"}],
-    [2,"Orco",,,{smallIcon:"race_orc_female"}],
-    [6,"Tauren",,,{smallIcon:"race_tauren_female"}],
-    [8,"Trol",,,{smallIcon:"race_troll_female"}],
-    [5,"No-muerto",,,{smallIcon:"race_scourge_female"}]
+    [10,"Elfo de sangre","?race=10",,{smallIcon:"race_bloodelf_female"}],
+    [2,"Orco","?race=2",,{smallIcon:"race_orc_female"}],
+    [6,"Tauren","?race=6",,{smallIcon:"race_tauren_female"}],
+    [8,"Trol","?race=8",,{smallIcon:"race_troll_female"}],
+    [5,"No-muerto","?race=5",,{smallIcon:"race_scourge_female"}]
 ];
 var mn_items = [
     [2,"Armas",,[

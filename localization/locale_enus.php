@@ -355,7 +355,7 @@ $lang = array(
         'resources'     => "Resources",
         'role'          => "Role",                          // ROLE
         'roles'         => "Roles",                         // LFG_TOOLTIP_ROLES
-        'specs'         => "Specs",
+        'specs'         => "Specializations",
         '_roles'        => ["Healer", "Melee DPS", "Ranged DPS", "Tank"],
 
         'phases'        => "Phases",

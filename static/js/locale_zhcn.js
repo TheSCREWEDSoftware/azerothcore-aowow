@@ -52,30 +52,30 @@ var l_guide_states_color = [
 ];
 
 var mn_classes = [
-    [6,"死亡骑士",,,{className:"c6",smallIcon:"class_deathknight"}],
-    [11,"德鲁伊",,,{className:"c11",smallIcon:"class_druid"}],
-    [3,"猎人",,,{className:"c3",smallIcon:"class_hunter"}],
-    [8,"法师",,,{className:"c8",smallIcon:"class_mage"}],
-    [2,"圣骑士",,,{className:"c2",smallIcon:"class_paladin"}],
-    [5,"牧师",,,{className:"c5",smallIcon:"class_priest"}],
-    [4,"潜行者",,,{className:"c4",smallIcon:"class_rogue"}],
-    [7,"萨满",,,{className:"c7",smallIcon:"class_shaman"}],
-    [9,"术士",,,{className:"c9",smallIcon:"class_warlock"}],
-    [1,"战士",,,{className:"c1",smallIcon:"class_warrior"}]
+    [6,"死亡骑士","?class=6",,{className:"c6",smallIcon:"class_deathknight"}],
+    [11,"德鲁伊","?class=11",,{className:"c11",smallIcon:"class_druid"}],
+    [3,"猎人","?class=3",,{className:"c3",smallIcon:"class_hunter"}],
+    [8,"法师","?class=8",,{className:"c8",smallIcon:"class_mage"}],
+    [2,"圣骑士","?class=2",,{className:"c2",smallIcon:"class_paladin"}],
+    [5,"牧师","?class=5",,{className:"c5",smallIcon:"class_priest"}],
+    [4,"潜行者","?class=4",,{className:"c4",smallIcon:"class_rogue"}],
+    [7,"萨满","?class=7",,{className:"c7",smallIcon:"class_shaman"}],
+    [9,"术士","?class=9",,{className:"c9",smallIcon:"class_warlock"}],
+    [1,"战士","?class=1",,{className:"c1",smallIcon:"class_warrior"}]
 ];
 var mn_races = [
     [,"联盟",,,{tinyIcon:"side_alliance"}],
-    [11,"德莱尼",,,{smallIcon:"race_draenei_female"}],
-    [3,"矮人",,,{smallIcon:"race_dwarf_female"}],
-    [7,"侏儒",,,{smallIcon:"race_gnome_female"}],
-    [1,"人类",,,{smallIcon:"race_human_female"}],
-    [4,"暗夜精灵",,,{smallIcon:"race_nightelf_female"}],
+    [11,"德莱尼","?race=11",,{smallIcon:"race_draenei_female"}],
+    [3,"矮人","?race=3",,{smallIcon:"race_dwarf_female"}],
+    [7,"侏儒","?race=7",,{smallIcon:"race_gnome_female"}],
+    [1,"人类","?race=1",,{smallIcon:"race_human_female"}],
+    [4,"暗夜精灵","?race=4",,{smallIcon:"race_nightelf_female"}],
     [,"部落",,,{tinyIcon:"side_horde",colBreak:true}],
-    [10,"血精灵",,,{smallIcon:"race_bloodelf_female"}],
-    [2,"兽人",,,{smallIcon:"race_orc_female"}],
-    [6,"牛头人",,,{smallIcon:"race_tauren_female"}],
-    [8,"巨魔",,,{smallIcon:"race_troll_female"}],
-    [5,"亡灵",,,{smallIcon:"race_scourge_female"}]
+    [10,"血精灵","?race=10",,{smallIcon:"race_bloodelf_female"}],
+    [2,"兽人","?race=2",,{smallIcon:"race_orc_female"}],
+    [6,"牛头人","?race=6",,{smallIcon:"race_tauren_female"}],
+    [8,"巨魔","?race=8",,{smallIcon:"race_troll_female"}],
+    [5,"亡灵","?race=5",,{smallIcon:"race_scourge_female"}]
 ];
 var mn_items = [
     [2,"武器",,[
