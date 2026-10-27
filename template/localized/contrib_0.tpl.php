@@ -3,8 +3,8 @@
             <ul>
             <li><div>Your comment must be in English or it will be removed.</div></li>
             <li><div>Unsure how to post? Check out our <a href="?help=commenting-and-you" target="_blank">handy guide</a>!</div></li>
-            <li><div>Please post questions on our <a href="?forums">forums</a> for quicker reply.</div></li>
             <li><div>You might want to proof-read your comments before posting them.</div></li>
+            <li><div>Please post questions on our <a href="?forums">forums</a> for quicker reply.</div></li>
             </ul>
 <?php
     echo $this->coError ? '            <div class="msg-failure">'.$this->coError."</div>\n            <div class=\"pad\"></div>\n" : '';
@@ -34,21 +34,23 @@
         <div id="tab-submit-a-screenshot" style="display: none">
             Simply browse for your screenshot using the form below.
             <ul>
-            <li><div>In-game screenshots are preferred over model-viewer-generated ones.</div></li>
+            <li><div>Screenshots containing UI elements are generally declined on sight, the same goes for screenshots from the modelviewer or character selection screen.</div></li>
             <li><div>The higher the quality the better!</div></li>
-            <li><div>Be sure to read the <a href="?help=screenshots-tips-tricks" target="_blank">tips &amp; tricks</a> if you haven't before.</div></li>
+            <li><div>Please review our <a href="?help=screenshot-guidelines" target="_blank">Screenshot Guidelines</a> before submitting!</div></li>
             </ul>
+            <small>Only JPEG and PNG image formats are accepted.<br />Maximum 16MB and/or 3840x2400 resolution.</small>
 <?php
     echo $this->ssError ? '            <div class="msg-failure">'.$this->ssError."</div>\n            <div class=\"pad\"></div>\n" : '';
 
     if (User::canUploadScreenshot()):
 ?>
             <form action="?screenshot=add&<?=$this->type.'.'.$this->typeId; ?>" method="post" enctype="multipart/form-data" onsubmit="return ss_validateForm(this)">
+            <div class="pad2"></div>
             <input type="file" name="screenshotfile" style="width: 35%"/><br />
             <div class="pad2"></div>
             <input type="submit" value="Submit" />
             <div class="pad3"></div>
-            <small class="q0">Note: Your Screenshot will need to be approved before appearing on the site.</small>
+            <small class="q0">Note: Your screenshot will need to be approved before appearing on the site.</small>
 <?php
     else:
 ?>
@@ -71,7 +73,10 @@
 ?>
             <div class="pad2"></div>
             <form action="?video=add&<?=$this->type.'.'.$this->typeId; ?>" method="post" enctype="multipart/form-data" onsubmit="return vi_validateForm(this)">
-            <input type="text" name="videourl" style="width: 35%" /> <small>Supported: YouTube only</small>
+            <table>
+            <tr><td>URL:</td><td><input type="text" name="videourl" style="width: 35%" /> <small>Supported: YouTube only</small></td></tr>
+            <tr><td>Title:</td><td><input type="text" name="videotitle" style="width: 35%" /> <small>Optional, up to 200 characters</small></td></tr>
+            </table>
             <div class="pad2"></div>
             <input type="submit" value="Submit" />
             <div class="pad3"></div>
@@ -80,7 +85,10 @@
     else:
 ?>
             <form action="/" method="post">
-            <input type="text" name="videourl" disabled="disabled" /><br />
+            <table>
+            <tr><td>URL:</td><td><input type="text" name="videourl" disabled="disabled" /> <small>Supported: YouTube only</small></td></tr>
+            <tr><td>Title:</td><td><input type="text" name="videotitle" disabled="disabled" /> <small>Optional, up to 200 characters</small></td></tr>
+            </table>
 <?php
     endif;
     if (!User::$id):
@@ -90,4 +98,14 @@
     endif;
 ?>
             </form>
+        </div>
+        <div id="tab-sniffs-client" style="display: none">
+            The Sniffs tool is a little application we use to keep our database up to date, and to provide you with some nifty extra functionality on the website!<br /><br />
+            It serves 2 main purposes:
+            <ol>
+            <li><div>It maintains a WoW addon which collects data as you play the game!</div></li>
+            <li><div>It uploads the collected data to our database in order to keep it up-to-date!</div></li>
+            </ol>
+            You can also use it to keep track of your completed quests, recipes, mounts, companion pets, and titles!<br /><br />
+            So, what are you waiting for? Download the client and get started.
         </div>

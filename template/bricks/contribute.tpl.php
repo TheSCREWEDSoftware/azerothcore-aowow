@@ -26,6 +26,9 @@ if (!empty($this->contribute)):
         echo "    if (g_user && g_user.roles & (U_GROUP_ADMIN | U_GROUP_BUREAU | U_GROUP_VIDEO))\n";
         echo "        tabsContribute.add(LANG.tab_suggestavideo, {id: 'suggest-a-video'});\n";
     endif;
+    if ($this->contribute & CONTRIBUTE_CL):
+        echo "    tabsContribute.add('Sniffs', {id: 'sniffs-client'});\n";
+    endif;
 ?>
     tabsContribute.flush();
 </script>

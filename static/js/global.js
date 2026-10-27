@@ -9234,7 +9234,7 @@ Listview.funcBox = {
         if(noRestrictedMarkup)
             comment.roles &= ~U_GROUP_PENDING;
 
-        if(mode == -1 || mode == 0)
+        if(mode == -1 || mode == 0 || mode == 1 || mode == 3)
         {
             var divMode = $('<div/>', { text: LANG.compose_mode });
             divMode.addClass('comment-edit-modes');
@@ -9289,7 +9289,7 @@ Listview.funcBox = {
                 break;
         }
 
-        if(mode != -1 && mode != 0)
+        if(mode == 2 || mode == 4)
         {
             var h3 = $('<h3/>'),
                 ah3 = $('<a/>'),
@@ -9413,7 +9413,8 @@ Listview.funcBox = {
         else
             divBody.append($WH.ct($WH.sprintf(LANG.compose_limit, charLimit)));
 
-        var span = $('<span class="comment-remaining"> ' + $WH.sprintf(LANG.compose_remaining, charLimit - comment.body.length) + '</span>');
+        divBody.append($WH.ct(' '));
+        var span = $('<span class="comment-remaining"/>').text($WH.sprintf(LANG.compose_remaining, charLimit - comment.body.length));
         divBody.append(span);
 
         ta.keyup(Listview.funcBox.coUpdateCharLimit.bind(0, ta, span, charLimit));
