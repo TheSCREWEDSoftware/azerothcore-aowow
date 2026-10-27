@@ -588,6 +588,13 @@ class CLISetup
         // backslash to forward slash
         $_ = strtolower(CLI::nicePath($path));
 
+        // on Windows, backslash path separators can produce invalid PCRE patterns — validate first
+        if ($useRegEx && @preg_match($path, '') === false)
+        {
+            CLI::write('filesInPath: invalid regex pattern "'.CLI::bold($path).'" (check path separator escaping on Windows)', CLI::LOG_WARN);
+            return [];
+        }
+
         foreach (self::$mpqFiles as $lowerFile => $realFile)
         {
             if (!$useRegEx && strstr($lowerFile, $_))

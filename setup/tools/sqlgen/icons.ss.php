@@ -13,7 +13,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         'icons' => [[], CLISetup::ARGV_PARAM, 'Compiles data for type: Icons from dbc.']
     );
 
-    protected $dbcSourceFiles = ['spellicon', 'itemdisplayinfo', 'creaturefamily'];
+    protected $dbcSourceFiles = ['spellicon', 'itemdisplayinfo', 'creaturefamily', 'chrclasses'];
 
     public function generate(array $ids = []) : bool
     {
@@ -24,7 +24,8 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             (
                 (SELECT LOWER(SUBSTRING_INDEX(iconPath, "\\\\", -1))   AS x FROM dbc_spellicon       WHERE iconPath LIKE "%icons%") UNION
                 (SELECT LOWER(inventoryIcon1)                          AS x FROM dbc_itemdisplayinfo WHERE inventoryIcon1 <> "")    UNION
-                (SELECT LOWER(SUBSTRING_INDEX(iconString, "\\\\", -1)) AS x FROM dbc_creaturefamily  WHERE iconString LIKE "%icons%")
+                (SELECT LOWER(SUBSTRING_INDEX(iconString, "\\\\", -1)) AS x FROM dbc_creaturefamily  WHERE iconString LIKE "%icons%") UNION
+                (SELECT LOWER(CONCAT("classicon_", fileString))        AS x FROM dbc_chrclasses       WHERE fileString <> "")
             ) y GROUP BY x'
         );
 
