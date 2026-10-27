@@ -23,6 +23,7 @@ class CLISetup
     public  const LOCK_RESTORE    = 2;
 
     private static $lock          = self::LOCK_ON;
+    private const  LOCK_FILE      = 'cache/setup/site-lock';    // site status before setup locked it - left behind if a run didn't finish
 
     public const ARGV_NONE        = 0x00;
     public const ARGV_REQUIRED    = 0x01;
@@ -228,6 +229,13 @@ class CLISetup
             self::$lock = Cfg::get('MAINTENANCE');
         else
             self::$lock = self::LOCK_ON;
+
+        // a previous run stopped while the site was locked: its maintenance mode is not the one to restore
+        if (is_file(self::LOCK_FILE) && ($prev = trim((string)@file_get_contents(self::LOCK_FILE))) !== '')
+        {
+            self::$lock = (int)$prev;
+            CLI::write('the last setup run did not finish - the site status from before it will be restored ('.(self::$lock ? 'maintenance' : 'open').')', CLI::LOG_WARN);
+        }
     }
 
     public static function writeCLIHelp(bool $full = false) : void
@@ -476,8 +484,19 @@ class CLISetup
 
     private static function siteLock(int $mode = self::LOCK_RESTORE) : void
     {
-        if (DB::isConnected(DB_AOWOW))
-            Cfg::set('MAINTENANCE', $mode == self::LOCK_RESTORE ? self::$lock : $mode);
+        if (!DB::isConnected(DB_AOWOW))
+            return;
+
+        Cfg::set('MAINTENANCE', $mode == self::LOCK_RESTORE ? self::$lock : $mode);
+
+        // remember what to go back to until the run ends, so a crash doesn't leave the site closed for good
+        if ($mode == self::LOCK_ON)
+        {
+            if (!is_file(self::LOCK_FILE) && (is_dir(dirname(self::LOCK_FILE)) || @mkdir(dirname(self::LOCK_FILE), 0755, true)))
+                @file_put_contents(self::LOCK_FILE, (string)(int)self::$lock);
+        }
+        else if (is_file(self::LOCK_FILE))
+            @unlink(self::LOCK_FILE);
     }
 
 
