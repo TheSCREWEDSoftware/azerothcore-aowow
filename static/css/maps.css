@@ -1096,3 +1096,22 @@ i.zs-poi-swatch.zs-spell {
 .zs-route-arrows .zs-route-no-h, .zs-route-no-tip.zs-route-no-h { color: #ff4d4d; }
 .zs-route-arrows .zs-route-no-n, .zs-route-no-tip.zs-route-no-n { color: #ffd100; }
 .zs-route-no.zs-route-no-tip { position: static; display: inline-block; transform: none; vertical-align: 1px; color: inherit; }
+
+/* ── light mode: the panels and their text follow the light palette ── */
+html[data-mode="light"] #mapper-controls,
+html[data-mode="light"] #zs-poi {
+    background: var(--th-surface-2, #f3f4f6);
+    border-color: var(--th-border, #d4d8de);
+    color: var(--th-text, #23262b);
+}
+html[data-mode="light"] #mapper-controls a,
+html[data-mode="light"] .mapper-ctrl-check,
+html[data-mode="light"] .zs-poi-group summary { color: var(--th-link, #9a6b00); }
+html[data-mode="light"] .zs-poi-opt,
+html[data-mode="light"] #zs-legend { color: var(--th-text, #23262b); }
+html[data-mode="light"] #zs-poi > .zs-go-hint,
+html[data-mode="light"] .zs-poi-group summary i,
+html[data-mode="light"] #mapper-controls .q0 { color: var(--th-muted, #646b75); }
+html[data-mode="light"] #zs-legend,
+html[data-mode="light"] #mapper-controls hr { border-color: var(--th-border, #d4d8de); }
+html[data-mode="light"] #mapper-controls input[type="text"] { background: var(--th-input, #fff); color: var(--th-text, #23262b); border: 1px solid var(--th-border-2, #c4c9d1); }
