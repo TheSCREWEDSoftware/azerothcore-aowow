@@ -12,7 +12,7 @@ class ObjectPage extends GenericPage
 
     protected $pageText      = [];
     protected $relBoss       = null;
-    protected $poolLegend    = null;
+    protected $poolInfo      = null;
 
     protected $type          = Type::OBJECT;
     protected $typeId        = 0;
@@ -217,85 +217,12 @@ class ObjectPage extends GenericPage
                 [SC_CSS_FILE, 'css/Book.css']
             );
 
-        // color spawns by pool membership; pin types 1-15 cycle across pools
-        $poolLegend  = null;
-        $foreignData = [];
-        if ($poolRows = DB::World()->select(
-            'SELECT pg.`guid`, pg.`pool_entry`, COALESCE(pt.`max_limit`, 0) AS `max_limit`
-             FROM pool_gameobject pg
-             JOIN gameobject g ON g.`guid` = pg.`guid`
-             LEFT JOIN pool_template pt ON pt.`entry` = pg.`pool_entry`
-             WHERE g.`id` = ?d',
-            $this->typeId
-        ))
-        {
-            $pools      = array_unique(array_column($poolRows, 'pool_entry'));
-            sort($pools);
-            $poolIndex  = array_flip($pools);               // pool_entry => 0-based index
-            $poolMaxMap = [];
-            $colorMap   = [];
-            foreach ($poolRows as $r)
-            {
-                $pe = (int)$r['pool_entry'];
-                $poolMaxMap[$pe] = (int)$r['max_limit'];
-                $colorMap[(int)$r['guid']] = [
-                    'type' => ($poolIndex[$pe] % 15) + 1,
-                    'pool' => $pe,
-                    'max'  => (int)$r['max_limit'],
-                ];
-            }
-
-            // find other objects sharing these pools (foreign members)
-            $myGuids = array_keys($colorMap);
-            if ($foreignPoolRows = DB::World()->select(
-                'SELECT pg.`guid`, pg.`pool_entry` FROM pool_gameobject pg
-                 WHERE pg.`pool_entry` IN (?a) AND pg.`guid` NOT IN (?a)',
-                $pools, $myGuids
-            ))
-            {
-                $fGuids = array_column($foreignPoolRows, 'guid');
-
-                $guidToId = [];
-                foreach (DB::World()->select('SELECT `guid`, `id` FROM gameobject WHERE `guid` IN (?a)', $fGuids) as $r)
-                    $guidToId[(int)$r['guid']] = (int)$r['id'];
-
-                $nameMap = [];
-                if ($eids = array_unique(array_values($guidToId)))
-                    foreach (DB::Aowow()->select('SELECT `id`, `name_loc0` FROM ?_objects WHERE `id` IN (?a)', $eids) as $r)
-                        $nameMap[(int)$r['id']] = $r['name_loc0'];
-
-                foreach ($foreignPoolRows as $r)
-                {
-                    $guid = (int)$r['guid'];
-                    $pe   = (int)$r['pool_entry'];
-                    $eid  = $guidToId[$guid] ?? 0;
-                    $foreignData[$guid] = [
-                        'type' => ($poolIndex[$pe] % 15) + 1,
-                        'pool' => $pe,
-                        'max'  => $poolMaxMap[$pe] ?? 0,
-                        'name' => $nameMap[$eid] ?? '?',
-                    ];
-                }
-            }
-
-            $this->subject->setSpawnColorMap($colorMap);
-
-            // Total members per pool (own + foreign) for legend display
-            $poolSizes = DB::World()->selectCol(
-                'SELECT `pool_entry` AS ARRAY_KEY, COUNT(*) FROM pool_gameobject WHERE `pool_entry` IN (?a) GROUP BY `pool_entry`',
-                $pools
-            );
-
-            // Legend: one entry per pool (zone-filtered in the template via data-areas)
-            $poolLegend = [];
-            foreach ($pools as $pe)
-                $poolLegend[] = [
-                    'type'  => ($poolIndex[$pe] % 15) + 1,
-                    'pool'  => $pe,
-                    'max'   => $poolMaxMap[$pe],
-                    'total' => (int)($poolSizes[$pe] ?? 0),
-                ];
-        }
+        // spawn pools: pool colour per pool, pin shape per object in the pools (includes/components/PoolMap)
+        require_once 'includes/components/PoolMap.class.php';
+        $pm = new PoolMap(Type::OBJECT, $this->typeId, $this->subject->getField('name', true));
+        $hasPools = $pm->load();
+        if ($hasPools)
+            $this->subject->setSpawnColorMap($pm->colorMap());
 
         // get spawns and path
         $map = null;
@@ -307,130 +234,11 @@ class ObjectPage extends GenericPage
             unset($areaData);
         }
 
-        // inject foreign pool members into the map (same pool color, diamond pin)
-        if ($foreignData && $map)
+        $poolInfo = null;
+        if ($hasPools && $map)
         {
-            $fGuids = array_keys($foreignData);
-            if ($fSpawnRows = DB::Aowow()->select(
-                'SELECT `guid`, `areaId`, `floor`, `posX`, `posY` FROM ?_spawns
-                 WHERE `type` = ?d AND `guid` IN (?a) AND `posX` > 0 AND `posY` > 0',
-                Type::OBJECT, $fGuids
-            ))
-            {
-                foreach ($fSpawnRows as $fs)
-                {
-                    $guid   = (int)$fs['guid'];
-                    $fd     = $foreignData[$guid];
-                    $areaId = (int)$fs['areaId'];
-                    $floor  = (int)$fs['floor'];
-                    $opts   = [
-                        'type'    => $fd['type'],
-                        'alt'     => true,                  // rotate 45° — foreign object sharing this pool
-                        'tooltip' => [$fd['name'] => ['info' => [
-                            6 => '<span class="pool-c-'.$fd['type'].'">Pool'.Lang::main('colon').$fd['pool'].' (max '.$fd['max'].' active)</span>',
-                            7 => '<span class="q0">shares this pool with '.$this->subject->getField('name', true).'</span>',
-                        ]]],
-                    ];
-                    if (!isset($spawns[$areaId]))
-                    {
-                        $spawns[$areaId] = [];
-                        $map['extra'][$areaId] = ZoneList::getName($areaId);
-                    }
-                    if (!isset($spawns[$areaId][$floor]))
-                        $spawns[$areaId][$floor] = ['coords' => [], 'count' => 0];
-                    // prepend so native pins render on top of foreign diamonds in the DOM
-                    array_unshift($spawns[$areaId][$floor]['coords'], [$fs['posX'], $fs['posY'], $opts]);
-                }
-            }
-        }
-
-        // Annotate each pool legend entry with the area IDs it actually appears in
-        // so the template can hide legend entries that aren't on the current map zone.
-        if ($poolLegend && $spawns)
-        {
-            $typeAreas = [];
-            foreach ($spawns as $areaId => $areaData)
-                foreach ($areaData as $floorData)
-                    foreach ($floorData['coords'] as $coord)
-                        if (!empty($coord[2]['type']))
-                            $typeAreas[(int)$coord[2]['type']][$areaId] = true;
-
-            foreach ($poolLegend as &$p)
-                $p['areas'] = array_keys($typeAreas[$p['type']] ?? []);
-            unset($p);
-        }
-
-        // Merge pool spawns that share the same map grid cell (coords rounded to
-        // 1 decimal, as shown in tooltips, e.g. 41.0, 64.7). When a cell holds
-        // more than one distinct object, render a single 45° pin whose tooltip
-        // lists every object there — the searched object always first — which
-        // naturally covers one or several pools sharing that spot.
-        if ($poolLegend && $spawns)
-        {
-            $curName = $this->subject->getField('name', true);
-            foreach ($spawns as &$areaData)
-            {
-                foreach ($areaData as &$floorData)
-                {
-                    $cells = [];                            // "x|y" => [coord index, ...]
-                    foreach ($floorData['coords'] as $idx => $coord)
-                        $cells[number_format((float)$coord[0], 1).'|'.number_format((float)$coord[1], 1)][] = $idx;
-
-                    $newCoords = [];
-                    foreach ($cells as $idxs)
-                    {
-                        // collect the distinct objects (by tooltip name) in this cell
-                        $entries = [];
-                        $curType = $anyType = null;
-                        foreach ($idxs as $i)
-                        {
-                            $o = $floorData['coords'][$i][2];
-                            if (empty($o['tooltip']))
-                                continue;
-                            foreach ($o['tooltip'] as $nm => $data)
-                            {
-                                if (!isset($entries[$nm]))
-                                    $entries[$nm] = $data;
-                                if (isset($o['type']))
-                                {
-                                    if ($nm === $curName)  $curType = $o['type'];
-                                    if ($anyType === null) $anyType = $o['type'];
-                                }
-                            }
-                        }
-
-                        // 0 or 1 distinct object -> leave this cell's pins untouched
-                        if (count($entries) <= 1)
-                        {
-                            foreach ($idxs as $i)
-                                $newCoords[] = $floorData['coords'][$i];
-                            continue;
-                        }
-
-                        // >1 distinct object -> one 45° pin, searched object first
-                        $tt = [];
-                        if (isset($entries[$curName]))
-                        {
-                            $tt[$curName] = $entries[$curName];
-                            unset($entries[$curName]);
-                        }
-                        foreach ($entries as $nm => $data)
-                            $tt[$nm] = $data;
-
-                        $base = $floorData['coords'][$idxs[0]];
-                        $newCoords[] = [$base[0], $base[1], [
-                            'type'    => $curType ?? $anyType,
-                            'alt'     => true,
-                            'tooltip' => $tt,
-                        ]];
-                    }
-
-                    $floorData['coords'] = $newCoords;
-                    $floorData['count']  = count($newCoords);
-                }
-                unset($floorData);
-            }
-            unset($areaData);
+            $pm->inject($spawns, $map['extra']);
+            $poolInfo = $pm->info($spawns);
         }
 
         $relBoss = null;
@@ -471,7 +279,7 @@ class ObjectPage extends GenericPage
         }
 
         $this->map         = $map;
-        $this->poolLegend  = $poolLegend;
+        $this->poolInfo    = $poolInfo;
         $this->infobox     = $infobox ? '[ul][li]'.implode('[/li][li]', $infobox).'[/li][/ul]' : null;
         $this->relBoss     = $relBoss;
         $this->smartAI     = $sai ? $sai->getMarkdown() : null;

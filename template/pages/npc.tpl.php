@@ -32,6 +32,7 @@ if ($this->placeholder):
 <?php
 elseif (!empty($this->map)):
     $this->brick('mapper');
+    $this->brick('poolLegend');
 else:
     echo '                '.Lang::npc('unkPosition')."\n";
 endif;

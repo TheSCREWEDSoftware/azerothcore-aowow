@@ -717,7 +717,11 @@ trait spawnHelper
                 $poolData = $this->spawnColorMap[$s['guid']];
                 if (!isset($opts['type']))                  // don't override respawn/teleport color
                     $opts['type'] = $poolData['type'];      // 1-15 original pins, 16-31 tinted pin images
-                $info[6] = '<span class="pool-c-'.$poolData['type'].'">Pool'.Lang::main('colon').$poolData['pool'].' (max '.$poolData['max'].' active)</span>';
+                $opts['pool']  = $poolData['pool'];         // pool pins: coloured shape + legend hover (PoolMap)
+                $opts['shape'] = $poolData['shape'] ?? 0;
+                $info[6] = isset($poolData['shape'])        // PoolMap: group colour tag
+                    ? '<span class="pool-tag pool-g-'.$poolData['type'].'">Pool '.$poolData['pool'].'</span> <span class="q0">max '.$poolData['max'].' active at a time</span>'
+                    : '<span class="pool-c-'.$poolData['type'].'">Pool'.Lang::main('colon').$poolData['pool'].' (max '.$poolData['max'].' active)</span>';
             }
 
             if ($info)

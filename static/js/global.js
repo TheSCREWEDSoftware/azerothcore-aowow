@@ -20356,6 +20356,15 @@ Mapper.prototype = {
             if(opt && opt.alt)
                 _.className += ' pin-alt';
 
+            // aowow: spawn pool pins - group colour (pool-g-N) + shape per object/creature, hover link with the legend
+            if(opt && opt.pool)
+            {
+                _.className += ' pin-pool pool-g-' + opt.type + ' pin-shape-' + (opt.shape || 0) + (opt.multi ? ' pin-multi' : '');
+                _.setAttribute('data-pools', (opt.pools || [opt.pool]).join(' '));
+            }
+            else
+                _.removeAttribute('data-pools');
+
             _.a.tt = $WH.str_replace(_.a.tt, '$', _.x.toFixed(1) + ', ' + _.y.toFixed(1));
 
             if(opt && opt.lines)
