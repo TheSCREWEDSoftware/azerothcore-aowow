@@ -185,3 +185,5 @@ html[data-mode="light"] .pool-chip.pool-group { border-left-color: #999; }
 /* grouped chips (many one-spot pools): neutral, the shapes say what can spawn */
 .pool-chips.pool-grouped { grid-template-columns: 1fr; }
 .pool-chip.pool-group { border-left-color: rgba(255,255,255,.3); }
+html[data-mode="light"] .pool-key .viewed a { color: #000; }
+html[data-mode="light"] .pool-key { background: rgba(0,0,0,.03); border-color: rgba(0,0,0,.12); }
