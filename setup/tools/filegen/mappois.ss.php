@@ -104,6 +104,25 @@ CLISetup::registerSetup("build", new class extends SetupScript
     private $capitals = [];                                 // zoneId => true
     private $outlines = [];                                 // contZoneId => [zoneId => rings]
 
+    private const STEPS = 9;
+    private $stepNo = 0;
+
+    // one status line, rewritten in place: [mappois] step 3/9 - travel   120/400   (30.00%)
+    private function progress(string $step, int $cur = 0, int $max = 0, bool $next = false, bool $always = false) : void
+    {
+        if ($next)
+            $this->stepNo++;
+
+        $line = '[mappois] step '.$this->stepNo.'/'.self::STEPS.' - '.str_pad($step, 22);
+        if ($max)
+        {
+            if (!$always && $cur != $max && $cur % max(1, intdiv($max, 50)))   // ~50 updates per loop
+                return;
+            $line .= str_pad($cur.'/'.$max, 14).'('.number_format($cur * 100 / $max, 2).'%)';
+        }
+        CLI::write($line, CLI::LOG_BLANK, true, true);
+    }
+
     public function generate() : bool
     {
         if (!$this->loadShapes())
@@ -119,6 +138,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
             return false;
         }
 
+        $this->progress('loading spawns', 0, 0, true);
         foreach ($zones as $id => $z)
             if ($z['flags'] & self::AREA_FLAG_CAPITAL)
                 $this->capitals[$id] = true;
@@ -155,8 +175,12 @@ CLISetup::registerSetup("build", new class extends SetupScript
         $pois    = [];
         $givers  = [];                                      // zoneId => [[x, y, A, H], ..]
 
+        $this->progress('npcs & objects', 0, 0, true);
+        $i = 0;
+        $nAll = count($npcs ?: []) + count($objects ?: []);
         foreach ($npcs ?: [] as $n)
         {
+            $this->progress('npcs & objects', ++$i, $nAll);
             if ($n['floor'])                                // multi-floor maps: skip
                 continue;
 
@@ -169,10 +193,14 @@ CLISetup::registerSetup("build", new class extends SetupScript
         }
 
         foreach ($objects ?: [] as $o)
+        {
+            $this->progress('npcs & objects', ++$i, $nAll);
             if (!$o['floor'])
                 $pois[(int)$o['areaId']][] = ['t' => self::OBJECT_TYPES[$o['type']], 'x' => (float)$o['posX'], 'y' => (float)$o['posY'], '_src' => $o];
+        }
 
         // instance entrances
+        $this->progress('instance entrances', 0, 0, true);
         $nInst  = 0;
         $parent = [];                                       // instance zoneId => zoneId of its entrance ("Back to" on the maps page)
         foreach ($zones as $z)
@@ -195,6 +223,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
         $this->tagGraveyards($pois);
 
         // travel: boats / zeppelins (transport stops), map crossings (Dark Portal, ..) and portals
+        $this->progress('transports & portals', 0, 0, true);
         $nTravel = 0;
         foreach ($this->travelPois() as [$zoneId, $p])
         {
@@ -205,8 +234,12 @@ CLISetup::registerSetup("build", new class extends SetupScript
 
         // quest hubs + world pvp areas from the subzone outlines
         $nHubs = $nPvP = 0;
+        $this->progress('quest hubs & pvp', 0, 0, true);
+        $nSubMaps = count(glob(dirname(sprintf(self::SUBSHAPES, 0)).'/*.json') ?: []);   // subzoneMaps() reads them one by one
+        $i = 0;
         foreach ($this->subzoneMaps() as $zoneId => $subs)
         {
+            $this->progress('quest hubs & pvp', ++$i, $nSubMaps);
             $byArea = [];
             foreach ($givers[$zoneId] ?? [] as $g)
                 foreach ($subs as $areaId => $e)
@@ -248,6 +281,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
         }
 
         // continents: flight masters, instance entrances, territory shields
+        $this->progress('continent maps', 0, 0, true);
         foreach ($pois as $zoneId => $list)
         {
             if (!isset($this->rects[$zoneId]))
@@ -298,16 +332,21 @@ CLISetup::registerSetup("build", new class extends SetupScript
 
         // neighbouring zones (always both ways)
         $nNb = 0;
-        foreach ($this->buildNeighbours() as $zoneId => $list)
+        $this->progress('neighbour zones', 0, 0, true);
+        $nbs = $this->buildNeighbours();
+        $i = 0;
+        foreach ($nbs as $zoneId => $list)
         {
             $nNb += count($list);
             if (!CLISetup::writeFile(sprintf(self::OUT_NB, $zoneId), json_encode($list, JSON_UNESCAPED_SLASHES)))
                 $this->success = false;
+            $this->progress('writing neighbours', ++$i, count($nbs));
         }
         CLI::write('[mappois] '.$nNb.' neighbour links');
 
         // transport paths
         $info['rt'] = [];
+        $this->progress('transport paths', 0, 0, true);
         foreach ($this->transportRoutes() as $zoneId => $list)
         {
             $info['rt'][] = $zoneId;
@@ -319,6 +358,9 @@ CLISetup::registerSetup("build", new class extends SetupScript
         if (!CLISetup::writeFile(self::OUT_INFO, "var g_map_info = ".json_encode($info).";\n"))
             $this->success = false;
 
+        $this->progress('writing map files', 0, 0, true);
+        $i = 0;
+        $nOut = count(CLISetup::$locales) * count($pois);
         foreach (CLISetup::$locales as $loc)
         {
             Lang::load($loc);
@@ -345,6 +387,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
 
                 if (!CLISetup::writeFile(sprintf(self::OUT_POIS, $loc->json(), $zoneId), json_encode($out, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)))
                     $this->success = false;
+                $this->progress('writing map files ('.$loc->json().')', ++$i, $nOut, false, true);
             }
         }
 
@@ -910,9 +953,11 @@ CLISetup::registerSetup("build", new class extends SetupScript
         $tracer  = new ZoneShapeTracer();
         $tracer->smoothPasses = 1;
 
+        $nbNo = 0;
         foreach ($this->rects as $x => [$cont, $r])
         {
             ini_set('max_execution_time', 0);
+            $this->progress('neighbour zones', ++$nbNo, count($this->rects), false, true);   // the slow part: one map at a time
 
             $sx = $W / ($r[2] - $r[0]);                     // continent % -> zone map px
             $sy = $H / ($r[3] - $r[1]);
