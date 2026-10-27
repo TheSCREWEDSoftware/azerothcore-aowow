@@ -212,9 +212,33 @@ var Theme = new function () {
             lSlot.appendChild(links);
     }
 
+    // the accent line under the page title is as wide as the title text
+    function fitTitleAccent() {
+        var h1 = document.querySelector('.text h1');
+        if (!h1 || !document.createRange)
+            return;
+
+        var fit = function () {
+            var w = 0, left = h1.getBoundingClientRect().left;
+            Array.prototype.forEach.call(h1.childNodes, function (n) {   // text only: not the star / buttons inside
+                if (n.nodeType != 3 || !n.textContent.trim())
+                    return;
+                var r = document.createRange();
+                r.selectNodeContents(n);
+                w = Math.max(w, Math.ceil(r.getBoundingClientRect().right - left));
+            });
+            h1.style.backgroundSize = (w > 0 ? w : 64) + 'px 2px';
+        };
+        fit();
+        if (document.fonts && document.fonts.ready)         // web fonts change the width once loaded
+            document.fonts.ready.then(fit);
+        window.addEventListener('resize', fit);
+    }
+
     this.init = function () {
         arrangeHeader();
         renderControls();
+        fitTitleAccent();
     };
 };
 
