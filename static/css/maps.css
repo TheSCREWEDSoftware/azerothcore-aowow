@@ -1033,6 +1033,17 @@ i.zs-poi-swatch.zs-spell {
     stroke-dasharray: calc(6px / var(--zs-k, 1)) calc(5px / var(--zs-k, 1));
 }
 
+/* hover target: wide, invisible, only the stroke reacts (the svg itself lets clicks through to the map) */
+.zs-routes { pointer-events: none; }
+.zs-routes .zs-route-hit {
+    stroke: transparent;
+    stroke-width: calc(12px / var(--zs-k, 1));
+    pointer-events: stroke;
+    cursor: help;
+}
+.zs-routes .zs-route-hl .zs-route { stroke-width: calc(3.5px / var(--zs-k, 1)); stroke-dasharray: none; }
+.zs-routes .zs-route-hl .zs-route-case { stroke-width: calc(6px / var(--zs-k, 1)); stroke: rgba(0,0,0,.75); }
+
 .zs-route-a { stroke: #4da6ff; }
 .zs-route-h { stroke: #ff4d4d; }
 .zs-route-n { stroke: #ffd100; }
@@ -1060,3 +1071,28 @@ i.zs-poi-swatch.zs-spell {
 
 .zs-route-arrow-a { border-left-color: #4da6ff; }
 .zs-route-arrow-h { border-left-color: #ff4d4d; }
+
+/* line numbers on transport routes (same number in the tooltip) */
+.zs-route-no {
+    position: absolute;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    box-sizing: border-box;
+    transform: translate(-50%, -50%) rotate(var(--r, 0deg)) scale(calc(1 / var(--zs-k, 1)));
+    white-space: nowrap;
+    border-radius: 8px;
+    border: 2px solid currentColor;
+    background: #111;
+    color: #ffd100;
+    font: bold 10px/11px Verdana, sans-serif;
+    text-align: center;
+    pointer-events: auto;
+    cursor: help;
+    z-index: 1;
+}
+.zs-route-no b, .zs-route-no { text-shadow: none; }
+.zs-route-no-a { color: #4da6ff; }
+.zs-route-no-h { color: #ff4d4d; }
+.zs-route-no-n { color: #ffd100; }
+.zs-route-no.zs-route-no-tip { position: static; display: inline-block; transform: none; vertical-align: 1px; color: inherit; }

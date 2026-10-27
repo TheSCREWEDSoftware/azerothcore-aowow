@@ -1422,6 +1422,73 @@ function ma_DrawPois(mapper, force) {
  */
 var ma_routeCache = {};
 
+// hovering a transport line: what runs there, between where, how long a loop takes
+// (ship / stops / timings come from the route itself, or from the dock markers that sit on the line)
+function ma_RouteDist(rt, px, py) {                         // distance of a point to the route's polyline
+    var best = Infinity;
+    rt.l.forEach(function (l) {
+        for (var i = 2; i < l.length; i += 2) {
+            var ax = l[i - 2], ay = l[i - 1], dx = l[i] - ax, dy = l[i + 1] - ay;
+            var f = dx || dy ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy))) : 0;
+            best = Math.min(best, Math.hypot(px - ax - f * dx, py - ay - f * dy));
+        }
+    });
+    return best;
+}
+
+// docks of a line: same kind and faction, close to it - and closer to it than to any other line (towers stand side by side)
+function ma_RouteStops(rt, zone, all) {
+    var near = zone < 0 ? 1 : 2.5;
+    var side = function (r) { return (r || [0, 0]).join(); };
+
+    return (ma_poiCache[zone] || []).filter(function (p) {
+        if (p.t != rt.t || side(p.r) != side(rt.r))
+            return false;
+        var d = ma_RouteDist(rt, p.x, p.y);
+        return d < near && !all.some(function (o) {
+            return o !== rt && o.t == rt.t && side(o.r) == side(rt.r) && ma_RouteDist(o, p.x, p.y) < d;
+        });
+    });
+}
+
+function ma_BindRoute(g, rt, zone, all) {
+    var tip = function () {
+        var kind  = rt.k || { boat: 'Boat', zep: 'Zeppelin', gun: 'Gunship' }[rt.t] || 'Transport';
+        var stops = ma_RouteStops(rt, zone, all);
+        var names = [];
+        stops.forEach(function (p) { if (p.n && names.indexOf(p.n) == -1) names.push(p.n); });
+
+        var mins = function (sec) { var m = Math.round(sec / 6) / 10; return m + (m == 1 ? ' minute' : ' minutes'); };
+        var h = '<b class="q"><span class="zs-route-no zs-route-no-tip">' + (rt.id || rt._no) + '</span> ' + (rt.n || names.join(' / ') || kind) + '</b>';
+        h += '<br /><span class="q1">' + (stops[0] && stops[0].k || kind) + '</span>' + (rt.r ? ' &nbsp;' + ma_ReactHtml(rt.r) : '');
+
+        // stops: every dock names the next one, so their destinations are all stops of the line (this zone first)
+        var pts = zone > 0 && rt.t != 'gun' ? [zone] : [];
+        stops.forEach(function (p) { if (p.z && pts.indexOf(p.z) == -1) pts.push(p.z); });
+        if (rt.w && rt.t != 'gun')
+            h += '<br /><span class="q1">' + $WH.htmlentities(rt.w).replace(/ and /, ' &harr; ') + '</span>';
+        else if (rt.t == 'gun' && pts.length)
+            h += '<br /><span class="q1">Patrols over ' + pts.map(ma_ZoneName).join(', ') + '</span>';
+        else if (pts.length > 1)
+            h += '<br /><span class="q1">' + pts.map(ma_ZoneName).join(pts.length == 2 ? ' &harr; ' : ' &rarr; ') + '</span>';
+        else if (pts.length)                                // only one dock on this map
+            h += '<br /><span class="q1">To ' + ma_ZoneName(pts[0]) + '</span>';
+
+        var t = stops.filter(function (p) { return p.rt; })[0];
+        if (t) {
+            h += '<br /><span class="q2">Wait time: ' + mins(t.w) + '</span>';
+            h += '<br /><span class="q2">Travel 1-way: ' + mins(t.tt) + '</span>';
+        }
+        if (rt.rt || t)
+            h += '<br /><span class="q2">Travel 2-way: ' + mins(rt.rt || t.rt) + '</span>';
+        return h + '<br /><span class="q0">Arrows show the direction of travel</span>';
+    };
+
+    g.addEventListener('mouseover', function (e) { g.classList.add('zs-route-hl'); $WH.Tooltip.showAtCursor(e, tip(), 0, 0, 'q'); });
+    g.addEventListener('mousemove', function (e) { $WH.Tooltip.cursorUpdate(e); });
+    g.addEventListener('mouseout',  function () { g.classList.remove('zs-route-hl'); $WH.Tooltip.hide(); });
+}
+
 function ma_DrawRoutes(mapper) {
     ['_zsRoutes', '_zsRouteArrows'].forEach(function (k) {
         if (mapper[k] && mapper[k].parentNode)
@@ -1449,29 +1516,46 @@ function ma_DrawRoutes(mapper) {
         var W = mapper.span.offsetWidth || 772, H = mapper.span.offsetHeight || 515;
         var GAP = 110;
 
+        var num = 0;
         list.forEach(function (rt) {
             if (ma_poiOn[rt.t] === false)
                 return;
 
+            rt._no = ++num;                                 // line number on this map (badge + tooltip)
+            var bestLen = -1, bestAt = null;
+
             var side = rt.r && rt.r[0] > 0 && rt.r[1] < 0 ? 'a' : (rt.r && rt.r[1] > 0 && rt.r[0] < 0 ? 'h' : 'n');
+            var g = document.createElementNS(MA_ZS_SVGNS, 'g');
+            svg.appendChild(g);
+            ma_BindRoute(g, rt, zone, list);
             rt.l.forEach(function (l) {
                 var d = 'M' + l[0] + ' ' + l[1];
                 for (var i = 2; i < l.length; i += 2)
                     d += 'L' + l[i] + ' ' + l[i + 1];
 
-                ['zs-route-case', 'zs-route zs-route-' + side].forEach(function (cls) {
+                // wide invisible stroke on top: the hover target
+                ['zs-route-case', 'zs-route zs-route-' + side, 'zs-route-hit'].forEach(function (cls) {
                     var path = document.createElementNS(MA_ZS_SVGNS, 'path');
                     path.setAttribute('d', d);
                     path.setAttribute('class', cls);
                     path.setAttribute('vector-effect', 'non-scaling-stroke');
-                    svg.appendChild(path);
+                    g.appendChild(path);
                 });
 
                 var next = GAP / 2;
                 var run  = 0;
+                var total = 0;
+                for (var k = 2; k < l.length; k += 2)
+                    total += Math.hypot((l[k] - l[k - 2]) * W / 100, (l[k + 1] - l[k - 1]) * H / 100);
+                var half = Math.min(total * .5 + GAP / 4, total * .75);   // badge between two arrows, near the middle
                 for (var j = 2; j < l.length; j += 2) {
                     var dx = (l[j] - l[j - 2]) * W / 100, dy = (l[j + 1] - l[j - 1]) * H / 100;
                     var len = Math.sqrt(dx * dx + dy * dy);
+                    if (total > bestLen && half >= run && half <= run + len && len) {
+                        bestLen = total;
+                        bestAt  = [l[j - 2] + (l[j] - l[j - 2]) * (half - run) / len, l[j - 1] + (l[j + 1] - l[j - 1]) * (half - run) / len,
+                                   Math.atan2(dy, dx) * 180 / Math.PI];
+                    }
                     while (len && next <= run + len) {
                         var f = (next - run) / len;
                         var a = document.createElement('i');
@@ -1485,6 +1569,21 @@ function ma_DrawRoutes(mapper) {
                     run += len;
                 }
             });
+
+            if (bestAt) {
+                var b = document.createElement('b');
+                b.className = 'zs-route-no zs-route-no-' + side;
+                b.textContent = rt.id || rt._no;            // transport ID once the build has it, else the line number
+                b.style.left = bestAt[0] + '%';
+                b.style.top  = bestAt[1] + '%';
+                var ang = bestAt[2];                        // along the line, but never upside down
+                if (ang > 90) ang -= 180; else if (ang < -90) ang += 180;
+                b.style.setProperty('--r', ang.toFixed(1) + 'deg');
+                b.addEventListener('mouseover', function (e) { g.dispatchEvent(new MouseEvent('mouseover', e)); });
+                b.addEventListener('mousemove', function (e) { $WH.Tooltip.cursorUpdate(e); });
+                b.addEventListener('mouseout',  function () { g.dispatchEvent(new MouseEvent('mouseout')); });
+                arrows.appendChild(b);
+            }
         });
 
         ma_InsertLayer(mapper, svg, 2.5);

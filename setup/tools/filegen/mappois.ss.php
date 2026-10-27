@@ -384,6 +384,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
                 }
             }
 
+            $this->roundTrip[(int)$tr['pathId']] = (int)round($round);
             if (count($pos) < 2)
                 continue;
 
@@ -629,16 +630,27 @@ CLISetup::registerSetup("build", new class extends SetupScript
      *  crosses (and its continent), split where the path leaves the map, changes maps or teleports
      *  @return array [mapZoneId => [{t, r, l: [[x, y, x, y, ..], ..]}, ..]]
      */
+    private $roundTrip = [];                                // pathId => seconds for a full loop (set by travelPois)
+
     private function transportRoutes() : array
     {
         $nodes = $this->taxiNodes();
         $out   = [];
-        foreach (DB::World()->select('SELECT t.`name`, gt.`name` AS "goName", gt.`Data0` AS "pathId" FROM transports t JOIN gameobject_template gt ON gt.`entry` = t.`entry` WHERE gt.`type` = 15') ?: [] as $tr)
+        foreach (DB::World()->select('SELECT t.`entry`, t.`name`, gt.`name` AS "goName", gt.`Data0` AS "pathId" FROM transports t JOIN gameobject_template gt ON gt.`entry` = t.`entry` WHERE gt.`type` = 15 ORDER BY t.`entry`') ?: [] as $tr)
         {
             if (empty($nodes[$tr['pathId']]))
                 continue;
 
-            [$kind, $r] = $this->transportKind($tr['name'] ?: $tr['goName']);
+            $desc = $tr['name'] ?: $tr['goName'];
+            [$kind, $r, $label] = $this->transportKind($desc);
+            // "Orgrimmar and Grom'gol Base Camp (Zeppelin, Horde ("The Purple Princess"))" => route + ship for the hover tooltip
+            $info = ['id' => (int)$tr['entry'], 'n' => preg_match('/\("([^"]+)"\)/', $desc, $m) ? $m[1] : $tr['goName']];
+            if (preg_match('/^(.+?)\s*\(/', $desc, $m) && $m[1] != $info['n'])
+                $info['w'] = $m[1];
+            if ($label)
+                $info['k'] = $label;
+            if (!empty($this->roundTrip[(int)$tr['pathId']]))
+                $info['rt'] = $this->roundTrip[(int)$tr['pathId']];
             $list = $nodes[$tr['pathId']];
             ksort($list);
             $list[] = reset($list);                         // the path loops
@@ -704,7 +716,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
                     $keep[] = $flat;
                 }
                 if ($keep)
-                    $out[$mz][] = ['t' => $kind, 'r' => $r, 'l' => $keep];
+                    $out[$mz][] = ['t' => $kind, 'r' => $r, 'l' => $keep] + $info;
             }
         }
 
