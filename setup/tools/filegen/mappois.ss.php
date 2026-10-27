@@ -30,7 +30,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
 
     protected $setupAfter      = [['spawns', 'creature', 'objects', 'zones', 'factions'], ['zoneshapes']];
     protected $dbcSourceFiles  = ['areatrigger'];
-    protected $worldDependency = ['npc_vendor', 'transports', 'areatrigger_teleport', 'spell_target_position', 'gameobject', 'graveyard_zone'];
+    protected $worldDependency = ['npc_vendor', 'transports', 'areatrigger_teleport', 'spell_target_position', 'spell_scripts', 'gameobject', 'graveyard_zone'];
     protected $requiredDirs = ['datasets/', 'static/js/zone-pois/', 'static/js/zone-nb/', 'static/js/zone-routes/'];
     protected $localized    = true;
 
@@ -510,6 +510,9 @@ CLISetup::registerSetup("build", new class extends SetupScript
             // the orbs cast a dummy that triggers the actual teleport: follow one step of triggered spells
             $spells = array_values(array_unique(array_map('intval', array_column($gos, 'spell'))));
             $trig   = DB::Aowow()->select('SELECT `id` AS ARRAY_KEY, `effect1TriggerSpell` AS "0", `effect2TriggerSpell` AS "1", `effect3TriggerSpell` AS "2" FROM ?_spell WHERE `id` IN (?a)', $spells) ?: [];
+            // .. or cast it from spell_scripts (command 15 = cast spell, e.g. Translocate 35727 -> 35730)
+            foreach (DB::World()->select('SELECT `id`, `datalong` FROM spell_scripts WHERE `command` = 15 AND `id` IN (?a)', $spells) ?: [] as $sc)
+                $trig[$sc['id']][] = (int)$sc['datalong'];
             $ids    = $spells;
             foreach ($trig as $t)
                 foreach ($t as $ts)
