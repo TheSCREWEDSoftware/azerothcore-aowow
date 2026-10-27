@@ -335,7 +335,7 @@ if (!CLI) {
         User::save();                                       // save user-variables in session
 
     // hard override locale for this call (should this be here..?)
-    if (isset($_GET['locale']) && ($loc = Locale::tryFrom((int)$_GET['locale'])))
+    if (isset($_GET['locale']) && ($loc = Locale::tryFrom((int)$_GET['locale'])) && $loc->validate())   // not installed: crashed the page
         Lang::load($loc);
     else
         Lang::load(User::$preferedLoc);
