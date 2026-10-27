@@ -38,6 +38,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
     private const OUT_INFO  = 'datasets/map-info';
     private const OUT_NB    = 'static/js/zone-nb/%d.json';   // neighbouring zones per zone map (outlines / edge buttons)
     private const OUT_RT    = 'static/js/zone-routes/%d.json';   // transport paths per map
+    private const PASS_MAPS = [369 => 'Deeprun Tram'];  // maps you only travel through: map => label
     private const SHAPES    = 'datasets/zone-shapes';
     private const SUBSHAPES = 'static/js/zone-shapes/%d.json';
 
@@ -405,30 +406,80 @@ CLISetup::registerSetup("build", new class extends SetupScript
             }
         }
 
-        // map crossings
+        // map crossings (Dark Portal, ..) and teleports to another zone on the same map (Rut'theran Village <-> Darnassus)
         $tele = DB::World()->select('SELECT `ID` AS ARRAY_KEY, `Name`, `target_map`, `target_position_x` AS "tx", `target_position_y` AS "ty" FROM areatrigger_teleport WHERE `target_map` IN (?a)', [0, 1, 530, 571]);
         if ($tele && ($trig = DB::Aowow()->select('SELECT `id` AS ARRAY_KEY, `mapId`, `posX`, `posY` FROM dbc_areatrigger WHERE `id` IN (?a) AND `mapId` IN (?a)', array_keys($tele), [0, 1, 530, 571])))
         {
             foreach ($trig as $id => $t)
             {
                 $tp = $tele[$id];
-                if ($t['mapId'] == $tp['target_map'])
+                if (stripos($tp['Name'], 'Leap of Faith') !== false)    // fall reset, not a way to travel
                     continue;
 
                 $src = $this->entrancePos((int)$t['mapId'], (float)$t['posX'], (float)$t['posY']);
                 $dst = $this->entrancePos((int)$tp['target_map'], (float)$tp['tx'], (float)$tp['ty']);
-                if ($src && $dst)
+                if ($src && $dst && ($t['mapId'] != $tp['target_map'] || $src[0] != $dst[0]))
                     $out[] = [$src[0], ['t' => 'portal', 'x' => round($src[1], 1), 'y' => round($src[2], 1), 'z' => $dst[0], '_src' => ['name_loc0' => $tp['Name']]]];
             }
         }
 
-        // portal objects
-        $gos = DB::World()->select('SELECT g.`map`, g.`position_x` AS "x", g.`position_y` AS "y", gt.`name`, gt.`Data0` AS "spell" FROM gameobject g JOIN gameobject_template gt ON gt.`entry` = g.`id` WHERE gt.`type` = 22 AND gt.`Data0` > 0 AND g.`map` IN (?a)', [0, 1, 530, 571]);
-        if ($gos && ($dest = DB::World()->select('SELECT `ID` AS ARRAY_KEY, `MapID`, `PositionX`, `PositionY` FROM spell_target_position WHERE `ID` IN (?a) AND `MapID` IN (?a) GROUP BY `ID`', array_unique(array_column($gos, 'spell')), [0, 1, 530, 571])))
+        // pass-through maps (Deeprun Tram): entering at one end takes you out at the other
+        foreach (self::PASS_MAPS as $passMap => $label)
         {
+            $in  = DB::World()->select('SELECT `ID` AS ARRAY_KEY, `target_position_x` AS "tx", `target_position_y` AS "ty" FROM areatrigger_teleport WHERE `target_map` = ?d', $passMap);
+            $out2 = DB::World()->select('SELECT `ID` AS ARRAY_KEY, `target_map`, `target_position_x` AS "tx", `target_position_y` AS "ty" FROM areatrigger_teleport WHERE `target_map` IN (?a)', [0, 1, 530, 571]);
+            if (!$in || !$out2)
+                continue;
+
+            $pos   = DB::Aowow()->select('SELECT `id` AS ARRAY_KEY, `mapId`, `posX`, `posY` FROM dbc_areatrigger WHERE `id` IN (?a)', array_merge(array_keys($in), array_keys($out2)));
+            $exits = [];                                    // exits inside the pass-through map: [x, y, destination zone]
+            foreach ($out2 as $id => $o)
+                if (isset($pos[$id]) && $pos[$id]['mapId'] == $passMap && ($dst = $this->entrancePos((int)$o['target_map'], (float)$o['tx'], (float)$o['ty'])))
+                    $exits[] = [(float)$pos[$id]['posX'], (float)$pos[$id]['posY'], $dst[0]];
+
+            if (count($exits) < 2)
+                continue;
+
+            foreach ($in as $id => $e)
+            {
+                if (!isset($pos[$id]) || !in_array($pos[$id]['mapId'], [0, 1, 530, 571]))
+                    continue;
+
+                // the exit next to where we arrive is the way back - the farthest one is where the ride ends
+                usort($exits, fn($a, $b) => (($a[0] - $e['tx']) ** 2 + ($a[1] - $e['ty']) ** 2) <=> (($b[0] - $e['tx']) ** 2 + ($b[1] - $e['ty']) ** 2));
+                $far = end($exits);
+                $src = $this->entrancePos((int)$pos[$id]['mapId'], (float)$pos[$id]['posX'], (float)$pos[$id]['posY']);
+                if ($src && $src[0] != $far[2])
+                    $out[] = [$src[0], ['t' => 'portal', 'x' => round($src[1], 1), 'y' => round($src[2], 1), 'z' => $far[2], '_src' => ['name_loc0' => $label]]];
+            }
+        }
+
+        // portal objects (spellcasters) and teleport orbs (goobers casting a spell, e.g. Orb of Translocation Silvermoon <-> Undercity)
+        $gos = DB::World()->select(
+            'SELECT g.`map`, g.`position_x` AS "x", g.`position_y` AS "y", gt.`name`, IF(gt.`type` = 22, gt.`Data0`, gt.`Data10`) AS "spell"
+             FROM   gameobject g JOIN gameobject_template gt ON gt.`entry` = g.`id`
+             WHERE  ((gt.`type` = 22 AND gt.`Data0` > 0) OR (gt.`type` = 10 AND gt.`Data10` > 0)) AND g.`map` IN (?a)',
+            [0, 1, 530, 571]
+        );
+        if ($gos)
+        {
+            // the orbs cast a dummy that triggers the actual teleport: follow one step of triggered spells
+            $spells = array_values(array_unique(array_map('intval', array_column($gos, 'spell'))));
+            $trig   = DB::Aowow()->select('SELECT `id` AS ARRAY_KEY, `effect1TriggerSpell` AS "0", `effect2TriggerSpell` AS "1", `effect3TriggerSpell` AS "2" FROM ?_spell WHERE `id` IN (?a)', $spells) ?: [];
+            $ids    = $spells;
+            foreach ($trig as $t)
+                foreach ($t as $ts)
+                    if ($ts > 0)
+                        $ids[] = (int)$ts;
+
+            $dest = DB::World()->select('SELECT `ID` AS ARRAY_KEY, `MapID`, `PositionX`, `PositionY` FROM spell_target_position WHERE `ID` IN (?a) AND `MapID` IN (?a) GROUP BY `ID`', array_unique($ids), [0, 1, 530, 571]) ?: [];
+
             foreach ($gos as $g)
             {
-                if (!($d = $dest[$g['spell']] ?? null))
+                $d = $dest[$g['spell']] ?? null;
+                foreach ($trig[$g['spell']] ?? [] as $ts)
+                    $d ??= $dest[$ts] ?? null;
+                if (!$d)
                     continue;
 
                 $src = $this->entrancePos((int)$g['map'], (float)$g['x'], (float)$g['y']);
@@ -438,7 +489,22 @@ CLISetup::registerSetup("build", new class extends SetupScript
             }
         }
 
-        return $out;
+        // the same way out twice (portal object on an area trigger): keep one
+        $seen = [];
+        foreach ($out as $i => [$zoneId, $p])
+        {
+            if ($p['t'] != 'portal')
+                continue;
+            foreach ($seen[$zoneId.'-'.$p['z']] ?? [] as [$x, $y])
+                if (abs($x - $p['x']) < 1.5 && abs($y - $p['y']) < 1.5)
+                {
+                    unset($out[$i]);
+                    continue 2;
+                }
+            $seen[$zoneId.'-'.$p['z']][] = [$p['x'], $p['y']];
+        }
+
+        return array_values($out);
     }
 
     // raw client dbc (for files aowow has no table definition for)
