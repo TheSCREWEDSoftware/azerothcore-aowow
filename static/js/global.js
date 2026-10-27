@@ -857,17 +857,13 @@ var PageTemplate = new function()
             var $a = $($as.get(idx));
 
             var isActiveTab = (menuItem[MENU_IDX_ID] == opt.activeTab);
-            if(isActiveTab)
-            {
-                $a.addClass('active');
-                Menu.remove($a);
-            }
+            $a.toggleClass('active', isActiveTab);
+
+            // aowow: the active tab opens its menu too
+            if(menuItem[MENU_IDX_SUB])
+                Menu.add($a, menuItem[MENU_IDX_SUB]);
             else
-            {
-                $a.removeClass('active');
-                if(menuItem[MENU_IDX_SUB])
-                    Menu.add($a, menuItem[MENU_IDX_SUB]);
-            }
+                Menu.remove($a);
         });
     }
 
@@ -17752,7 +17748,7 @@ var Menu = new function()
         $menuItems.each(function() { if($(this).hasClass('col-break')) { hasColBreaks = true; return false; } });
         if(hasColBreaks)
         {
-            var $holder = $('<div></div>');
+            var $holder = $('<div class="menu-cols"></div>');   // aowow: one panel for all columns
             var $outerDiv = $('<div class="menu-outer"></div>');
             var $innerDiv = $('<div class="menu-inner"></div>');
 
@@ -17792,7 +17788,7 @@ var Menu = new function()
         var nItemsPerColumn = Math.ceil(nItems / nColumns);
         var nItemsAdded = 0;
         var nItemsRemaining = nItems;
-        var $holder = $('<div></div>');
+        var $holder = $('<div class="menu-cols"></div>');   // aowow: one panel for all columns
 
         while(nItemsRemaining > 0)
         {

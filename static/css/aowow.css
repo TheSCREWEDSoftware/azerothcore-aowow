@@ -4508,3 +4508,106 @@ input.button-copy:hover {
 .fav-star-1 {
     background-position: -65px center;
 }
+
+/* ── aowow: modern menu panels ──────────────────────────────────────────────
+ * one dark panel per menu (all columns share it, so columns of different length
+ * no longer look like separate, ragged boxes), flat items, grey hover          */
+.menu .menu-cols,
+.menu > .menu-outer,
+.menu > div > .menu-outer:only-child {
+    background: #1c1c1c;
+    border: 1px solid #3a3a3a;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.5);
+}
+.menu .menu-cols {
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+}
+.menu .menu-cols > .menu-outer {
+    float: none;
+    border: 0;
+    border-left: 1px solid #3a3a3a;
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+}
+.menu .menu-cols > .menu-outer:first-child {
+    border-left: 0;
+}
+.menu > .menu-outer {
+    float: none;
+    overflow: hidden;
+}
+.menu .menu-inner {
+    border: 0;
+    padding: 3px 0;
+}
+.menu a,
+.menu a span {
+    background-color: transparent;
+}
+.menu a {
+    border: 0;
+    padding: 4px 10px;
+    font-size: 13px;
+    line-height: 17px;
+}
+.menu a.open, .menu a:hover,
+.menu a.open span, .menu a:hover span {
+    background-color: #2b2b2b;
+}
+.menu a.open, .menu a:hover {
+    border: 0;
+    color: #fff;
+    text-decoration: none;
+}
+.menu a.separator,
+.menu a.separator:hover {
+    color: #fff;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 6px 10px 3px;
+    background-color: transparent;
+    border: 0;
+    text-decoration: none;
+    cursor: default;
+}
+.menu a.separator span {
+    background-color: transparent;
+}
+.menu a.separator:not(:first-child) {
+    margin-top: 4px;
+}
+.menu a.checked {
+    background-position: 6px center;
+}
+/* headings / entries with an icon (Alliance / Horde columns, class & race icons) keep the 24px icon slot */
+.menu a.separator.icon-alliance,
+.menu a.separator.icon-horde,
+.menu a.separator.icon,
+.menu a.separator.tinyicon,
+.menu a.separator.smallicon {
+    padding-left: 24px;
+}
+/* no dimming of the other entries */
+.menu-inner.dim-ok.dim-siblings a:not(.dim-current):not(.checked) {
+    filter: none;
+}
+
+/* aowow: tiny icons (15px, e.g. in side boxes and articles) get the same frame as the bigger icons */
+span.icontiny, a.icontiny, .icontinyl {
+    position: relative;
+}
+span.icontiny::before, a.icontiny::before, .icontinyl::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 15px;
+    height: 15px;
+    margin-top: -8px;
+    background: url(../images/Icon/tiny/border/default.gif) no-repeat;
+    pointer-events: none;
+}

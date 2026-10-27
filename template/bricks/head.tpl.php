@@ -12,6 +12,7 @@ foreach ($this->css as [$type, $css]):
     endif;
 endforeach;
 ?>
+    <link rel="stylesheet" type="text/css" href="<?=Cfg::get('STATIC_URL'); ?>/css/theme.css?<?=@filemtime('static/css/theme.css'); ?>" />
     <script type="text/javascript">
         var g_serverTime = new Date('<?=date(Util::$dateFormatInternal); ?>');
         var g_staticUrl = "<?=Cfg::get('STATIC_URL'); ?>";
@@ -31,6 +32,7 @@ foreach ($this->js as [$type, $js]):
     endif;
 endforeach;
 ?>
+    <script type="text/javascript" src="<?=Cfg::get('STATIC_URL'); ?>/js/theme.js?<?=@filemtime('static/js/theme.js'); ?>"></script>
     <script type="text/javascript">
         var g_user = <?=Util::toJSON($this->gUser, JSON_UNESCAPED_UNICODE); ?>;
         var g_pageAccess = <?=Util::toJSON([

@@ -1,0 +1,828 @@
+/*
+ * aowow: themes + modern header
+ *
+ *   <html data-ui="modern|classic" data-theme="vanilla|tbc|wotlk|cata|mop|wod|legion|bfa|shadowlands|dragonflight|tww|midnight|diablo|starcraft|hearthstone|overwatch" data-mode="dark|light">
+ *
+ * data-ui="classic" (theme "Classic AoWoW") leaves the original look untouched: everything below is scoped to
+ * html[data-ui="modern"]. Palettes only set custom properties; the layout rules read them.
+ */
+
+/* ── palettes ─────────────────────────────────────────────────────────────── */
+
+html[data-ui="modern"] {
+    --th-accent:      #3ba7e3;              /* WotLK: northrend ice */
+    --th-accent-2:    #7fd0ff;
+    --th-accent-ink:  #04121c;
+    --th-glow:        rgba(59, 167, 227, .18);
+
+    --th-bg:          #0e0f11;
+    --th-strip:       #08090a;
+    --th-header:      #141619;
+    --th-nav:         #1a1c20;
+    --th-surface:     #1d1f22;
+    --th-surface-2:   #24272b;
+    --th-surface-3:   #2c3035;
+    --th-border:      #30343a;
+    --th-border-2:    #3c4148;
+    --th-text:        #cfd3d8;
+    --th-text-strong: #ffffff;
+    --th-muted:       #8b929b;
+    --th-link:        #ffd100;
+    --th-link-hover:  #ffffff;
+    --th-input:       #0c0d0f;
+    --th-shadow:      0 2px 10px rgba(0, 0, 0, .5);
+    --th-font:        "Segoe UI", "Open Sans", Roboto, Arial, sans-serif;
+}
+
+html[data-ui="modern"][data-theme="vanilla"] {
+    --th-accent:      #d2a64b;              /* old gold */
+    --th-accent-2:    #f1cf83;
+    --th-accent-ink:  #1e1505;
+    --th-glow:        rgba(210, 166, 75, .18);
+    --th-header:      #18150f;
+    --th-nav:         #1e1a13;
+}
+
+html[data-ui="modern"][data-theme="tbc"] {
+    --th-accent:      #4cc23a;              /* fel green */
+    --th-accent-2:    #9be86f;
+    --th-accent-ink:  #071a04;
+    --th-glow:        rgba(76, 194, 58, .18);
+    --th-header:      #141712;
+    --th-nav:         #1a1e17;
+}
+
+html[data-ui="modern"][data-theme="cata"] {
+    --th-accent:      #e8622c;              /* molten orange */
+    --th-accent-2:    #ffa275;
+    --th-accent-ink:  #200a02;
+    --th-glow:        rgba(232, 98, 44, .18);
+    --th-header:      #19120f;
+    --th-nav:         #211713;
+}
+
+html[data-ui="modern"][data-theme="mop"] {
+    --th-accent:      #2fb37b;              /* jade */
+    --th-accent-2:    #7fe0b4;
+    --th-accent-ink:  #03180f;
+    --th-glow:        rgba(47, 179, 123, .18);
+    --th-header:      #111815;
+    --th-nav:         #16201b;
+}
+
+html[data-ui="modern"][data-theme="wod"] {
+    --th-accent:      #b5763e;              /* iron and rust */
+    --th-accent-2:    #e2ad7a;
+    --th-accent-ink:  #1c1006;
+    --th-glow:        rgba(181, 118, 62, .18);
+    --th-header:      #17130f;
+    --th-nav:         #1e1914;
+}
+
+html[data-ui="modern"][data-theme="legion"] {
+    --th-accent:      #8fd82b;              /* legion fel */
+    --th-accent-2:    #c4f37a;
+    --th-accent-ink:  #0d1803;
+    --th-glow:        rgba(143, 216, 43, .18);
+    --th-header:      #12160e;
+    --th-nav:         #181d12;
+}
+
+html[data-ui="modern"][data-theme="bfa"] {
+    --th-accent:      #2f6fd6;              /* deep sea blue */
+    --th-accent-2:    #7fa8f0;
+    --th-accent-ink:  #ffffff;
+    --th-glow:        rgba(47, 111, 214, .18);
+    --th-header:      #10141c;
+    --th-nav:         #151a24;
+}
+
+html[data-ui="modern"][data-theme="shadowlands"] {
+    --th-accent:      #9fb6d8;              /* afterlife silver */
+    --th-accent-2:    #d3e1f4;
+    --th-accent-ink:  #0c1420;
+    --th-glow:        rgba(159, 182, 216, .18);
+    --th-header:      #13151a;
+    --th-nav:         #191c22;
+}
+
+html[data-ui="modern"][data-theme="dragonflight"] {
+    --th-accent:      #d64a5a;              /* dragon crimson */
+    --th-accent-2:    #f28a95;
+    --th-accent-ink:  #ffffff;
+    --th-glow:        rgba(214, 74, 90, .18);
+    --th-header:      #18101a;
+    --th-nav:         #1f1522;
+}
+
+html[data-ui="modern"][data-theme="tww"] {
+    --th-accent:      #e0a640;              /* earthen amber */
+    --th-accent-2:    #f6cf86;
+    --th-accent-ink:  #1e1403;
+    --th-glow:        rgba(224, 166, 64, .18);
+    --th-header:      #17140e;
+    --th-nav:         #1e1a13;
+}
+
+html[data-ui="modern"][data-theme="midnight"] {
+    --th-accent:      #8a5cf0;              /* void purple */
+    --th-accent-2:    #bba0ff;
+    --th-accent-ink:  #ffffff;
+    --th-glow:        rgba(138, 92, 240, .18);
+    --th-header:      #130f1c;
+    --th-nav:         #191424;
+}
+
+html[data-ui="modern"][data-theme="diablo"] {
+    --th-accent:      #c8301e;              /* blood red on black */
+    --th-accent-2:    #ff6a4d;
+    --th-accent-ink:  #ffffff;
+    --th-glow:        rgba(200, 48, 30, .2);
+    --th-bg:          #0b0807;
+    --th-strip:       #050303;
+    --th-header:      #150d0b;
+    --th-nav:         #1c1210;
+    --th-surface:     #1c1614;
+    --th-surface-2:   #241c19;
+    --th-border:      #3a2a25;
+    --th-border-2:    #4a362f;
+}
+
+html[data-ui="modern"][data-theme="starcraft"] {
+    --th-accent:      #1fc6e0;              /* terran console teal */
+    --th-accent-2:    #8af1ff;
+    --th-accent-ink:  #021418;
+    --th-glow:        rgba(31, 198, 224, .2);
+    --th-bg:          #070b10;
+    --th-strip:       #04070a;
+    --th-header:      #0b131c;
+    --th-nav:         #0f1924;
+    --th-surface:     #121b24;
+    --th-surface-2:   #18232e;
+    --th-border:      #22323f;
+    --th-border-2:    #2d4252;
+}
+
+html[data-ui="modern"][data-theme="hearthstone"] {
+    --th-accent:      #f0a12a;              /* tavern amber */
+    --th-accent-2:    #ffd27a;
+    --th-accent-ink:  #241400;
+    --th-glow:        rgba(240, 161, 42, .2);
+    --th-bg:          #120d09;
+    --th-strip:       #0a0705;
+    --th-header:      #1d140d;
+    --th-nav:         #241912;
+    --th-surface:     #1f1813;
+    --th-surface-2:   #2a2019;
+    --th-border:      #423225;
+    --th-border-2:    #523f2f;
+}
+
+html[data-ui="modern"][data-theme="overwatch"] {
+    --th-accent:      #f99e1a;              /* orange on slate */
+    --th-accent-2:    #ffc56b;
+    --th-accent-ink:  #1d1203;
+    --th-glow:        rgba(249, 158, 26, .2);
+    --th-bg:          #101318;
+    --th-strip:       #0a0c10;
+    --th-header:      #171b22;
+    --th-nav:         #1d222b;
+    --th-surface:     #1c2129;
+    --th-surface-2:   #232933;
+    --th-border:      #313946;
+    --th-border-2:    #3d4757;
+}
+
+/* light mode: works with any palette (accent kept) */
+html[data-ui="modern"][data-mode="light"] {
+    --th-bg:          #eceef1;
+    --th-strip:       #dfe2e7;
+    --th-header:      #ffffff;
+    --th-nav:         #f6f7f9;
+    --th-surface:     #ffffff;
+    --th-surface-2:   #f3f4f6;
+    --th-surface-3:   #e8eaee;
+    --th-border:      #d4d8de;
+    --th-border-2:    #c4c9d1;
+    --th-text:        #23262b;
+    --th-text-strong: #000000;
+    --th-muted:       #646b75;
+    --th-link:        #9a6b00;
+    --th-link-hover:  #000000;
+    --th-input:       #ffffff;
+    --th-shadow:      0 2px 10px rgba(0, 0, 0, .12);
+}
+
+/* ── page ─────────────────────────────────────────────────────────────────── */
+
+html[data-ui="modern"] body {
+    background: var(--th-bg);
+    color: var(--th-text);
+    font-family: var(--th-font);
+}
+
+html[data-ui="modern"] a { color: var(--th-link); }
+html[data-ui="modern"] a:hover { color: var(--th-link-hover); }
+
+html[data-ui="modern"] .layout { max-width: 1400px; }
+
+/* ── theme controls (header row) ──────────────────────────────────────────── */
+
+#th-strip { display: none !important; }
+
+/* classic look keeps a small theme link so the picker stays reachable */
+#th-classic-picker { display: none; }
+html[data-ui="classic"] #th-classic-picker {
+    display: block;
+    position: absolute;
+    top: 8px;
+    left: 180px;
+    font-size: 11px;
+    z-index: 5;
+}
+html[data-ui="classic"] #th-tools { display: none; }
+
+#th-tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+}
+
+.th-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 4px;
+    color: var(--th-text) !important;
+    background: var(--th-surface-2);
+    border: 1px solid var(--th-border);
+    text-decoration: none !important;
+    white-space: nowrap;
+    box-sizing: border-box;
+}
+.th-btn:hover, .th-btn.open { color: var(--th-text-strong) !important; border-color: var(--th-accent); }
+.th-btn i { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0,0,0,.4); }
+.th-btn img { display: block; max-height: 14px; }
+.th-btn.hassubmenu span { padding-right: 0; }
+.th-btn.th-mode { font-size: 14px; padding: 0 9px; }
+
+/* ── header row: logo, search, account links ──────────────────────────────── */
+
+html[data-ui="modern"] .header {
+    height: auto;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 10px 0;
+    background: none;
+}
+
+html[data-ui="modern"] #header-logo {
+    flex-shrink: 0;
+    position: relative;
+    width: 132px;
+    height: 56px;
+}
+
+html[data-ui="modern"] .header a.header-logo {
+    left: 0;
+    top: 0;
+    width: 132px;
+    height: 56px;
+    background-size: contain !important;
+    background-position: left center !important;
+}
+
+html[data-ui="modern"] #th-search-slot {
+    flex: 1 1 auto;
+    max-width: 620px;
+}
+
+/* search moved up from the old bar (same form / live search) */
+html[data-ui="modern"] #th-search-slot .topbar-search {
+    float: none;
+    position: relative;
+    right: auto;
+    top: auto;
+    margin: 0;
+}
+
+html[data-ui="modern"] #th-search-slot .topbar-search input {
+    width: 100% !important;
+    box-sizing: border-box;
+    height: 36px;
+    padding: 0 40px 0 14px;
+    font-size: 14px;
+    color: var(--th-text);
+    background: var(--th-input);
+    border: 1px solid var(--th-border-2);
+    border-radius: 4px;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+html[data-ui="modern"] #th-search-slot .topbar-search input:focus {
+    border-color: var(--th-accent);
+    box-shadow: 0 0 0 3px var(--th-glow);
+}
+
+html[data-ui="modern"] #th-search-slot .topbar-search a {
+    right: 7px;
+    top: 7px;
+    opacity: .7;
+}
+
+html[data-ui="modern"] #th-search-slot .topbar-search a:hover { opacity: 1; }
+
+html[data-ui="modern"] .toplinks {
+    position: static;
+    height: auto;
+    line-height: 20px;
+    overflow: visible;
+    white-space: nowrap;
+    color: var(--th-muted);
+}
+
+html[data-ui="modern"] #th-links-slot .toplinks a {
+    display: inline-block;
+    margin: 0 2px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 4px;
+    color: var(--th-text) !important;
+    background: var(--th-surface-2);
+    border: 1px solid var(--th-border);
+}
+
+html[data-ui="modern"] #th-links-slot .toplinks a:hover {
+    color: var(--th-text-strong) !important;
+    border-color: var(--th-accent);
+}
+
+html[data-ui="modern"] #th-links-slot .toplinks a[href="?account=signin"] {
+    color: var(--th-accent-ink) !important;
+    background: var(--th-accent);
+    border-color: var(--th-accent);
+}
+
+/* the old separators "|" between the links */
+html[data-ui="modern"] #th-links-slot .toplinks { font-size: 0; }
+html[data-ui="modern"] #th-links-slot .toplinks span { font-size: 12px; }
+
+/* ── nav row (the old top tabs) ───────────────────────────────────────────── */
+
+html[data-ui="modern"] .wrapper > .toplinks { display: none; }
+
+html[data-ui="modern"] .toptabs,
+html[data-ui="modern"] .toptabs a {
+    height: auto;
+    background: none;
+}
+
+html[data-ui="modern"] .toptabs {
+    background: var(--th-nav);
+    border: 1px solid var(--th-border);
+    border-bottom: 2px solid var(--th-accent);
+    border-radius: 4px 4px 0 0;
+}
+
+html[data-ui="modern"] .toptabs dl {
+    display: flex;
+    align-items: stretch;
+}
+
+html[data-ui="modern"] .toptabs dt {
+    float: none;
+    margin: 0;
+}
+
+html[data-ui="modern"] .toptabs a {
+    position: relative;
+    top: 0;
+    padding: 0 16px;
+    line-height: 42px;
+    font-family: var(--th-font);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .05em;
+    color: var(--th-text) !important;
+    background: none !important;
+    transition: color .12s, background-color .12s;
+}
+
+html[data-ui="modern"] .toptabs a big { font-size: inherit; }
+html[data-ui="modern"] .toptabs a span { display: none; }
+
+html[data-ui="modern"] .toptabs a:hover,
+html[data-ui="modern"] .toptabs a.open {
+    color: var(--th-text-strong) !important;
+    background: var(--th-surface-2) !important;
+}
+
+html[data-ui="modern"] .toptabs a.active {
+    color: var(--th-accent) !important;
+}
+
+html[data-ui="modern"] .toptabs a.active::after {
+    content: '';
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 0;
+    height: 3px;
+    border-radius: 3px 3px 0 0;
+    background: var(--th-accent);
+}
+
+/* ── sub-nav row (Browse / Utilities / ..) ────────────────────────────────── */
+
+html[data-ui="modern"] .topbar {
+    height: 34px;
+    background: var(--th-surface-2);
+    border: 1px solid var(--th-border);
+    border-top: 0;
+    border-radius: 0 0 4px 4px;
+}
+
+html[data-ui="modern"] .topbar-buttons { line-height: 34px; }
+
+html[data-ui="modern"] span.menu-buttons a {
+    color: var(--th-text);
+    border-radius: 3px;
+}
+
+html[data-ui="modern"] span.menu-buttons a:hover,
+html[data-ui="modern"] span.menu-buttons a.open {
+    color: var(--th-text-strong);
+    background-color: var(--th-surface-3);
+}
+
+html[data-ui="modern"] .topbar-browse { padding-top: 6px; }
+
+/* ── content frame ────────────────────────────────────────────────────────── */
+
+html[data-ui="modern"] .main-precontents {
+    margin-top: 10px;
+    background: none;
+    border: 0;
+    padding: 4px 2px;
+}
+
+html[data-ui="modern"] .main-contents {
+    background: var(--th-surface);
+    border: 1px solid var(--th-border);
+    border-radius: 6px;
+    box-shadow: var(--th-shadow);
+    padding: 16px 18px;
+}
+
+html[data-ui="modern"] .breadcrumb { color: var(--th-muted); }
+
+html[data-ui="modern"] .footer { color: var(--th-muted); }
+html[data-ui="modern"] .footer a { color: var(--th-muted); }
+html[data-ui="modern"] .footer a:hover { color: var(--th-text-strong); }
+
+/* accent touches on shared widgets */
+html[data-ui="modern"] .menu a.checked { color: var(--th-text-strong); }
+html[data-ui="modern"] .listview { border-color: var(--th-border); border-radius: 4px; overflow: hidden; }
+html[data-ui="modern"] .listview-mode-default,
+html[data-ui="modern"] .listview-mode-div,
+html[data-ui="modern"] .listview-mode-tiled,
+html[data-ui="modern"] .listview-mode-calendar { background-color: var(--th-surface-2); }
+html[data-ui="modern"] .listview-mode-default td { border-color: var(--th-border); }
+html[data-ui="modern"] .listview thead a,
+html[data-ui="modern"] .listview th a.static,
+html[data-ui="modern"] .listview th a.static:hover { background-color: var(--th-surface-3); color: var(--th-text-strong); }
+html[data-ui="modern"] .listview th a:hover { background-color: var(--th-border-2); }
+html[data-ui="modern"] .listview thead div { border-color: var(--th-border-2) var(--th-border) var(--th-border) var(--th-border-2); }
+html[data-ui="modern"] .listview-band-top,
+html[data-ui="modern"] .listview-band-bottom { background-color: var(--th-surface); }
+
+/* ── content widgets (both modes) ─────────────────────────────────────────── */
+
+html[data-ui="modern"] .infobox {
+    background-color: var(--th-surface-2);
+    border-color: var(--th-border);
+    border-radius: 6px;
+}
+
+html[data-ui="modern"] .tabs a,
+html[data-ui="modern"] .tabs div {
+    background-image: none !important;
+}
+html[data-ui="modern"] .tabs a {
+    background-color: var(--th-surface-2);
+    border: 1px solid var(--th-border);
+    border-bottom: 0;
+    border-radius: 4px 4px 0 0;
+}
+html[data-ui="modern"] .tabs a:hover { background-color: var(--th-surface-3); border-bottom: 0; }
+html[data-ui="modern"] .tabs a.selected,
+html[data-ui="modern"] .tabs a.selected:hover {
+    background-color: var(--th-surface-3);
+    box-shadow: inset 0 3px 0 var(--th-accent);
+    border-bottom: 0;
+}
+
+/* ── light mode: content that hard-codes light-on-dark colours ────────────── */
+
+html[data-ui="modern"][data-mode="light"] .text,
+html[data-ui="modern"][data-mode="light"] .text ol li div,
+html[data-ui="modern"][data-mode="light"] .text li div,
+html[data-ui="modern"][data-mode="light"] #fi,
+html[data-ui="modern"][data-mode="light"] .listview-band-top,
+html[data-ui="modern"][data-mode="light"] .listview-band-bottom,
+html[data-ui="modern"][data-mode="light"] .infobox td { color: var(--th-text); }
+
+html[data-ui="modern"][data-mode="light"] .text b,
+html[data-ui="modern"][data-mode="light"] .text h1,
+html[data-ui="modern"][data-mode="light"] .text h2,
+html[data-ui="modern"][data-mode="light"] .text h3,
+html[data-ui="modern"][data-mode="light"] .text h4,
+html[data-ui="modern"][data-mode="light"] .comment-body h2,
+html[data-ui="modern"][data-mode="light"] .comment-body h3,
+html[data-ui="modern"][data-mode="light"] .infobox th,
+html[data-ui="modern"][data-mode="light"] .infobox th a,
+html[data-ui="modern"][data-mode="light"] .main-contents a.selected,
+html[data-ui="modern"][data-mode="light"] .tabs li a.selected div,
+html[data-ui="modern"][data-mode="light"] .tabs li a:hover div,
+html[data-ui="modern"][data-mode="light"] .tabs li a.selected b,
+html[data-ui="modern"][data-mode="light"] .tabs li a:hover b,
+html[data-ui="modern"][data-mode="light"] .listview thead a { color: var(--th-text-strong); }
+
+html[data-ui="modern"][data-mode="light"] .tabs li a div,
+html[data-ui="modern"][data-mode="light"] .tabs li a b { color: var(--th-link); }
+
+html[data-ui="modern"][data-mode="light"] .text h1,
+html[data-ui="modern"][data-mode="light"] .text h2 { border-bottom-color: var(--th-border-2); }
+
+html[data-ui="modern"][data-mode="light"] .text ol { color: #8a6d1f; }
+
+html[data-ui="modern"][data-mode="light"] .listview-mode-default td { color: var(--th-text); }
+html[data-ui="modern"][data-mode="light"] .listview-mode-default tr:hover td,
+html[data-ui="modern"][data-mode="light"] .listview-mode-default tr.mouseover td { background-color: var(--th-surface-3); }
+
+html[data-ui="modern"][data-mode="light"] .text .quote,
+html[data-ui="modern"][data-mode="light"] .text blockquote { background: var(--th-surface-2); color: var(--th-text); border-color: var(--th-border); }
+
+html[data-ui="modern"][data-mode="light"] .main-contents input[type="text"],
+html[data-ui="modern"][data-mode="light"] .main-contents select,
+html[data-ui="modern"][data-mode="light"] .main-contents textarea { background-color: #fff; color: var(--th-text); border: 1px solid var(--th-border-2); }
+
+/* the logo art is made for a dark background */
+html[data-ui="modern"][data-mode="light"] .header a.header-logo { filter: drop-shadow(0 1px 1px rgba(0,0,0,.35)); }
+
+/* item quality / reaction colours tuned for a light background (tooltips live outside .main-contents and stay dark) */
+html[data-ui="modern"][data-mode="light"] .main-contents .q0,  html[data-ui="modern"][data-mode="light"] .main-contents .q0 a  { color: #6f6f6f !important; }
+html[data-ui="modern"][data-mode="light"] .main-contents .q1,  html[data-ui="modern"][data-mode="light"] .main-contents .q1 a  { color: #1d1f22 !important; }
+html[data-ui="modern"][data-mode="light"] .main-contents .q2,  html[data-ui="modern"][data-mode="light"] .main-contents .q2 a  { color: #138a00 !important; }
+html[data-ui="modern"][data-mode="light"] .main-contents .q3,  html[data-ui="modern"][data-mode="light"] .main-contents .q3 a  { color: #0058b8 !important; }
+html[data-ui="modern"][data-mode="light"] .main-contents .q4,  html[data-ui="modern"][data-mode="light"] .main-contents .q4 a  { color: #7d1fc7 !important; }
+html[data-ui="modern"][data-mode="light"] .main-contents .q5,  html[data-ui="modern"][data-mode="light"] .main-contents .q5 a  { color: #c55a00 !important; }
+html[data-ui="modern"][data-mode="light"] .main-contents .q6,  html[data-ui="modern"][data-mode="light"] .main-contents .q6 a  { color: #9c7a3c !important; }
+html[data-ui="modern"][data-mode="light"] .main-contents .q,   html[data-ui="modern"][data-mode="light"] .main-contents .q a   { color: #9a6b00 !important; }
+
+/* page access note ("Everyone can see this page") joins the header row instead of covering the account links */
+html[data-ui="modern"] #page-access-label {
+    position: static !important;
+    order: 10;
+    margin-left: 4px;
+    font-size: 11px !important;
+    line-height: 1.3;
+    color: var(--th-muted) !important;
+}
+
+/* search icon: drawn with CSS so it follows the theme */
+html[data-ui="modern"] #th-search-slot .topbar-search a {
+    width: 22px;
+    height: 22px;
+    background: none !important;
+}
+html[data-ui="modern"] #th-search-slot .topbar-search a::before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--th-muted);
+    border-radius: 50%;
+}
+html[data-ui="modern"] #th-search-slot .topbar-search a::after {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 14px;
+    width: 7px;
+    height: 2px;
+    background: var(--th-muted);
+    transform: rotate(45deg);
+    transform-origin: left center;
+}
+html[data-ui="modern"] #th-search-slot .topbar-search a:hover::before { border-color: var(--th-accent); }
+html[data-ui="modern"] #th-search-slot .topbar-search a:hover::after  { background: var(--th-accent); }
+
+/* many expansion chips: scroll sideways on narrow windows instead of wrapping */
+html[data-ui="modern"] #th-strip {
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+html[data-ui="modern"] #th-strip::-webkit-scrollbar { display: none; }
+
+/* tab panels (comments, screenshots, ..) */
+html[data-ui="modern"] .tabbed-contents {
+    background-color: var(--th-surface-2);
+    border-color: var(--th-border);
+    border-radius: 0 4px 4px 4px;
+}
+html[data-ui="modern"][data-mode="light"] .tabbed-contents { color: var(--th-text); }
+
+
+/* ── theme colour on the small details ────────────────────────────────────── */
+
+/* list bullets: side box squares + article lists */
+html[data-ui="modern"] .infobox li {
+    position: relative;
+    background: none;
+    padding-left: 12px;
+}
+html[data-ui="modern"] .infobox li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: .78em;
+    width: 5px;
+    height: 5px;
+    border-radius: 1px;
+    background: var(--th-accent);
+}
+html[data-ui="modern"] .infobox li li::before { background: var(--th-accent-2); }
+html[data-ui="modern"] .text ul li::marker { color: var(--th-accent); }
+
+html[data-ui="modern"] .infobox th {
+    border-bottom: 1px solid var(--th-border);
+    letter-spacing: .02em;
+}
+html[data-ui="modern"] .infobox { padding-top: 0; }
+
+/* form controls follow the theme */
+html[data-ui="modern"] input[type="checkbox"],
+html[data-ui="modern"] input[type="radio"],
+html[data-ui="modern"] input[type="range"] { accent-color: var(--th-accent); }
+html[data-ui="modern"] .main-contents input[type="text"]:focus,
+html[data-ui="modern"] .main-contents select:focus,
+html[data-ui="modern"] .main-contents textarea:focus {
+    outline: 0;
+    border-color: var(--th-accent);
+    box-shadow: 0 0 0 3px var(--th-glow);
+}
+
+/* headings: thin divider, theme coloured accent under the page title */
+html[data-ui="modern"] .text h1 {
+    border-bottom: 1px solid var(--th-border-2);
+    background: linear-gradient(var(--th-accent), var(--th-accent)) left bottom / 64px 2px no-repeat;
+}
+html[data-ui="modern"] .text h2 { border-bottom-color: var(--th-border); }
+
+/* the red buttons (Links, Hide pins, ..) become flat theme buttons */
+html[data-ui="modern"] a.button-red {
+    padding: 0 11px;
+    line-height: 24px;
+    font-size: 11px;
+    color: var(--th-text-strong);
+    background: var(--th-surface-3);
+    border: 1px solid var(--th-border-2);
+    border-radius: 4px;
+    transition: background-color .12s, border-color .12s, color .12s;
+}
+html[data-ui="modern"] a.button-red em {
+    padding-right: 0;
+    background: none;
+}
+html[data-ui="modern"] a.button-red b { display: none; }
+html[data-ui="modern"] a.button-red span { left: 0 !important; }
+html[data-ui="modern"] a:hover.button-red {
+    color: var(--th-accent-ink);
+    background: var(--th-accent);
+    border-color: var(--th-accent);
+}
+html[data-ui="modern"] a:active.button-red { filter: brightness(.9); }
+html[data-ui="modern"] a.button-red-disabled,
+html[data-ui="modern"] a.button-red-disabled:hover {
+    color: var(--th-muted);
+    background: var(--th-surface-2);
+    border-color: var(--th-border);
+    cursor: default;
+}
+
+/* breadcrumb: muted path, current page highlighted, thin chevrons */
+html[data-ui="modern"] .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    font-size: 14px;
+    padding-left: 22px;
+    background-position: left center;
+    color: var(--th-muted);
+}
+html[data-ui="modern"] .breadcrumb a { color: var(--th-link); }
+html[data-ui="modern"] .breadcrumb a:hover { color: var(--th-link-hover); }
+html[data-ui="modern"] .breadcrumb > span:last-child,
+html[data-ui="modern"] .breadcrumb > span:last-child a { color: var(--th-text-strong); font-weight: 600; }
+html[data-ui="modern"] span.breadcrumb-arrow {
+    padding-right: 0;
+    background: none;
+}
+html[data-ui="modern"] span.breadcrumb-arrow::after {
+    content: '\203A';
+    display: inline-block;
+    margin: 0 8px;
+    color: var(--th-muted);
+    font-weight: normal;
+}
+
+/* menus: checked entry and hover pick up the theme */
+html[data-ui="modern"] .menu a:hover,
+html[data-ui="modern"] .menu a.open { box-shadow: inset 2px 0 0 var(--th-accent); }
+html[data-ui="modern"] .menu a.separator:hover { box-shadow: none; }
+
+/* ── scrollbars + native controls follow the mode ─────────────────────────── */
+html[data-ui="modern"],
+html[data-ui="classic"] {
+    color-scheme: dark;
+    scrollbar-color: var(--th-border-2, #3c4148) var(--th-bg, #0e0f11);
+}
+html[data-ui="modern"][data-mode="light"] { color-scheme: light; }
+html[data-ui="classic"] { scrollbar-color: #444 #111; }
+
+html[data-ui="modern"] ::-webkit-scrollbar { width: 12px; height: 12px; }
+html[data-ui="modern"] ::-webkit-scrollbar-track { background: var(--th-bg); }
+html[data-ui="modern"] ::-webkit-scrollbar-thumb {
+    background: var(--th-border-2);
+    border: 3px solid var(--th-bg);
+    border-radius: 8px;
+}
+html[data-ui="modern"] ::-webkit-scrollbar-thumb:hover { background: var(--th-accent); }
+html[data-ui="modern"] ::-webkit-scrollbar-corner { background: var(--th-bg); }
+
+/* ── signed in: name + reputation as one button ───────────────────────────── */
+html[data-ui="modern"] #th-links-slot #toplinks-user {
+    margin-right: 0;
+    border-radius: 4px 0 0 4px;
+}
+html[data-ui="modern"] #th-links-slot #toplinks-rep { font-size: 0 !important; }     /* drops the "( )" */
+html[data-ui="modern"] #th-links-slot #toplinks-rep a {
+    margin-left: -1px;
+    border-radius: 0 4px 4px 0;
+    color: var(--th-accent) !important;
+}
+html[data-ui="modern"] #th-links-slot #toplinks-favorites a:empty { display: none !important; }
+
+/* ── account links: name + reputation as one button ───────────────────────── */
+
+html[data-ui="modern"] #th-links-slot #toplinks-rep { font-size: 0 !important; }      /* drops the "( )" */
+html[data-ui="modern"] #th-links-slot #toplinks-user {
+    border-radius: 4px 0 0 4px;
+    border-right: 0;
+    margin-right: 0;
+}
+html[data-ui="modern"] #th-links-slot #toplinks-rep a {
+    margin-left: 0;
+    padding: 6px 9px;
+    border: 1px solid var(--th-border);     /* left edge doubles as the divider */
+    border-radius: 0 4px 4px 0;
+    color: var(--th-accent) !important;
+    font-size: 12px;
+    text-decoration: none !important;
+}
+html[data-ui="modern"] #th-links-slot #toplinks-user:hover,
+html[data-ui="modern"] #th-links-slot #toplinks-rep a:hover {
+    border-color: var(--th-border);
+    background: var(--th-surface-3);
+}
+html[data-ui="modern"] #th-links-slot #toplinks-rep a::before {
+    content: '\2605';                      /* reputation star */
+    margin-right: 4px;
+    font-size: 10px;
+    opacity: .8;
+}
+html[data-ui="modern"] #th-links-slot #toplinks-favorites { font-size: 0 !important; }
+html[data-ui="modern"] #th-links-slot #toplinks-favorites a:empty { display: none; }
+
+/* ── scrollbars follow the theme ──────────────────────────────────────────── */
+
+html[data-ui="modern"] { color-scheme: dark; scrollbar-color: var(--th-border-2) var(--th-bg); }
+html[data-ui="modern"][data-mode="light"] { color-scheme: light; }
+html[data-ui="modern"] * { scrollbar-color: var(--th-border-2) transparent; }
+html[data-ui="modern"] ::-webkit-scrollbar { width: 10px; height: 10px; }
+html[data-ui="modern"] ::-webkit-scrollbar-track { background: var(--th-bg); }
+html[data-ui="modern"] ::-webkit-scrollbar-thumb { background: var(--th-border-2); border-radius: 6px; border: 2px solid var(--th-bg); }
+html[data-ui="modern"] ::-webkit-scrollbar-thumb:hover { background: var(--th-accent); }
+html[data-ui="modern"] ::-webkit-scrollbar-button { display: none; height: 0; width: 0; }
+html[data-ui="classic"] { color-scheme: dark; }
