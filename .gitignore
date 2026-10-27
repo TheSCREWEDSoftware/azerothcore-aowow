@@ -58,3 +58,7 @@
 # others
 **/.DS_store
 /Stuff
+
+# model viewer data, made by setup/tools/modelviewer/extract.py from the game client
+/static/modelviewer/data/
+__pycache__/
