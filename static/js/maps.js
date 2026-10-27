@@ -1634,8 +1634,14 @@ function ma_UpdateTitle(mapper) {
     if (box.parentNode != t.parentNode)
         t.parentNode.appendChild(box);
 
+    // the mapper's own label can still hold the previous zone (e.g. after going back to a continent): name the map we show
+    var zone = parseInt(mapper.zone);
     var a = shown ? shown.querySelector('a') : null;
-    var name = shown ? shown.textContent : '';
+    var name = (zone && ma_ZoneName(zone)) || (shown ? shown.textContent : '');
+    if (a && zone > 0)
+        a.setAttribute('href', '?zone=' + zone);
+    else if (zone <= 0)
+        a = null;
     if (!name) {
         box.style.display = 'none';
         return;
@@ -1643,7 +1649,6 @@ function ma_UpdateTitle(mapper) {
     box.style.display = '';
     box.innerHTML = a ? '<a href="' + a.getAttribute('href') + '">' + $WH.htmlentities(name) + '</a>' : '<b>' + $WH.htmlentities(name) + '</b>';
 
-    var zone = parseInt(mapper.zone);
     var exp  = (typeof g_map_info != 'undefined' && g_map_info.exp[zone]) || 0;
     if (exp && MA_EXP[exp] && MA_EXP[exp].src) {
         var img = document.createElement('img');
