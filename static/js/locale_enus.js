@@ -3668,6 +3668,7 @@ var LANG = {
         oex:      "This quest has objectives and ends in $$.",
         osx_ey:   "This quest has objectives and starts in $$ and ends in $$.",
         oex_sy:   "This quest has objectives and ends in $$ and starts in $$.",
+        sy_oex:   "This quest starts in $$ and has objectives and ends in $$.",
         sx_ey:    "This quest starts in $$ and ends in $$.",
         ox_sy:    "This quest starts in $$ and has objectives in $$.",
         ox_ey:    "This quest has objectives in $$ and ends in $$.",

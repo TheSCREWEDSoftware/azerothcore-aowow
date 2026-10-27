@@ -174,7 +174,19 @@ if ($g = $this->gains):
     echo "                    <ul>\n";
 
     if (!empty($g['xp'])):
-        echo '                        <li><div>'.Lang::nf($g['xp']).' '.Lang::quest('experience')."</div></li>\n";
+        // aowow: XP by player level (QuestXP.dbc row x RewardXPDifficulty, scaled like the core's Quest::XPValue)
+        $qxTbl  = @json_decode(@file_get_contents('static/js/quest-xp.json'), true) ?: [];
+        $qxLvl  = (int)$this->subject->getField('level');
+        $qxMin  = max(1, (int)$this->subject->getField('minLevel'));
+        $qxDiff = null;
+        if ($g['xp'] >= 1 && $g['xp'] <= 9)                 // not unpacked by the quests setup: still the difficulty index
+            $qxDiff = (int)$g['xp'];
+        else if ($qxLvl > 0 && isset($qxTbl[$qxLvl]) && ($i = array_search((int)$g['xp'], $qxTbl[$qxLvl])) !== false)
+            $qxDiff = (int)$i;
+
+        $qxRow  = $qxLvl > 0 ? $qxLvl : $qxMin;             // level -1: the quest scales with the player
+        $qxFull = $qxDiff !== null && isset($qxTbl[$qxRow]) ? $qxTbl[$qxRow][$qxDiff] : (int)$g['xp'];
+        echo '                        <li><div><span id="q-xp-val">'.Lang::nf($qxFull).'</span> '.Lang::quest('experience')."</div></li>\n";
     endif;
 
     if (!empty($g['rep'])):
@@ -197,8 +209,116 @@ if ($g = $this->gains):
     endif;
 
     echo "                    </ul>\n";
+
+    if (!empty($qxDiff) && $qxTbl):
+        $qxMax = $qxLvl > 0 ? max($qxMin, min(MAX_LEVEL - 1, $qxLvl + 10)) : MAX_LEVEL - 1;
+        $qxDef = $qxLvl > 0 ? min($qxMax, max($qxMin, $qxLvl)) : $qxMin;
+        $qxRows = $qxLvl > 0 ? [$qxLvl => $qxTbl[$qxLvl]] : array_slice($qxTbl, 0, MAX_LEVEL, true);
+?>
+                    <div class="q-xpbar">
+                        <div class="q-xpbar-head"><span>LEVEL<span class="q-xpbar-diff" id="q-xp-diff"></span></span><span><b id="q-xp-lvl"><?=$qxDef; ?></b> / <?=$qxMax; ?></span></div>
+                        <input type="range" id="q-xp-range" min="<?=$qxMin; ?>" max="<?=$qxMax; ?>" value="<?=$qxDef; ?>" step="1" />
+                    </div>
+                    <style>
+                        .q-xpbar { width: 375px; max-width: 100%; margin: 4px 0 6px; }
+                        .q-xpbar-head { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; letter-spacing: .08em; color: #aaa; margin-bottom: 4px; }
+                        .q-xpbar-head b { color: #1eff00; }
+                        #q-xp-range { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 10px; margin: 0; border-radius: 5px; cursor: pointer; background: #2b2b2b; box-shadow: inset 0 0 0 1px rgba(0,0,0,.6); }
+                        #q-xp-range::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 18px; border-radius: 2px; background: #eee; border: 1px solid #000; box-shadow: 0 0 2px #000; }
+                        #q-xp-range::-moz-range-thumb { width: 8px; height: 18px; border-radius: 2px; background: #eee; border: 1px solid #000; }
+                        .q-xpbar-diff { margin-left: 8px; font-weight: normal; letter-spacing: 0; text-transform: none; }
+                    </style>
+                    <script type="text/javascript">
+                        (function () {
+                            var rows = <?=json_encode($qxRows); ?>, qLvl = <?=$qxLvl; ?>, diff = <?=$qxDiff; ?>;
+                            var r = $WH.ge('q-xp-range'), lv = $WH.ge('q-xp-lvl'), out = $WH.ge('q-xp-val');
+                            var xpAt = function (p) {
+                                var q = qLvl > 0 ? qLvl : p, row = rows[q];
+                                if (!row)
+                                    return 0;
+                                var f = Math.min(10, Math.max(1, 2 * (q - p) + 20));
+                                var xp = Math.floor(f * row[diff] / 10);
+                                if (xp <= 100)       xp = 5  * Math.floor((xp + 2)  / 5);
+                                else if (xp <= 500)  xp = 10 * Math.floor((xp + 5)  / 10);
+                                else if (xp <= 1000) xp = 25 * Math.floor((xp + 12) / 25);
+                                else                 xp = 50 * Math.floor((xp + 25) / 50);
+                                return xp;
+                            };
+                            // quest colour for a player level, as the core's Acore::XP::GetColorCode / the client's GetQuestDifficultyColor
+                            var COLORS = { red: ['#ff1a1a', 'Red: very difficult'], orange: ['#ff8040', 'Orange: difficult'], yellow: ['#ffff00', 'Yellow: standard'],
+                                           green: ['#40bf40', 'Green: easy'], grey: ['#808080', 'Grey: trivial'] };
+                            var grayLevel = function (p) { return p <= 5 ? 0 : (p <= 39 ? p - 5 - Math.floor(p / 10) : (p <= 59 ? p - 1 - Math.floor(p / 5) : p - 9)); };
+                            var colorAt = function (p) {
+                                var q = qLvl > 0 ? qLvl : p;
+                                return q >= p + 5 ? 'red' : (q >= p + 3 ? 'orange' : (q >= p - 2 ? 'yellow' : (q > grayLevel(p) ? 'green' : 'grey')));
+                            };
+                            var dif = $WH.ge('q-xp-diff');
+                            var lo = parseInt(r.min), hi = parseInt(r.max), n = hi - lo + 1, stops = [];
+                            for (var l = lo; l <= hi; l++)
+                                stops.push(COLORS[colorAt(l)][0] + ' ' + ((l - lo) / n * 100).toFixed(2) + '% ' + ((l - lo + 1) / n * 100).toFixed(2) + '%');
+                            r.style.background = 'linear-gradient(to right, ' + stops.join(', ') + ')';
+
+                            var upd = function () {
+                                var p = parseInt(r.value), c = COLORS[colorAt(p)];
+                                lv.textContent  = p;
+                                lv.style.color  = c[0];
+                                dif.textContent = c[1];
+                                dif.style.color = c[0];
+                                out.textContent = $WH.number_format(xpAt(p));
+                            };
+                            r.oninput = upd;
+                            upd();
+                        })();
+                    </script>
+<?php
+    endif;
 endif;
 
+// aowow: completion check (3.3.5 client macro + GM command), click to copy
+$qId    = (int)$this->typeId;
+$qMacro = '/run local q='.$qId.' local f=CreateFrame("Frame")f:RegisterEvent("QUEST_QUERY_COMPLETE")f:SetScript("OnEvent",function(s)s:UnregisterAllEvents()print("Quest "..q..(GetQuestsCompleted()[q] and " complete" or " incomplete"))end)QueryQuestsCompleted()';
+$qGm    = '.quest status '.$qId;
+?>
+                    <div class="pad"></div>
+                    <div class="q-status-check">
+                        Check the quest's status with the command (click to copy):
+                        <code class="q-copy" title="Click to copy" data-copy="<?=htmlspecialchars($qGm); ?>"><?=htmlspecialchars($qGm); ?></code>
+                        or by typing in game:
+                        <code class="q-copy q-macro" title="Click to copy" data-copy="<?=htmlspecialchars($qMacro); ?>" data-short="/run local q=<?=$qId; ?> ..."><span>/run local q=<?=$qId; ?> ...</span></code>
+                        <a href="javascript:;" class="q-expand">Expand</a>
+                    </div>
+                    <style>
+                        .q-status-check { margin-top: 6px; line-height: 1.6; }
+                        .q-status-check .q-copy { display: block; width: fit-content; max-width: min(100%, 460px); margin: 3px 0 8px; padding: 0; font: bold 13px/1.5 Consolas, "Courier New", monospace; color: #fff; background: none; border-bottom: 1px dotted #888; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                        .q-status-check .q-copy:hover { color: #ffd100; border-bottom-color: #ffd100; }
+                        .q-status-check .q-copy.q-copied { color: #1eff00; border-bottom-color: #1eff00; }
+                        .q-status-check .q-macro { margin-bottom: 2px; }
+                        .q-status-check .q-macro.q-open { white-space: normal; word-break: break-all; max-width: min(100%, 720px); }
+                        .q-status-check .q-expand { display: inline-block; font-size: 11px; margin-bottom: 8px; }
+                    </style>
+                    <script type="text/javascript">
+                        $('.q-status-check .q-expand').on('click', function () {
+                            var m = $('.q-status-check .q-macro'), open = !m.hasClass('q-open');
+                            m.toggleClass('q-open', open).children('span').text(open ? m.attr('data-copy') : m.attr('data-short'));
+                            $(this).text(open ? 'Collapse' : 'Expand');
+                        });
+                        $('.q-status-check .q-copy').on('click', function () {
+                            var el = this, txt = el.getAttribute('data-copy');
+                            var done = function () { $(el).addClass('q-copied'); setTimeout(function () { $(el).removeClass('q-copied'); }, 1500); };
+                            var legacy = function () {
+                                var ta = document.createElement('textarea');
+                                ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                                document.body.appendChild(ta); ta.select();
+                                try { if (document.execCommand('copy')) done(); } catch (e) {}
+                                document.body.removeChild(ta);
+                            };
+                            if (navigator.clipboard && window.isSecureContext)
+                                navigator.clipboard.writeText(txt).then(done, legacy);
+                            else
+                                legacy();
+                        });
+                    </script>
+<?php
 $this->brick('mail', ['offset' => ++$offset]);
 
 if (!empty($this->transfer)):

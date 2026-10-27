@@ -20061,6 +20061,15 @@ Mapper.prototype = {
                 primaryLink = zoneLinks(this, span, zones, typesByZone);
                 $WH.ae(span, $WH.ct(parts[1]));
             }
+            else if(endObj && LANG.mapper_objectives.sy_oex) // aowow: starts in y, objectives and ends in x (start named first)
+            {
+                var parts = LANG.mapper_objectives.sy_oex.split('$$');
+                $WH.ae(span, $WH.ct(parts[0]));
+                primaryLink = zoneLinks(this, span, startZones, typesByZone);
+                $WH.ae(span, $WH.ct(parts[1]));
+                secondaryLink = zoneLinks(this, span, objZones, typesByZone);
+                $WH.ae(span, $WH.ct(parts[2]));
+            }
             else if(endObj) // objectives and ends in x, starts in y
             {
                 var parts = LANG.mapper_objectives.oex_sy.split('$$');
@@ -20180,8 +20189,8 @@ Mapper.prototype = {
                 this.sZoom.style.display = 'none';
         }
 
-        /*  aowow: check for e is custom as it should only affect the lightbox */
-        if(this.zoom && e === undefined)
+        /*  aowow: clicking a small map opens it in the lightbox instead of growing it in place */
+        if(this.zoom)
             MapViewer.show({ mapper: this });
     },
 
