@@ -8137,6 +8137,24 @@ Listview.extraCols = {
 };
 
 Listview.funcBox = {
+    createGroupCol: function() {
+        return {
+            id:    'group',
+            name:  (LANG.group !== undefined ? LANG.group : 'Group'),
+            width: '7%',
+            value: 'group',
+            compute: function(row, td) {
+                var g = parseInt(row.group) || 0;
+                var s = $WH.ce('span');
+                s.className = 'lv-group' + (g ? ' lv-group-' + ((g - 1) % 16 + 1) : ' lv-group-none');
+                $WH.ae(s, $WH.ct(g ? g : '\u2013'));
+                $WH.ae(td, s);
+            },
+            getVisibleText: function(row) { return String(row.group || 0); },
+            sortFunc: function(a, b) { return (parseInt(a.group) || 0) - (parseInt(b.group) || 0); }
+        };
+    },
+
     createSimpleCol: function(i, n, w, v) {
         return {
             id:    i,

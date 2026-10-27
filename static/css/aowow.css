@@ -4611,3 +4611,11 @@ span.icontiny::before, a.icontiny::before, .icontinyl::before {
     background: url(../images/Icon/tiny/border/default.gif) no-repeat;
     pointer-events: none;
 }
+
+/* loot group column: one colour per group (16, then repeats) */
+.lv-group { display:inline-block; min-width:22px; padding:1px 6px; border-radius:3px; font-weight:bold; line-height:16px; color:#fff; background:var(--lg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.18); }
+.lv-group-none { background:none; box-shadow:none; color:#777; font-weight:normal; }
+.lv-group-1  { --lg:#0f7200; } .lv-group-2  { --lg:#a70000; } .lv-group-3  { --lg:#0014d2; } .lv-group-4  { --lg:#936200; }
+.lv-group-5  { --lg:#5900b1; } .lv-group-6  { --lg:#000000; } .lv-group-7  { --lg:#740090; } .lv-group-8  { --lg:#389c01; }
+.lv-group-9  { --lg:#ac00a3; } .lv-group-10 { --lg:#005f73; } .lv-group-11 { --lg:#9b2226; } .lv-group-12 { --lg:#3a86ff; }
+.lv-group-13 { --lg:#ff006e; } .lv-group-14 { --lg:#8338ec; } .lv-group-15 { --lg:#fb8500; } .lv-group-16 { --lg:#2a9d8f; }

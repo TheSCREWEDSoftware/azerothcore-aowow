@@ -408,7 +408,7 @@ class Loot
                     break;
             }
     
-            $this->extraCols[] = "\$Listview.funcBox.createSimpleCol('group', 'Group', '7%', 'group')";
+            $this->extraCols[] = '$Listview.funcBox.createGroupCol()';
             foreach ($fields as $idx => $field)
                 if ($set & (1 << $idx))
                     $this->extraCols[] = "\$Listview.funcBox.createSimpleCol('".$field."', '".Util::ucFirst($field)."', '7%', '".$field."')";
