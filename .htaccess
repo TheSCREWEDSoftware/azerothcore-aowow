@@ -39,3 +39,28 @@ RewriteEngine on
 #   RewriteRule     ^([a-z0-9\-]+)$                             ?$1       [NC]      # /items                 => ?items
 #   RewriteRule     ^([a-z0-9\-]+)=([^?&]*)$                    ?$1=$2    [NC]      # /items=4.1             => ?items=4.1
 #   RewriteRule     ^([a-z0-9\-]+)=([^?&]*)[&?](.*)$            ?$1=$2&$3 [NC]      # /items=4.1?filter=sl=7 => ?items=4.1&filter=sl=7
+
+# readable links: [locale/]type=id[/name]  ->  index.php?type=id  (static/js/prettyurl.js writes them into the address bar)
+#   /aowow/item=35797/drakurus-elixir   /aowow/ru/item=35797/эликсир-дракуру   /aowow/ru/
+#   relative links on such pages ("?zone=14") arrive as /aowow/ru/item=35797/name?zone=14 and keep the path's locale
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{QUERY_STRING} ^$
+    RewriteRule ^(en|fr|de|es|ru|cn)/([a-z-]+=[^/]*)(?:/[^/]*)?$ index.php?$2&urlloc=$1 [L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{QUERY_STRING} ^$
+    RewriteRule ^([a-z-]+=[^/]*)(?:/[^/]*)?$ index.php?$1 [L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{QUERY_STRING} .
+    RewriteRule ^(en|fr|de|es|ru|cn)/(?:[a-z-]+=[^/]*(?:/[^/]*)?)?$ index.php?%{QUERY_STRING}&urlloc=$1 [L]
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{QUERY_STRING} .
+    RewriteRule ^[a-z-]+=[^/]*(?:/[^/]*)?$ index.php?%{QUERY_STRING} [L]
+
+    RewriteRule ^(en|fr|de|es|ru|cn)/?$ index.php?&urlloc=$1 [L,QSA]
+</IfModule>

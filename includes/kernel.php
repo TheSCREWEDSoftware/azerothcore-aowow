@@ -337,6 +337,8 @@ if (!CLI) {
     // hard override locale for this call (should this be here..?)
     if (isset($_GET['locale']) && ($loc = Locale::tryFrom((int)$_GET['locale'])) && $loc->validate())   // not installed: crashed the page
         Lang::load($loc);
+    else if (!empty($_GET['urlloc']) && ($loc = Locale::tryFromDomain($_GET['urlloc'])) && $loc->validate())
+        Lang::load($loc);                                   // readable links: /aowow/ru/item=123 (see .htaccess)
     else
         Lang::load(User::$preferedLoc);
 

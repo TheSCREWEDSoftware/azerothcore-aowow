@@ -29,7 +29,20 @@ class AjaxLocale extends AjaxHandler
             User::save(true);
         }
 
-        return isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '.';
+        if (!isset($_SERVER['HTTP_REFERER']))
+            return '.';
+
+        // readable links carry the locale in the path (/aowow/ru/item=123/..): swap it, or the old one stays in charge
+        $ref  = $_SERVER['HTTP_REFERER'];
+        $base = rtrim(Cfg::get('HOST_URL'), '/').'/';
+        if ($this->_get['locale']?->validate() && strpos($ref, $base) === 0)
+        {
+            $rest = preg_replace('#^(en|fr|de|es|ru|cn)(/|$)#', '', substr($ref, strlen($base)));
+            $loc  = $this->_get['locale'] == Locale::EN ? '' : $this->_get['locale']->domain().'/';
+            $ref  = $base.($rest === '' || $rest[0] == '?' ? ($loc ?: '').$rest : $loc.$rest);
+        }
+
+        return $ref;
     }
 }
 

@@ -22770,12 +22770,12 @@ $WH.aE(window, 'load', function () {
 
     var pattern = /^\?[-a-z]+=\d+/i;
     // var path    = pattern.exec(location.pathname);
-    var path    = pattern.exec(location.search);
+    var path    = pattern.exec(location.search) || /\/([-a-z]+=\d+)(\/|$)/i.exec(location.pathname);   // aowow: also readable links
     if (!path) {
         return;
     }
 
-    path = path[0];
+    path = path[0].charAt(0) == '?' ? path[0] : '?' + path[1];
 
     var makeButton = function (text, url) {
         var a = $WH.ce('a');
