@@ -1905,6 +1905,7 @@ $lang = array(
         'consumable'    => "Consumable",
         'nonConsumable' => "Non-consumable",
         'accountWide'   => "Account-wide",
+        'notAccountWide'=> "Not account-wide",
         'millable'      => "Millable",                      // ITEM_MILLABLE
         'noEquipCD'     => "No equip cooldown",
         'prospectable'  => "Prospectable",                  // ITEM_PROSPECTABLE

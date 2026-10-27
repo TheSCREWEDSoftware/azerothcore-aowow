@@ -80,6 +80,8 @@ if (!empty($this->subItems)):
 endif;
 
 $this->brick('book');
+
+    $this->brick('mapper');
 ?>
 
                 <h2 class="clear"><?=Lang::main('related'); ?></h2>

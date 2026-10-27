@@ -151,9 +151,11 @@ class ItemPage extends genericPage
         if ($_ilvl && in_array($_class, [ITEM_CLASS_ARMOR, ITEM_CLASS_WEAPON, ITEM_CLASS_AMMUNITION, ITEM_CLASS_GEM]))
             $infobox[] = Lang::game('level').Lang::main('colon').$_ilvl;
 
-        // account-wide
+        // account-wide / not account-wide
         if ($_flags & ITEM_FLAG_ACCOUNTBOUND)
             $infobox[] = Lang::item('accountWide');
+        else if ($_class == ITEM_CLASS_MISC && $_subClass == 5)
+            $infobox[] = Lang::item('notAccountWide');
 
         // side
         if ($si = $this->subject->json[$this->typeId]['side'])
@@ -820,7 +822,7 @@ class ItemPage extends genericPage
                 // vendor map: show spawn pins for all selling NPCs
                 $vendorNpcIds = array_keys($vendors);
                 $rawSpawns = DB::Aowow()->select(
-                    "SELECT `typeId`, `areaId`, `floor`, `posX`, `posY` FROM ?_spawns WHERE `type` = ?d AND `typeId` IN (?a) AND `areaId` > 0",
+                    "SELECT `typeId`, `areaId`, `floor`, `posX`, `posY`, `respawn` FROM ?_spawns WHERE `type` = ?d AND `typeId` IN (?a) AND `areaId` > 0",
                     Type::NPC, $vendorNpcIds
                 );
                 if ($rawSpawns)
@@ -832,7 +834,15 @@ class ItemPage extends genericPage
                             $vendorMapData[$s['areaId']][$s['floor']] = ['coords' => [], 'count' => 0];
                         if ($s['posX'] > 0 && $s['posY'] > 0)
                         {
-                            $vendorMapData[$s['areaId']][$s['floor']]['coords'][] = [$s['posX'], $s['posY']];
+                            $opts = [];
+                            if (isset($sbData[$s['typeId']]['name']))
+                            {
+                                $tt = ['info' => []];
+                                if ($s['respawn'] > 0)
+                                    $tt['info'][1] = '<span class="q0">'.Lang::npc('respawnIn', [Lang::formatTime($s['respawn'] * 1000, 'game', 'timeAbbrev', true)]).'</span>';
+                                $opts['tooltip'] = [$sbData[$s['typeId']]['name'] => $tt];
+                            }
+                            $vendorMapData[$s['areaId']][$s['floor']]['coords'][] = [$s['posX'], $s['posY'], $opts ?: null];
                             $vendorMapData[$s['areaId']][$s['floor']]['count']++;
                         }
                     }
