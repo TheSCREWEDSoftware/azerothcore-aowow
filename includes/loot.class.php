@@ -194,6 +194,7 @@ class Loot
 
             if ($entry['Reference'])
             {
+                $entry['Reference'] = abs($entry['Reference']);   // core reads negative references as abs() too
                 // bandaid.. remove when propperly handling lootmodes
                 if (!in_array($entry['Reference'], $handledRefs))
                 {                                                                                                   // todo (high): find out, why i used this in the first place. (don't do drugs, kids)
@@ -451,14 +452,14 @@ class Loot
         $refResults = [];
         $query      =   'SELECT
                             lt1.entry AS ARRAY_KEY,
-                            IF(lt1.reference = 0, lt1.item, lt1.reference) AS item,
+                            IF(lt1.reference = 0, lt1.item, ABS(lt1.reference)) AS item,
                             lt1.chance,
                             SUM(IF(lt2.chance = 0, 1, 0)) AS nZeroItems,
                             SUM(IF(lt2.reference = 0, lt2.chance, 0)) AS sumChance,
                             IF(lt1.groupid > 0, 1, 0) AS isGrouped,
                             IF(lt1.reference = 0, lt1.mincount, 1) AS min,
                             IF(lt1.reference = 0, lt1.maxcount, 1) AS max,
-                            IF(lt1.reference > 0, lt1.maxcount, 1) AS multiplier
+                            IF(lt1.reference <> 0, lt1.maxcount, 1) AS multiplier
                         FROM
                             ?# lt1
                         LEFT JOIN
@@ -490,7 +491,7 @@ class Loot
         {
             $curRefs = $newRefs;
             $newRefs = DB::World()->select(
-                sprintf($query, 'lt1.reference IN (?a)'),
+                sprintf($query, 'ABS(lt1.reference) IN (?a)'),
                 LOOT_REFERENCE, LOOT_REFERENCE,
                 array_keys($curRefs)
             );
@@ -510,7 +511,7 @@ class Loot
                 continue;
 
             $result = $this->calcChance(DB::World()->select(
-                sprintf($query, '{lt1.reference IN (?a) OR }(lt1.reference = 0 AND lt1.item = ?d)'),
+                sprintf($query, '{ABS(lt1.reference) IN (?a) OR }(lt1.reference = 0 AND lt1.item = ?d)'),
                 $lootTemplate, $lootTemplate,
                 $refResults ? array_keys($refResults) : DBSIMPLE_SKIP,
                 $this->entry
