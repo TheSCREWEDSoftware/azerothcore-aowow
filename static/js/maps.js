@@ -1184,15 +1184,15 @@ function ma_InitPois() {
     var applyChange = function (terr) {
         save();
         refreshers.forEach(function (f) { f(); });
-        ma_DrawPois(myMapper, true);
         if (ma_zsColored != ma_poiOn['m-lc']) {
             ma_zsColored = ma_poiOn['m-lc'];
             try { window.localStorage.setItem(MA_ZS_STORE, ma_zsColored ? '1' : '0'); } catch (e) {}
             terr = true;
         }
         ma_ApplyDisplay();
-        if (terr)
+        if (terr)                                           // redrawing the zone shapes clears the marker layers, so it goes first
             ma_DrawZoneShapes(myMapper, true);
+        ma_DrawPois(myMapper, true);
         ma_UpdateLink(myMapper);
     };
     var setTypes = function (types, on) {
@@ -1224,12 +1224,22 @@ function ma_InitPois() {
     // select / deselect everything
     var bar = document.createElement('span');
     bar.className = 'zs-poi-bar';
-    [['Select all', true], ['Deselect all', false]].forEach(function (b) {
+    var poiTypes = MA_POI_TYPES.filter(function (t) { return t[0].indexOf('m-') != 0; });
+    [['Select all', true], ['Deselect all', false], ['Default', null]].forEach(function (b) {
         var btn = document.createElement('a');
         btn.href = 'javascript:;';
         btn.className = 'zs-poi-btn';
         btn.textContent = b[0];
-        btn.onclick = function () { setTypes(MA_POI_TYPES.filter(function (t) { return t[0].indexOf('m-') != 0; }), b[1]); };
+        btn.title = b[1] === null ? 'Back to the default selection' : '';
+        btn.onclick = function () {
+            if (b[1] !== null)
+                return setTypes(poiTypes, b[1]);
+
+            poiTypes.forEach(function (t) { ma_poiOn[t[0]] = t[2]; });   // on by default, see MA_POI_GROUPS
+            ma_poiOn.badges = true;
+            bc.checked = true;
+            applyChange(true);
+        };
         bar.appendChild(btn);
     });
     box.firstChild.appendChild(bar);
