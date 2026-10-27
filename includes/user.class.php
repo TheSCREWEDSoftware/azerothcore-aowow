@@ -74,7 +74,7 @@ class User
         if (!$uData)
             return false;
 
-        if ($loc = Locale::tryFrom($uData['locale']))
+        if ($loc = Locale::tryFrom($uData['locale'])?->validate())   // account language no longer installed: keep the fallback
             self::$preferedLoc = $loc;
 
         // password changed, terminate session
