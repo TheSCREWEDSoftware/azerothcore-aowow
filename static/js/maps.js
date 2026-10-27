@@ -1456,11 +1456,11 @@ function ma_BindRoute(g, rt, zone, all) {
         var kind  = rt.k || { boat: 'Boat', zep: 'Zeppelin', gun: 'Gunship' }[rt.t] || 'Transport';
         var stops = ma_RouteStops(rt, zone, all);
         var names = [];
-        stops.forEach(function (p) { if (p.n && names.indexOf(p.n) == -1) names.push(p.n); });
+        stops.forEach(function (p) { if (p.n && names.indexOf(p.n) == -1) names.push($WH.htmlentities(p.n)); });
 
         var mins = function (sec) { var m = Math.round(sec / 6) / 10; return m + (m == 1 ? ' minute' : ' minutes'); };
         var side = rt.r && rt.r[0] > 0 && rt.r[1] < 0 ? 'a' : (rt.r && rt.r[1] > 0 && rt.r[0] < 0 ? 'h' : 'n');
-        var h = '<b class="q"><span class="zs-route-no zs-route-no-tip zs-route-no-' + side + '">' + (rt.id || rt._no) + '</span> ' + (rt.n || names.join(' / ') || kind) + '</b>';
+        var h = '<b class="q"><span class="zs-route-no zs-route-no-tip zs-route-no-' + side + '">' + (rt.id || rt._no) + '</span> ' + (rt.n ? $WH.htmlentities(rt.n) : names.join(' / ') || kind) + '</b>';
         h += '<br /><span class="q1">' + (stops[0] && stops[0].k || kind) + '</span>' + (rt.r ? ' &nbsp;' + ma_ReactHtml(rt.r) : '');
 
         // stops: every dock names the next one, so their destinations are all stops of the line (this zone first)
