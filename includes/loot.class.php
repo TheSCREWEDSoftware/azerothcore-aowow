@@ -201,8 +201,8 @@ class Loot
 
                     $handledRefs[] = $entry['Reference'];
 
-                    $loot     = array_merge($loot, $data);
-                    $rawItems = array_merge($rawItems, $raw);
+                    $loot     = array_merge($loot, $data ?? []);          // reference without rows in reference_loot_template
+                    $rawItems = array_merge($rawItems, $raw ?? []);
                 }
                 $set['reference']  = $entry['Reference'];
                 $set['multiplier'] = $entry['MaxCount'];
