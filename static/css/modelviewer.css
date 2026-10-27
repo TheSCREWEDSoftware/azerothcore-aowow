@@ -30,8 +30,18 @@ html.mv-noscroll { overflow: hidden; }
     position: relative;
     flex: 1;
     min-height: 0;
-    background: radial-gradient(ellipse at center, #2a2c31 0%, #141518 75%);
+    background: #1d1d1f url(../images/modelviewer/bg-tile.png) repeat;   /* tiled AoWoW logo silhouettes */
 }
+.mv-stage::after {                                      /* soft light in the middle */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,.05) 0%, rgba(0,0,0,.35) 100%);
+    pointer-events: none;
+}
+.mv-stage canvas, .mv-msg, .mv-tools { position: relative; z-index: 1; }
+.mv-msg { position: absolute; }
+.mv-tools { position: absolute; }
 .mv-stage canvas { display: block; width: 100%; height: 100%; cursor: grab; }
 .mv-stage canvas:active { cursor: grabbing; }
 

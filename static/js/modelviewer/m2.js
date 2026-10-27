@@ -187,6 +187,16 @@ var AoM2 = (function () {
         return m;
     }
 
+    // reflection layers (ArmorReflect, OrbReflectBright, ..): texture coords from the view space normal, like the client
+    function sphereMap(m) {
+        m.onBeforeCompile = function (sh) {
+            sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>',
+                '#include <project_vertex>\n\tvUv = normalize( normalMatrix * normal ).xy * 0.5 + 0.5;');
+        };
+        m.customProgramCacheKey = function () { return 'aom2-sphere'; };
+        return m;
+    }
+
     // ---------------------------------------------------------------- model
 
     function Model(base, key, opt) {
@@ -286,6 +296,7 @@ var AoM2 = (function () {
         this.texLookup    = lookup(0x80);
         this.weightLookup = lookup(0x90);
         this.texAnimLookup = lookup(0x98);
+        this.uvLookup     = lookup(0x88);                     // texture coord set per layer: 0 / 1, -1 = sphere (reflection) map
 
         // attachments (weapons, helms on characters - phase 2)
         var at = r.arr(0xF0);
@@ -332,7 +343,7 @@ var AoM2 = (function () {
             this.batches.push({
                 flags: sr.u8(o), priority: sr.i8(o + 1), section: sr.u16(o + 4), color: sr.i16(o + 8),
                 material: sr.u16(o + 10), layer: sr.u16(o + 12), texCount: sr.u16(o + 14), texCombo: sr.u16(o + 16),
-                weightCombo: sr.u16(o + 20), texAnimCombo: sr.u16(o + 22)
+                uvCombo: sr.u16(o + 18), weightCombo: sr.u16(o + 20), texAnimCombo: sr.u16(o + 22)
             });
         }
         // layers in order (the client draws batches by section, then material layer)
@@ -382,13 +393,36 @@ var AoM2 = (function () {
                 tex = tex.clone();                          // own copy: its offset is animated
                 tex.needsUpdate = true;
             }
-            var mat = makeMaterial(tex, rf.flags, rf.blend);
-            mat.userData = { batch: bt, texAnim: (anim != null && anim >= 0) ? anim : -1, weight: self.weightLookup[bt.weightCombo] };
+            var env = self.uvLookup[bt.uvCombo] == -1;
+            // reflection layers brighten the metal: drawn additive (as multiply they darkened everything behind them)
+            var mat = makeMaterial(tex, env ? rf.flags | 0x01 : rf.flags, env && rf.blend >= 2 ? 4 : rf.blend);
+            if (env) {
+                sphereMap(mat);
+                if (rf.blend >= 2) mat.userData.envScale = 0.6;
+            }
+            mat.userData = { batch: bt, texAnim: (anim != null && anim >= 0) ? anim : -1, weight: self.weightLookup[bt.weightCombo], envScale: mat.userData.envScale || 1 };
             mat.polygonOffset = bt.layer > 0;               // stacked layers on the same faces
             mat.polygonOffsetFactor = -bt.layer;
             materials.push(mat);
             self.batchMats.push(mat);
             geo.addGroup(sec.indexStart, sec.indexCount, materials.length - 1);
+
+            // two textures in one batch: the second (usually a reflection) is added on top
+            for (var t = 1; t < bt.texCount; t++) {
+                var tex2 = self.textureFor(self.texLookup[bt.texCombo + t]);
+                if (!tex2)
+                    continue;
+                var m2 = makeMaterial(tex2, rf.flags | 0x01, 4);   // unlit, additive
+                if (self.uvLookup[bt.uvCombo + t] == -1)
+                    sphereMap(m2);
+                m2.userData = { batch: bt, texAnim: -1, weight: self.weightLookup[bt.weightCombo + t], envScale: 0.6 };
+                m2.polygonOffset = true;
+                m2.polygonOffsetFactor = -(bt.layer + t);
+                m2.depthWrite = false;
+                materials.push(m2);
+                self.batchMats.push(m2);
+                geo.addGroup(sec.indexStart, sec.indexCount, materials.length - 1);
+            }
         });
 
         if (this.bones.length) {
@@ -481,6 +515,7 @@ var AoM2 = (function () {
                 var rgb = col.rgb.at(seq, t, self, null);
                 if (rgb && !m.map) m.color.setRGB(rgb[0], rgb[1], rgb[2]);
             }
+            a *= u.envScale || 1;
             if (a < 0.999 && !m.transparent) { m.transparent = true; m.needsUpdate = true; }
             m.opacity = a;
             if (u.texAnim >= 0 && m.map) {
