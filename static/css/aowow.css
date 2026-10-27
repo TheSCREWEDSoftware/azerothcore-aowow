@@ -56,6 +56,12 @@ a.selected, a.selected:hover {
     text-decoration: none !important;
 }
 
+/* mapper zone links: suppress bold so text doesn't shift on zone change */
+#mapper-zone-generic a.selected,
+#mapper-zone-generic a.selected:hover {
+    font-weight: normal;
+}
+
 a.open {
     color: white;
 }

@@ -8,14 +8,20 @@ elseif (!empty($this->map['data'])):
         echo "            <h2 class=\"clear\">Vendor Locations</h2>\n";
         echo '            <div>This item can be purchased in <span id="mapper-zone-generic">';
 
-        $extra = $this->map['extra'];
-        echo Lang::concat($this->map['mapperData'], true, function ($areaData, $areaId) use ($extra) {
-            $count = array_sum(array_column($areaData, 'count'));
-            $label = $extra[$areaId] . ($count > 0 ? '&nbsp;('.$count.')' : '');
-            return '<a href="javascript:;" onclick="myMapper.update({zone: '.$areaId.'}); g_setSelectedLink(this, \'mapper\'); return false" onmousedown="return false">'.$label.'</a>';
-        });
+        $extra   = $this->map['extra'];
+        $keys    = array_keys($this->map['mapperData']);
+        $nZones  = count($keys);
+        foreach ($keys as $i => $areaId):
+            $count    = array_sum(array_column($this->map['mapperData'][$areaId], 'count'));
+            $countStr = $count > 0 ? '<span class="q0">&nbsp;('.$count.')</span>' : '';
+            echo '<a href="javascript:;" onclick="myMapper.update({zone: '.$areaId.'}); g_setSelectedLink(this, \'mapper\'); return false" onmousedown="return false">'.$extra[$areaId].'</a>'.$countStr;
+            if ($i < $nZones - 2)
+                echo '<span class="q0">, </span>';
+            else if ($i === $nZones - 2)
+                echo '<span class="q0">'.Lang::main('and').'</span>';
+        endforeach;
 
-        echo ".</span></div>\n";
+        echo '<span class="q0">.</span></span></div>'."\n";
     elseif ($this->type != Type::ZONE):
         echo '            <div>';
 

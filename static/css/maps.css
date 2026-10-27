@@ -249,3 +249,814 @@
 .mapper-ctrl-link svg {
     flex-shrink: 0;
 }
+
+
+/* ── Zone shapes (continent maps) ───────────────── */
+
+.zs-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.zs-zone {
+    pointer-events: all;
+    cursor: pointer;
+    fill: #ffd100;
+    fill-opacity: 0;
+    stroke: #ffd100;
+    stroke-opacity: 0;
+    stroke-width: calc(1.5px / var(--zs-k, 1));
+    stroke-linejoin: round;
+    transition: fill-opacity .12s ease, stroke-opacity .12s ease;
+}
+
+.zs-zone:hover {
+    fill-opacity: .22;
+    stroke-opacity: 1;
+}
+
+.zs-colored .zs-zone {
+    fill: var(--zs-c, #ffd100);
+    fill-opacity: .42;
+    stroke: #1a1006;
+    stroke-opacity: .55;
+    stroke-width: calc(1px / var(--zs-k, 1));
+}
+
+.zs-colored .zs-zone:hover {
+    fill-opacity: .7;
+    stroke: #ffd100;
+    stroke-opacity: 1;
+    stroke-width: calc(2px / var(--zs-k, 1));
+}
+
+.zs-colored .zs-zone.zs-plain {
+    fill: #ffd100;
+    fill-opacity: .12;
+    stroke: #ffd100;
+    stroke-opacity: .45;
+}
+
+.zs-colored .zs-zone.zs-plain:hover {
+    fill-opacity: .3;
+    stroke-opacity: 1;
+}
+
+/* subzones never get level colours and don't take clicks away from pins; a faint border is always shown */
+.zs-zone.zs-sub,
+.zs-colored .zs-zone.zs-sub {
+    cursor: crosshair;
+    fill: #ffd100;
+    fill-opacity: 0;
+    stroke: #ffd100;
+    stroke-opacity: .32;
+    stroke-width: calc(1px / var(--zs-k, 1));
+    stroke-dasharray: none;
+}
+
+.zs-zone.zs-sub:hover,
+.zs-colored .zs-zone.zs-sub:hover {
+    fill-opacity: .16;
+    stroke-opacity: 1;
+    stroke-width: calc(1.5px / var(--zs-k, 1));
+}
+
+#zs-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding-top: 6px;
+    margin-top: 4px;
+    border-top: 1px solid #333;
+    font-size: 11px;
+    color: #ccc;
+}
+
+#zs-legend:empty {
+    display: none;
+}
+
+.zs-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.zs-legend-item i {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1px solid rgba(0,0,0,.6);
+}
+
+/* ── Alt+click .go command ──────────────────────── */
+
+#zs-go {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 0 4px;
+    border-top: 1px solid #333;
+    margin-top: 4px;
+}
+
+.zs-go-hint {
+    font-size: 11px;
+    color: #9d9d9d;
+}
+
+#zs-go-cmd {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 3px 5px;
+    font: 11px Consolas, Menlo, monospace;
+    color: #fff;
+    background: rgba(0,0,0,.5);
+    border: 1px solid #444;
+    border-radius: 2px;
+}
+
+#zs-go-toast {
+    display: none;
+    position: absolute;
+    z-index: 100;
+    padding: 4px 8px;
+    font: 12px Consolas, Menlo, monospace;
+    color: #1eff00;
+    white-space: nowrap;
+    pointer-events: none;
+    background: rgba(0,0,0,.85);
+    border: 1px solid #555;
+    border-radius: 3px;
+}
+
+#zs-go-toast.zs-go-error {
+    color: #ff6b6b;
+}
+
+/* ── Neighbouring zones on zone maps ─────────────── */
+
+.zs-nb-layer {
+    overflow: hidden;
+}
+
+.zs-zone.zs-nb {
+    cursor: pointer;
+    fill: #1eff00;
+    fill-opacity: .05;
+    stroke: #6dff4d;
+    stroke-opacity: .9;
+    stroke-width: calc(1.6px / var(--zs-k, 1));
+    stroke-dasharray: calc(1px / var(--zs-k, 1)) calc(4px / var(--zs-k, 1));
+    stroke-linecap: round;
+}
+
+.zs-zone.zs-nb:hover,
+.zs-zone.zs-nb.zs-hover {
+    fill-opacity: .16;
+    stroke-opacity: 1;
+    stroke-width: calc(2.2px / var(--zs-k, 1));
+}
+
+/* subzones that open their own map (capital cities) look like the neighbouring-zone buttons */
+.zs-zone.zs-sub.zs-link,
+.zs-colored .zs-zone.zs-sub.zs-link {
+    cursor: pointer;
+    fill: #1eff00;
+    fill-opacity: .05;
+    stroke: #6dff4d;
+    stroke-opacity: .9;
+    stroke-width: calc(1.6px / var(--zs-k, 1));
+    stroke-dasharray: calc(1px / var(--zs-k, 1)) calc(4px / var(--zs-k, 1));
+    stroke-linecap: round;
+}
+
+.zs-zone.zs-sub.zs-link:hover,
+.zs-zone.zs-sub.zs-link.zs-hover {
+    fill-opacity: .16;
+    stroke-opacity: 1;
+    stroke-width: calc(2.2px / var(--zs-k, 1));
+}
+
+.zs-nb-labels {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.zs-nb-label {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 7px;
+    font-size: 11px;
+    line-height: 16px;
+    white-space: nowrap;
+    color: #ffd100;
+    text-decoration: none;
+    pointer-events: auto;
+    background: rgba(0,0,0,.72);
+    border: 1px solid rgba(109,255,77,.55);
+    border-radius: 10px;
+}
+
+.zs-nb-label:hover {
+    color: #fff;
+    border-color: #6dff4d;
+    background: rgba(0,0,0,.88);
+    text-decoration: none;
+}
+
+.zs-nb-label span {
+    color: #1eff00;
+    font-weight: normal;
+}
+
+.zs-nb-edge {
+    border-style: dashed;
+    background: rgba(0,0,0,.8);
+}
+
+.zs-nb-label i {
+    font-style: normal;
+    font-size: 14px;
+}
+
+/* ── Map icons (zone-pois) ──────────────────────── */
+
+.zs-pois {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.zs-poi {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    pointer-events: auto;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,.8));
+    transition: transform .1s ease;
+}
+
+.zs-pois-cont .zs-poi {
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+}
+
+.zs-poi > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.zs-poi-badges {
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1px;
+    margin-bottom: -2px;
+    pointer-events: none;
+}
+
+.zs-poi-badges img {
+    width: 11px;
+    height: 11px;
+    display: block;
+    filter: drop-shadow(0 0 1px #000);
+}
+
+.zs-poi-badgeopt {
+    padding: 2px 0 5px 0;
+    margin-bottom: 3px;
+    border-bottom: 1px solid #333;
+}
+
+.zs-poi:hover {
+    transform: scale(1.35);
+    z-index: 5;
+}
+
+.zs-poi-ta,
+.zs-poi-th,
+.zs-pois-cont .zs-poi-ta,
+.zs-pois-cont .zs-poi-th {
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+}
+
+.zs-tip-inst {
+    color: #4fc3f7;
+}
+
+#zs-poi {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    align-items: start;
+    gap: 2px 28px;
+    margin-top: 8px;
+    padding: 8px 12px 10px;
+    background: rgba(0,0,0,.35);
+    border: 1px solid #333;
+    border-radius: 3px;
+}
+
+#zs-poi > .zs-go-hint {
+    grid-column: 1 / -1;
+    font-size: 12px;
+}
+
+#zs-poi > .zs-poi-badgeopt {
+    grid-column: 1 / -1;
+    justify-self: start;
+    min-width: 190px;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid #333;
+}
+
+.zs-poi-group {
+    margin: 0;
+}
+
+.zs-poi-group summary {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 12px;
+    color: #ffd100;
+    cursor: pointer;
+    user-select: none;
+}
+
+.zs-poi-group summary span {
+    flex: 1;
+}
+
+.zs-poi-all {
+    margin: 0;
+    accent-color: #ffd100;
+    cursor: pointer;
+}
+
+.zs-poi-group summary i {
+    font-style: normal;
+    font-size: 11px;
+    color: #9d9d9d;
+}
+
+.zs-poi-group[open] summary {
+    margin-bottom: 2px;
+}
+
+.zs-poi-opt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 0 1px 4px;
+    font-size: 12px;
+    color: #ddd;
+    cursor: pointer;
+    user-select: none;
+}
+
+.zs-poi-opt span {
+    flex: 1;
+}
+
+.zs-poi-opt input {
+    margin: 0;
+    accent-color: #ffd100;
+    cursor: pointer;
+}
+
+.zs-poi-swatch {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* spell / item icons wear aowow's small icon border (26px frame around an 18px icon) */
+.zs-spell {
+    position: relative;
+    display: block;
+    flex-shrink: 0;
+}
+
+.zs-spell > img {
+    position: absolute;
+    left: 15.4%;
+    top: 15.4%;
+    width: 69.2%;
+    height: 69.2%;
+    display: block;
+}
+
+.zs-spell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url(../images/Icon/small/border/default.png) no-repeat;
+    background-size: 100% 100%;
+}
+
+i.zs-poi-swatch.zs-spell {
+    width: 22px;
+    height: 22px;
+    margin: -3px -3px -3px 0;
+}
+
+.zs-poi.zs-poi-sq {
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+}
+
+.zs-pois-cont .zs-poi.zs-poi-sq {
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+}
+
+.zs-poi > .zs-spell {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Primary / Secondary, Consumables / Supplies */
+.zs-poi-sub {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0 1px 4px;
+    font-size: 11px;
+    color: #c8a95a;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    cursor: pointer;
+    user-select: none;
+}
+
+.zs-poi-opt.zs-poi-opt-sub {
+    padding-left: 22px;
+}
+
+#zs-poi > .zs-go-hint {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.zs-poi-bar {
+    display: flex;
+    gap: 6px;
+}
+
+.zs-poi-btn {
+    padding: 1px 8px;
+    font-size: 11px;
+    color: #ddd !important;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 3px;
+    text-decoration: none !important;
+}
+
+.zs-poi-btn:hover {
+    color: #fff !important;
+    border-color: #ffd100;
+}
+
+/* ── Map title (top left) ───────────────────────── */
+
+/* the mapper's glow title is kept for its own use but replaced by #zs-title */
+.zs-title {
+    visibility: hidden !important;
+}
+
+/* title (top left) and "Back to:" (top right) share one look and the same 6px inset */
+.zs-mapbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-sizing: border-box;
+    height: 24px;
+    padding: 0 9px;
+    font-size: 12px;
+    line-height: 16px;
+    white-space: nowrap;
+    background: rgba(0,0,0,.65);
+    border: 1px solid rgba(255,209,0,.55);
+    border-radius: 3px;
+}
+
+#zs-title {
+    position: absolute;
+    top: 3px;                   /* same inset as the mapper's button bar that holds "Back to:" */
+    left: 3px;
+    z-index: 6;
+    font-weight: bold;
+}
+
+#zs-title a,
+#zs-title b {
+    color: #ffd100;
+    text-decoration: none;
+    text-shadow: 0 1px 2px #000;
+}
+
+#zs-title a:hover {
+    text-decoration: underline;
+}
+
+.zs-title-exp {
+    display: block;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+/* ── Wheel zoom ─────────────────────────────────── */
+
+.zs-zoomable {
+    overflow: hidden;
+    position: relative;
+}
+
+.zs-zoomed .zs-zoomable,
+.zs-zoomed {
+    cursor: grab;
+}
+
+.zs-dragging,
+.zs-dragging * {
+    cursor: grabbing !important;
+}
+
+/* keep markers, labels and pins at their size while zoomed */
+.zs-poi,
+.zs-nb-label,
+.zs-zoomable .pin {
+    scale: calc(1 / var(--zs-k, 1));
+}
+
+.zs-zoom-ctl {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    z-index: 7;
+}
+
+.zs-zoom-ctl a {
+    display: block;
+    width: 22px;
+    height: 22px;
+    line-height: 21px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: bold;
+    color: #ffd100;
+    text-decoration: none;
+    background: rgba(0,0,0,.7);
+    border: 1px solid rgba(255,209,0,.5);
+    border-radius: 3px;
+}
+
+.zs-zoom-ctl a:hover {
+    color: #fff;
+    border-color: #ffd100;
+}
+
+/* ── .go history (right side) ───────────────────── */
+
+#zs-goh {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    max-height: 515px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0,0,0,.35);
+    border: 1px solid #333;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.zs-goh-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    color: #ffd100;
+    border-bottom: 1px solid #333;
+}
+
+.zs-goh-head a {
+    color: #ffd100;
+    text-decoration: none;
+    font-size: 11px;
+    padding: 1px 6px;
+    border: 1px solid rgba(255,209,0,.4);
+    border-radius: 2px;
+}
+
+.zs-goh-head a:hover {
+    color: #fff;
+    border-color: #ffd100;
+}
+
+.zs-goh-list {
+    overflow-y: auto;
+    flex: 1;
+    min-height: 60px;
+}
+
+.zs-goh-row {
+    display: block;
+    padding: 5px 10px;
+    color: #ddd;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.zs-goh-row:hover {
+    background: rgba(255,209,0,.08);
+    text-decoration: none;
+}
+
+.zs-goh-row code {
+    display: block;
+    font: 11px Consolas, Menlo, monospace;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.zs-goh-row span {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    color: #9d9d9d;
+    font-size: 11px;
+}
+
+.zs-goh-row i {
+    font-style: normal;
+    color: #666;
+    white-space: nowrap;
+}
+
+.zs-goh-row.zs-goh-copied code {
+    color: #1eff00;
+}
+
+.zs-goh-empty {
+    padding: 10px;
+    color: #777;
+    font-size: 11px;
+}
+
+/* ── Back to (top right) ────────────────────────── */
+
+#zs-back {
+    color: #ddd;
+    text-decoration: none;
+    gap: 5px;
+}
+
+#zs-back b {
+    color: #ffd100;
+}
+
+#zs-back i {
+    font-style: normal;
+    color: #ffd100;
+}
+
+#zs-back:hover {
+    color: #fff;
+    border-color: #ffd100;
+    background: rgba(0,0,0,.85);
+    text-decoration: none;
+}
+
+/* ── plain ?maps hint ───────────────────────────── */
+
+#zs-choose {
+    margin: 40px auto;
+    padding: 18px 24px;
+    max-width: 420px;
+    text-align: center;
+    font-size: 15px;
+    color: #ccc;
+    background: rgba(0,0,0,.35);
+    border: 1px dashed rgba(255,209,0,.45);
+    border-radius: 4px;
+}
+
+#zs-choose span {
+    color: #ffd100;
+    margin-right: 6px;
+}
+
+/* ── Map options (below the map): hide borders / transitions / names, hover still outlines ── */
+
+.zs-hide-zb .zs-zone:not(.zs-sub):not(.zs-nb):not(:hover) {
+    stroke-opacity: 0;
+}
+
+.zs-hide-sb .zs-zone.zs-sub:not(.zs-link):not(:hover) {
+    stroke-opacity: 0;
+}
+
+.zs-hide-nb .zs-zone.zs-nb:not(:hover):not(.zs-hover),
+.zs-hide-nb .zs-zone.zs-sub.zs-link:not(:hover):not(.zs-hover) {
+    stroke-opacity: 0;
+    fill-opacity: 0;
+}
+
+.zs-hide-zn .zs-nb-label {
+    display: none;
+}
+
+/* map options in the side panel: one block under "Scroll to map" */
+.mapper-ctrl-check.zs-mapopt-mid {
+    padding-bottom: 2px;
+    border-bottom: 0;
+    margin-bottom: 0;
+}
+
+/* ── Transport routes ───────────────────────────── */
+
+.zs-routes path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.zs-routes .zs-route-case {
+    stroke: rgba(0,0,0,.55);
+    stroke-width: calc(4px / var(--zs-k, 1));
+}
+
+.zs-routes .zs-route {
+    stroke-width: calc(2px / var(--zs-k, 1));
+    stroke-dasharray: calc(6px / var(--zs-k, 1)) calc(5px / var(--zs-k, 1));
+}
+
+.zs-route-a { stroke: #4da6ff; }
+.zs-route-h { stroke: #ff4d4d; }
+.zs-route-n { stroke: #ffd100; }
+
+.zs-route-arrows {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* triangle pointing right, turned to the direction of travel */
+.zs-route-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 5px 0 5px 9px;
+    border-color: transparent transparent transparent #ffd100;
+    transform: translate(-50%, -50%) rotate(var(--a, 0deg)) scale(calc(1 / var(--zs-k, 1)));
+    filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000);
+}
+
+.zs-route-arrow-a { border-left-color: #4da6ff; }
+.zs-route-arrow-h { border-left-color: #ff4d4d; }

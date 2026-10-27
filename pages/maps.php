@@ -27,6 +27,9 @@ class MapsPage extends GenericPage
     {
         // add conditional js
         $this->addScript([SC_JS_FILE, '?data=zones']);
+        $this->addScript([SC_JS_FILE, '?data=zone-shapes']);
+        $this->addScript([SC_JS_FILE, '?data=zone-names']);
+        $this->addScript([SC_JS_FILE, '?data=map-info']);
     }
 
     protected function generateTitle()
