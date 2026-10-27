@@ -4619,3 +4619,7 @@ span.icontiny::before, a.icontiny::before, .icontinyl::before {
 .lv-group-5  { --lg:#5900b1; } .lv-group-6  { --lg:#000000; } .lv-group-7  { --lg:#740090; } .lv-group-8  { --lg:#389c01; }
 .lv-group-9  { --lg:#ac00a3; } .lv-group-10 { --lg:#005f73; } .lv-group-11 { --lg:#9b2226; } .lv-group-12 { --lg:#3a86ff; }
 .lv-group-13 { --lg:#ff006e; } .lv-group-14 { --lg:#8338ec; } .lv-group-15 { --lg:#fb8500; } .lv-group-16 { --lg:#2a9d8f; }
+
+/* map zone list: the zone currently on the map */
+[id^="mapper-zone-"] a.selected { color: #fff !important; font-weight: bold; text-decoration: none; border-bottom: 2px solid var(--th-accent, #ffd100); padding-bottom: 1px; }
+html[data-mode="light"] [id^="mapper-zone-"] a.selected { color: #000 !important; }

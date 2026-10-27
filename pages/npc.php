@@ -17,6 +17,7 @@ class NpcPage extends GenericPage
     protected $gossipMenu      = null;
     protected $gossipCndResult = null;
     protected $subname         = '';
+    protected $poolInfo        = null;
 
     protected $type          = Type::NPC;
     protected $typeId        = 0;
@@ -609,6 +610,13 @@ DomContentLoaded.addEvent(function() {
         /* Main Content */
         /****************/
 
+        // spawn pools: pool colour per pool, pin shape per creature in the pools (includes/components/PoolMap)
+        require_once 'includes/components/PoolMap.class.php';
+        $pm = new PoolMap(Type::NPC, $this->typeId, $this->subject->getField('name', true));
+        $hasPools = $pm->load();
+        if ($hasPools)
+            $this->subject->setSpawnColorMap($pm->colorMap());
+
         // get spawns and path
         $map = null;
         if ($spawns = $this->subject->getSpawns(SPAWNINFO_FULL))
@@ -616,6 +624,13 @@ DomContentLoaded.addEvent(function() {
             $map = ['data' => ['parent' => 'mapper-generic'], 'mapperData' => &$spawns];
             foreach ($spawns as $areaId => &$areaData)
                 $map['extra'][$areaId] = ZoneList::getName($areaId);
+            unset($areaData);
+        }
+
+        if ($hasPools && $map)
+        {
+            $pm->inject($spawns, $map['extra']);
+            $this->poolInfo = $pm->info($spawns);
         }
 
         // smart AI
