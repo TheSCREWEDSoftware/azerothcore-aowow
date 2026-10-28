@@ -235,7 +235,7 @@ class CLISetup
         if (is_file(self::LOCK_FILE) && ($prev = trim((string)@file_get_contents(self::LOCK_FILE))) !== '')
         {
             self::$lock = (int)$prev;
-            CLI::write('the last setup run did not finish - the site status from before it will be restored ('.(self::$lock ? 'maintenance' : 'open').')', CLI::LOG_WARN);
+            CLI::write('the last setup run was stopped before it finished, so the site was left in maintenance mode - it is set back to '.(self::$lock ? 'maintenance' : 'open').' when this run ends', CLI::LOG_WARN);
         }
     }
 
