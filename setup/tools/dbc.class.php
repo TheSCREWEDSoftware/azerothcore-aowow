@@ -131,12 +131,27 @@ class DBC
                     break;
                 }
             }
+
+            if ($foundMask && !$this->localized)            // no text to merge: the first locale's file is all we need
+                break;
         }
 
         if (!$this->fileRefs)
         {
             CLI::write('no suitable files found for '.$file.'.dbc, aborting.', CLI::LOG_ERROR);
             return;
+        }
+
+        // a locale whose file has a different layout than the first one (e.g. a custom patch only in that client) is left out
+        $ref = reset($this->fileRefs)[2];
+        foreach ($this->fileRefs as $locId => [, , $h])
+        {
+            if ($h['recordCount'] == $ref['recordCount'] && $h['fieldCount'] == $ref['fieldCount'] && $h['recordSize'] == $ref['recordSize'])
+                continue;
+
+            CLI::write(' - DBC: '.$file.'.dbc of '.Locale::from($locId)->name.' has '.$h['recordCount'].' records instead of '.$ref['recordCount'].', its texts are skipped', CLI::LOG_WARN);
+            fclose($this->fileRefs[$locId][0]);
+            unset($this->fileRefs[$locId]);
         }
 
         // check if DBCs are identical
