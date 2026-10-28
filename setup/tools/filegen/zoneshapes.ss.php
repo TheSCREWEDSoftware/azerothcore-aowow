@@ -1128,6 +1128,8 @@ CLISetup::registerSetup("build", new class extends SetupScript
                     $e['l'] = [(int)$levels[$areaId]['levelMin'], (int)$levels[$areaId]['levelMax']];
             unset($e);
 
+            CLI::write('[zoneshapes] '.str_pad($wma['nameINT'], 18).str_pad(count($shapes), 3, ' ', STR_PAD_LEFT).' subzones ('.(count($sub) + 1).' of '.count($byWma).' zone maps)');
+
             if (!CLISetup::writeFile(sprintf(self::OUT_SUB, $wma['areaId']), json_encode($shapes, JSON_UNESCAPED_SLASHES)))
                 $this->success = false;
 
@@ -1211,25 +1213,37 @@ CLISetup::registerSetup("build", new class extends SetupScript
      *  skipped: npcs with gossip/vendor/.. flags, critters, non-combat pets, unattackable / unselectable units,
      *  civilians, triggers, guards, anything of a player-friendly faction and holiday spawns (game_event_creature)
      */
+    private ?array $eventGuids = null;                     // guids of holiday-only spawns
+    private array  $mapSpawns  = [];                       // mapId => candidate spawns
+
     private function subzoneLevels(array $wma, array $shapes, array $friendly) : array
     {
         [$l, $r, $t, $b] = [$wma['left'], $wma['right'], $wma['top'], $wma['bottom']];
         if ($l == $r || $t == $b)
             return [];
 
-        $spawns = DB::World()->select(
-           'SELECT c.`position_x` AS "x", c.`position_y` AS "y", ct.`minlevel`, ct.`maxlevel`, ct.`faction`
-            FROM   creature c
-            JOIN   creature_template ct ON ct.`entry` = c.`id`
-            WHERE  c.`map` = ?d AND c.`position_x` BETWEEN ?f AND ?f AND c.`position_y` BETWEEN ?f AND ?f AND
-                   ct.`npcflag` = 0 AND c.`npcflag` = 0 AND ct.`type` NOT IN (8, 12) AND ct.`minlevel` > 0 AND
-                   (ct.`unit_flags` & ?d) = 0 AND (c.`unit_flags` & ?d) = 0 AND (ct.`flags_extra` & ?d) = 0 AND
-                   NOT EXISTS (SELECT 1 FROM game_event_creature gec WHERE gec.`guid` = c.`guid` AND gec.`eventEntry` > 0)',
-            $wma['mapId'], min($t, $b), max($t, $b), min($l, $r), max($l, $r),
-            0x2 | 0x100 | 0x2000000,                        // UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_NOT_SELECTABLE
-            0x2 | 0x2000000,
-            0x2 | 0x80 | 0x8000                             // CREATURE_FLAG_EXTRA_CIVILIAN | _TRIGGER | _GUARD
-        );
+        // every candidate spawn of the map, once per map; holiday spawns (game_event_creature) as a guid set, once
+        // (a correlated NOT EXISTS per zone took minutes per map on a full world DB)
+        if ($this->eventGuids === null)
+            $this->eventGuids = array_flip(DB::World()->selectCol('SELECT DISTINCT `guid` FROM game_event_creature WHERE `eventEntry` > 0') ?: []);
+
+        if (!isset($this->mapSpawns[$wma['mapId']]))
+            $this->mapSpawns[$wma['mapId']] = DB::World()->select(
+               'SELECT c.`guid`, c.`position_x` AS "x", c.`position_y` AS "y", ct.`minlevel`, ct.`maxlevel`, ct.`faction`
+                FROM   creature c
+                JOIN   creature_template ct ON ct.`entry` = c.`id`
+                WHERE  c.`map` = ?d AND
+                       ct.`npcflag` = 0 AND c.`npcflag` = 0 AND ct.`type` NOT IN (8, 12) AND ct.`minlevel` > 0 AND
+                       (ct.`unit_flags` & ?d) = 0 AND (c.`unit_flags` & ?d) = 0 AND (ct.`flags_extra` & ?d) = 0',
+                $wma['mapId'],
+                0x2 | 0x100 | 0x2000000,                    // UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_IMMUNE_TO_PC | UNIT_FLAG_NOT_SELECTABLE
+                0x2 | 0x2000000,
+                0x2 | 0x80 | 0x8000                         // CREATURE_FLAG_EXTRA_CIVILIAN | _TRIGGER | _GUARD
+            ) ?: [];
+
+        [$xMin, $xMax, $yMin, $yMax] = [min($t, $b), max($t, $b), min($l, $r), max($l, $r)];
+        $spawns = array_filter($this->mapSpawns[$wma['mapId']], fn($sp) =>
+            $sp['x'] >= $xMin && $sp['x'] <= $xMax && $sp['y'] >= $yMin && $sp['y'] <= $yMax && !isset($this->eventGuids[$sp['guid']]));
 
         if (!$spawns)
             return [];
