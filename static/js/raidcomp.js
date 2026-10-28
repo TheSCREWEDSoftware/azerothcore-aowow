@@ -263,7 +263,7 @@ var AoRaidComp = (function () {
         // palette: a card per class (5 per row) with its three specs; hovering a spec shows its role
         html += '<div class="rc-palette rc-lay-' + layout + '" style="grid-template-columns: repeat(' + (exp == 'v' ? 4 : 5) + ', minmax(0, 1fr))">' + PALETTE.filter(classOk).map(function (c) {
             return '<div class="rc-pclass" style="--cc: ' + CLASS_RGB[c] + '">'
-                + (layout == 'r' ? '<a href="' + g_host.replace(/\/?$/, '/') + '?class=' + c + '" class="rc-pname c' + c + '"><img src="' + classIcon(c, 'medium') + '" alt="" />' + esc(g_chr_classes[c]) + '</a>' : '')
+                + (layout == 'r' ? '<span class="rc-pname c' + c + '"><img src="' + classIcon(c, 'medium') + '" alt="" />' + esc(g_chr_classes[c]) + '</span>' : '')
                 + '<span class="rc-pspecs">'
                 + SPECS.map(function (s, i) { return s[0] == c ? i : -1; }).filter(function (i) { return i >= 0; }).map(function (i) {
                     var s = SPECS[i];
