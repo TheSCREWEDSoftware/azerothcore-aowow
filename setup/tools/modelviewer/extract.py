@@ -133,6 +133,29 @@ def key_of(path):                       # client path -> output key
     return p
 
 
+def blp_palette(d):
+    """palettised BLP2 (encoding 1); pillow drops the separate alpha plane on these, so decode them here"""
+    if d[:4] != b'BLP2' or d[8] != 1:
+        return None
+    ad = d[9]
+    w, h = struct.unpack_from('<II', d, 12)
+    off, = struct.unpack_from('<I', d, 20)
+    pal = d[148:148 + 1024]
+    n = w * h
+    idx = d[off:off + n]
+    alpha = d[off + n:off + n + (n * ad + 7) // 8]
+    out = bytearray(n * 4)
+    for i in range(n):
+        p = idx[i] * 4
+        out[i * 4] = pal[p + 2]; out[i * 4 + 1] = pal[p + 1]; out[i * 4 + 2] = pal[p]
+        if ad == 8:   a = alpha[i]
+        elif ad == 4: a = ((alpha[i >> 1] >> ((i & 1) * 4)) & 15) * 17
+        elif ad == 1: a = 255 if alpha[i >> 3] >> (i & 7) & 1 else 0
+        else:         a = 255
+        out[i * 4 + 3] = a
+    return Image.frombytes('RGBA', (w, h), bytes(out))
+
+
 class Writer:
     def __init__(self, arc, out, force):
         self.arc, self.out, self.force = arc, out, force
@@ -187,8 +210,7 @@ class Writer:
             self.done_tex[k] = None
             return None
         try:
-            img = Image.open(io.BytesIO(data))
-            img = img.convert('RGBA')
+            img = blp_palette(data) or Image.open(io.BytesIO(data)).convert('RGBA')
             buf = io.BytesIO()
             img.save(buf, 'PNG', optimize=False)
             self._write(rel, buf.getvalue())
