@@ -12,6 +12,133 @@
  * Data: static/modelviewer/data (setup/tools/modelviewer/extract.py)
  * Code: static/js/modelviewer/m2.js (models), charmodel.js (characters), particles.js (particle effects), three.js
  */
+
+// ==================================================================== stage
+
+function AoStage(container) {
+    var self = this;
+    this.el = container;
+    this.model = null;
+    this.paused = false;
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+    this.renderer.outputEncoding = THREE.sRGBEncoding;
+    this.renderer.setPixelRatio(window.devicePixelRatio || 1);
+    container.insertBefore(this.renderer.domElement, container.firstChild);
+
+    this.scene = new THREE.Scene();
+    this.scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+    var sun = new THREE.DirectionalLight(0xffffff, 0.6);
+    sun.position.set(2, 3, 4);
+    this.scene.add(sun);
+    var back = new THREE.DirectionalLight(0xffffff, 0.25);
+    back.position.set(-3, 1, -4);
+    this.scene.add(back);
+
+    this.camera = new THREE.PerspectiveCamera(40, 1, 0.01, 2000);
+    this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.enableDamping = true;
+    this.controls.screenSpacePanning = true;
+
+    this.last = 0;
+    this.raf = 0;
+    this.loop = function (t) {
+        self.raf = requestAnimationFrame(self.loop);
+        var dt = self.last ? Math.min(t - self.last, 100) : 0;
+        self.last = t;
+        if (self.model && !self.paused) self.model.update(dt);
+        else if (self.model) self.model.update(0);
+        self.controls.update();
+        self.renderer.render(self.scene, self.camera);
+    };
+    this.setBackground(AoStage.savedBackground());
+}
+
+AoStage.BACKGROUNDS = [
+    ['logo',  'AoWoW pattern'],
+    ['dark',  'Dark'],
+    ['grey',  'Grey'],
+    ['light', 'Light'],
+    ['green', 'Green screen'],
+    ['none',  'Transparent (for screenshots)']
+];
+
+AoStage.savedBackground = function () {
+    try { return localStorage.getItem('aowow_mv_bg') || 'logo'; } catch (e) { return 'logo'; }
+};
+
+AoStage.prototype = {
+    start: function () {
+        if (!this.raf) { this.last = 0; this.raf = requestAnimationFrame(this.loop); }
+        this.resize();
+    },
+    stop: function () {
+        cancelAnimationFrame(this.raf);
+        this.raf = 0;
+    },
+    resize: function () {
+        var w = this.el.clientWidth, h = this.el.clientHeight;
+        if (!w || !h) return;
+        this.renderer.setSize(w, h, false);
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+    },
+    setBackground: function (id) {
+        this.background = id;
+        ['logo', 'dark', 'grey', 'light', 'green', 'none'].forEach(function (b) { this.el.classList.remove('mv-bg-' + b); }, this);
+        this.el.classList.add('mv-bg-' + id);
+        try { localStorage.setItem('aowow_mv_bg', id); } catch (e) {}
+    },
+    setModel: function (m, keepCamera) {
+        if (this.model && this.model !== m)
+            this.scene.remove(this.model.root);
+        this.model = m;
+        if (m) {
+            this.scene.add(m.root);
+            if (!keepCamera) this.frame();
+        }
+    },
+    // fit the camera to the model, looking a little from above
+    frame: function () {
+        var m = this.model;
+        if (!m) return;
+        m.root.updateMatrixWorld(true);
+        var box = new THREE.Box3().setFromObject(m.root);
+        if (m.emitters && m.emitters.length && m.headerBox && !m.headerBox.isEmpty())   // smoke, sparkles: their room is in the header
+            box.union(m.headerBox.clone().applyMatrix4(m.space.matrixWorld));
+        if (box.isEmpty() || !isFinite(box.min.x))
+            box = new THREE.Box3(new THREE.Vector3(-1, -1, -1), new THREE.Vector3(1, 1, 1));
+        var size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
+        var r = Math.max(size.x, size.y, size.z) || 1;
+        var dist = r / (2 * Math.tan(this.camera.fov * Math.PI / 360)) * 1.25;
+        this.camera.near = dist / 100;
+        this.camera.far = dist * 100;
+        this.camera.position.set(center.x, center.y + dist * 0.18, center.z + dist);
+        this.camera.updateProjectionMatrix();
+        this.controls.target.copy(center);
+        this.controls.update();
+    },
+    screenshot: function (name) {
+        this.renderer.render(this.scene, this.camera);
+        var src = this.renderer.domElement, out = src;
+        if (this.background != 'none') {                    // bake the css background colour in
+            out = document.createElement('canvas');
+            out.width = src.width;
+            out.height = src.height;
+            var g = out.getContext('2d');
+            g.fillStyle = getComputedStyle(this.el).backgroundColor || '#1d1d1f';
+            g.fillRect(0, 0, out.width, out.height);
+            g.drawImage(src, 0, 0);
+        }
+        var a = document.createElement('a');
+        a.href = out.toDataURL('image/png');
+        a.download = (name || 'model').replace(/[^\w\- ]+/g, '').trim() + '.png';
+        a.click();
+    }
+};
+
+// ==================================================================== window
+
 var AoViewer = (function () {
     var BASE, scriptsReady = null, animNames = null;
     var dlg, stage, current = null;

@@ -58,7 +58,7 @@ var AoM2 = (function () {
         this.r      = r;
         this.cache  = {};
     }
-    var SIZE = { vec3: 12, quat16: 8, quat: 16, fixed16: 2, float: 4 };
+    var SIZE = { vec3: 12, quat16: 8, quat: 16, fixed16: 2, float: 4, u8: 1 };
 
     Track.prototype.empty = function () { return !this.ts.n; };
 
@@ -99,6 +99,7 @@ var AoM2 = (function () {
             case 'quat':    return [r.f32(o), r.f32(o + 4), r.f32(o + 8), r.f32(o + 12)];
             case 'fixed16': return r.i16(o) / 32767;
             case 'float':   return r.f32(o);
+            case 'u8':      return r.u8(o);
         }
     }
 
@@ -326,6 +327,9 @@ var AoM2 = (function () {
         this.texAnimLookup = lookup(0x98);
         this.uvLookup     = lookup(0x88);                     // texture coord set per layer: 0 / 1, -1 = sphere (reflection) map
 
+        // bounds from the header (models made only of particles have next to no mesh)
+        this.headerBox = new THREE.Box3(new THREE.Vector3(r.f32(0xA0), r.f32(0xA4), r.f32(0xA8)), new THREE.Vector3(r.f32(0xAC), r.f32(0xB0), r.f32(0xB4)));
+
         // attachments (weapons, helms on characters)
         var at = r.arr(0xF0);
         this.attachments = [];
@@ -333,6 +337,11 @@ var AoM2 = (function () {
             o = at.o + i * 40;
             this.attachments.push({ id: r.u32(o), bone: r.u16(o + 4), pos: new THREE.Vector3(r.f32(o + 8), r.f32(o + 12), r.f32(o + 16)) });
         }
+
+        // particle emitters (static/js/modelviewer/particles.js)
+        this.emitterDefs = [];
+        if (typeof AoParticles != 'undefined')
+            try { this.emitterDefs = AoParticles.read(r, this, Track); } catch (e) { this.emitterDefs = []; }
 
         // ---- skin: which vertices / triangles / batches make up the visible mesh
         var sr = new Reader(skinbuf);
@@ -408,7 +417,10 @@ var AoM2 = (function () {
         this.space = new THREE.Group();                     // model space: the mesh and anything attached to it
         this.root.add(this.space);
         this.attached = [];
+        this.emitters = [];
         this.buildMesh();
+        if (this.emitterDefs.length)
+            this.emitters = AoParticles.attach(this, this.emitterDefs);
         this.geometry.computeBoundingBox();
         this.box = this.geometry.boundingBox.clone();
         this.play(this.findSeq(0));
@@ -579,6 +591,10 @@ var AoM2 = (function () {
             A.holder.matrixWorldNeedsUpdate = true;
             A.model.update(dt);
         }
+
+        // particles
+        for (var ei = 0; this.emitters && ei < this.emitters.length; ei++)
+            this.emitters[ei].update(dt);
 
         // transparency / colour alpha / scrolling textures
         this.batchMats.forEach(function (m) {
