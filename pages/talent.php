@@ -33,12 +33,36 @@ class TalentPage extends GenericPage
     {
         // add conditional js & css
         if ($this->isPetCalc)
+        {
             $this->addScript(
                 [SC_JS_FILE,  '?data=pet-talents.pets'],
                 [SC_JS_FILE,  'js/petcalc.js'],
-                [SC_JS_FILE,  'js/swfobject.js'],
                 [SC_CSS_FILE, 'css/petcalc.css']
             );
+
+            // per family: talent tree (0 ferocity, 1 tenacity, 2 cunning), exotic (needs Beast Mastery) and its abilities
+            $info   = [];
+            $spells = [];
+            $pets   = new PetList([Cfg::get('SQL_LIMIT_NONE')]);
+            foreach ($pets->iterate() as $id => $__)
+            {
+                $abilities = array_values(array_filter([$pets->getField('spellId1'), $pets->getField('spellId2'), $pets->getField('spellId3'), $pets->getField('spellId4')]));
+                $info[$id] = ['type' => (int)$pets->getField('type'), 'exotic' => (int)$pets->getField('exotic'), 'abilities' => $abilities];
+                $spells    = array_merge($spells, $abilities);
+            }
+
+            if ($spells)
+            {
+                $abilities = new SpellList([['id', array_values(array_unique($spells))]]);
+                $this->extendGlobalData($abilities->getJSGlobals(GLOBALINFO_SELF));
+            }
+
+            // pet talents: names and icons for the list of chosen talents
+            $talents = new SpellList([['s.typeCat', -7], Cfg::get('SQL_LIMIT_NONE')]);
+            $this->extendGlobalData($talents->getJSGlobals(GLOBALINFO_SELF));
+
+            $this->addScript([SC_JS_STRING, 'var g_pet_info = '.Util::toJSON($info).';']);
+        }
         else
             $this->addScript(
                 [SC_JS_FILE, '?data=glyphs'],

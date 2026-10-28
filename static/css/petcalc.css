@@ -1,59 +1,133 @@
-#pc-classes {
-    width:946px;
-    margin:0 auto;
-    padding-bottom:10px;
+/* Hunter pet talent calculator (static/js/petcalc.js); navbar, banner and section cards share the class calculator's look (talent.css) */
+
+/* ── choose screen: the three trees, their families below ────────── */
+#pc-classes { width: 100%; margin: 0 auto; padding: 30px 0 20px; }
+#pc-classes p { font-size: 26px; margin: 0 0 20px; text-align: center; }
+.pc-choose-groups { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+.pc-choose-group { width: 300px; background: #111; border: 1px solid #2c2c2c; border-radius: 4px; }
+.pc-choose-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; font-size: 15px; font-weight: bold; color: #fff;
+    border-bottom: 1px solid #2c2c2c; background: #181818;
+}
+.pc-choose-head img { width: 26px; height: 26px; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
+.pc-choose-list { padding: 6px; }
+a.pc-choose-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 3px 6px; color: #ddd; text-decoration: none; border-radius: 3px;
+}
+a.pc-choose-item:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+a.pc-choose-item img { width: 22px; height: 22px; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
+a.pc-choose-item span { flex: 1; }
+a.pc-choose-item i, .pc-banner-tree i { font-style: normal; font-size: 10px; color: #a335ee; text-transform: uppercase; letter-spacing: .05em; }
+
+/* ── navbar: families grouped by tree, tree name below ───────────── */
+#pc-navbar {
+    display: flex; align-items: center; justify-content: center;
+    background: #141414; border-bottom: 1px solid #2a2a2a;
+    margin: 0 -10px; padding: 8px 14px; width: calc(100% + 20px); box-sizing: border-box;
+}
+.pc-navbar-left { flex: 0 1 auto !important; gap: 18px !important; align-items: flex-start !important; flex-wrap: wrap !important; justify-content: center; }
+.pc-nav-group { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.pc-nav-icons { display: flex; flex-wrap: wrap; gap: 3px; max-width: 320px; justify-content: center; }
+a.pc-nav-icon { display: block; width: 24px; height: 24px; border: 1px solid #000; border-radius: 4px; overflow: hidden; opacity: .65; }
+a.pc-nav-icon img { width: 100%; height: 100%; display: block; }
+a.pc-nav-icon:hover { opacity: 1; }
+a.pc-nav-icon.on { opacity: 1; border-color: #ffd100; box-shadow: 0 0 5px rgba(255, 209, 0, .6); }
+.pc-nav-label { font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: .08em; }
+.pc-tree0 .pc-tree-name, .pc-nav-label.pc-tree0 { color: #ff7a52; }
+.pc-tree1 .pc-tree-name, .pc-nav-label.pc-tree1 { color: #6aa8ff; }
+.pc-tree2 .pc-tree-name, .pc-nav-label.pc-tree2 { color: #6ad67e; }
+
+/* ── banner ──────────────────────────────────────────────────────── */
+#pc-banner { position: relative; margin: 0 -10px; width: calc(100% + 20px); height: 120px; overflow: hidden; background: #0a0a0a; }
+.pc-banner-name {
+    display: flex; align-items: center; gap: 14px;
+    font-size: 30px; font-weight: bold; color: #fff; letter-spacing: 2px;
+    text-shadow: 2px 2px 6px #000, 0 0 20px rgba(0, 0, 0, .9);
+}
+.pc-banner-name img { width: 48px; height: 48px; border-radius: 5px; box-shadow: 0 0 0 1px #000, 0 2px 8px rgba(0, 0, 0, .7); }
+.pc-banner-tree {
+    font-size: 16px; font-weight: bold; color: #d8d8d8; letter-spacing: 2px; text-transform: uppercase;
+    text-shadow: 1px 1px 4px #000, 0 0 12px rgba(0, 0, 0, .9);
 }
 
-#pc-classes-inner {
-    width:874px;
-    margin:0 auto;
-    text-align:center;
-    z-index:3;
+/* ── hunter spec + points bar ────────────────────────────────────── */
+#pc-specbar {
+    display: flex; align-items: center; gap: 18px;
+    margin: 12px auto 8px; padding: 8px 12px; max-width: 1180px; box-sizing: border-box;
+    background: #141414; border: 1px solid #2a2a2a; border-radius: 6px; font-size: 15px;
+}
+.pc-specs { display: flex; gap: 5px; }
+a.pc-spec { display: block; width: 30px; height: 30px; border: 1px solid #555; border-radius: 4px; overflow: hidden; opacity: .55; }
+a.pc-spec img { width: 100%; height: 100%; display: block; }
+a.pc-spec:hover { opacity: .85; }
+a.pc-spec.on { opacity: 1; border-color: #ffd100; box-shadow: 0 0 6px rgba(255, 209, 0, .5); }
+.pc-spec-name { font-weight: bold; padding-right: 14px; border-right: 1px solid #3a3a3a; }
+.pc-spec-tree { font-weight: bold; color: #e0e0e0; }
+.pc-spec-stat { color: #999; }
+.pc-spec-stat b { color: #fff; }
+#pc-specbar > span { white-space: nowrap; }
+.pc-buttons { margin-left: auto; }
+
+/* ── the three trees ─────────────────────────────────────────────── */
+#pc-itself.pc-trees { display: flex; justify-content: center; gap: 10px; margin: 0 auto; }
+#pc-itself.choose { display: none; }
+.pc-tree { position: relative; width: 246px; }
+.pc-tree-head { display: flex; align-items: center; gap: 8px; padding: 4px 2px 8px; }
+.pc-tree-head img { width: 28px; height: 28px; border-radius: 50%; box-shadow: 0 0 0 1px #000; }
+.pc-tree-name { flex: 1; font-size: 16px; font-weight: bold; }
+.pc-tree-pts { font-size: 15px; font-weight: bold; color: #fff; }
+.pc-tree:not(.active) .pc-tree-name { color: #bbb; }
+.pc-tree:not(.active) .pc-tree-calc,
+.pc-tree:not(.active) .pc-tree-head img { filter: grayscale(1) brightness(.75); }
+.pc-tree-pick { display: none; position: absolute; inset: 0; cursor: pointer; }
+.pc-tree:not(.active) .pc-tree-pick { display: block; }
+.pc-tree:not(.active):hover .pc-tree-calc { filter: grayscale(.4) brightness(.9); }
+a.pc-tree-reset {
+    display: block; margin-top: 6px; padding: 6px; text-align: center;
+    background: #1c1c1c; border: 1px solid #333; color: #c0c0c0; text-decoration: none; border-radius: 3px; font-size: 12px;
+}
+a.pc-tree-reset::before { content: '\00D7'; color: #e33; font-weight: bold; margin-right: 6px; }
+a.pc-tree-reset:hover { background: #262626; color: #fff; }
+.pc-tree:not(.active) a.pc-tree-reset { opacity: .4; }
+
+/* the calculator: only its tree (no model, no title bars, no sidebar) */
+.pc-tree-calc .talentcalc-model,
+.pc-tree-calc .talentcalc-upper,
+.pc-tree-calc .talentcalc-lower,
+.pc-tree-calc .talentcalc-sidebar,
+.pc-tree-calc .talentcalc-sidebar-anchor { display: none !important; }
+.pc-tree-calc .talentcalc-wrapper { width: auto !important; }
+.pc-tree-calc .talentcalc-main { margin: 0 !important; width: 246px !important; height: auto !important; border: 1px solid #404040; box-sizing: border-box; float: none !important; }
+
+/* rank bar inside the icon, like the class calculator */
+.pc-tree-calc .iconmedium div.icon-bubble {
+    background: rgba(0, 0, 0, .78) !important;
+    border-style: solid !important; border-width: 0 1px 1px 1px !important; border-radius: 0 0 3px 3px !important;
+    box-sizing: border-box !important;
+    left: 1px !important; top: auto !important; bottom: 1px !important;
+    width: 42px !important; height: 16px !important; line-height: 15px !important; padding: 0 !important;
+    font-size: 10px !important; font-weight: bold; letter-spacing: 0 !important; text-align: center !important;
 }
 
-#pc-classes p {
-    font-size:32px;
-    margin:0 0 16px 0;
-    padding:0;
-    text-align:center;
-}
+/* ── sections ────────────────────────────────────────────────────── */
+#pc-sections { max-width: 1180px; margin: 14px auto; }
+.pc-sec-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-start; }
+.pc-sec-row > .tc-section { flex: 1; min-width: 0; }
+a.pc-row { display: flex; align-items: center; gap: 7px; padding: 3px 4px; color: #ddd; text-decoration: none; border-radius: 3px; }
+a.pc-row:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+a.pc-row img { width: 18px; height: 18px; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
+.pc-row-name { flex: 1; }
+.pc-row-rank { font-size: 11px; color: #9aa; }
 
-#pc-classes .iconmedium {
-    float:left;
-    margin-right:2px;
-    margin-bottom:2px;
-    opacity:.6666;
-    filter:alpha(opacity=66);
-}
-
-#pc-classes .iconmedium-gold-selected {
-    opacity:1;
-    filter:alpha(opacity=100);
-}
-
-#pc-classes.choose {
-    position:relative;
-    padding:0;
-}
-
-#pc-classes.choose #pc-classes-outer {
-    width:614px;
-}
-
-#pc-classes.choose #pc-classes-inner {
-    position:absolute;
-    left:54px;
-    top:150px;
-    width:506px;
-}
-
-#pc-classes.choose .iconmedium {
-    opacity:1;
-    filter:alpha(opacity=100);
-}
-
-#pc-itself.choose .talentcalc-main {
-    width:614px;
-    height:554px!important;
-    margin-left:0;
-}
+.pc-tame { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 2px 14px; }
+.pc-tame-row { display: grid; grid-template-columns: 1fr auto 60px auto; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 3px; }
+.pc-tame-row:hover { background: rgba(255, 255, 255, .06); }
+.pc-tame-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-tame-cls { font-size: 11px; }
+.pc-tame-lvl { font-size: 11px; color: #888; text-align: right; }
+a.pc-tame-3d { font-size: 11px; color: #999; }
+a.pc-tame-3d:hover { color: #ffd100; }
+.pc-preview { text-align: center; }
+.pc-preview img { display: block; margin: 6px auto 0; background: #000; border-radius: 4px; }
