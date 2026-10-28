@@ -1228,6 +1228,8 @@ var mn_tools = [
     [0,"天赋模拟器","?talent",mn_talentCalc],
     [4,"试衣间","?dressing-room"],
     [2,"猎人宠物模拟器","?petcalc",mn_petCalc],
+    [10,"物品查找器","?item-finder"],
+    [11,"团队配置","?raid-composition"],
     [3,"物品比较","?compare"],
     [5,"Profiler","?profiler",[
         [0,"角色","?profiles"],

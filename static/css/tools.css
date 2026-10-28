@@ -1,0 +1,91 @@
+/* Item Finder (static/js/itemfinder.js) and Raid Composition (static/js/raidcomp.js) */
+
+/* ── Item Finder ─────────────────────────────────────────────────── */
+.tool-itemfinder { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.tf-step { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; padding: 10px 12px; }
+.tf-step.off { opacity: .5; }
+.tf-head { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: .06em; color: #c8c8c8; margin-bottom: 8px; }
+.tf-head b { display: inline-block; width: 18px; height: 18px; line-height: 18px; text-align: center; border-radius: 50%; background: #ffd100; color: #111; margin-right: 6px; }
+.tf-head .q0 { text-transform: none; letter-spacing: 0; font-weight: normal; }
+.tf-classes, .tf-specs, .tf-slots { display: flex; flex-wrap: wrap; gap: 6px; }
+a.tf-class, a.tf-spec {
+    display: flex; align-items: center; gap: 7px; padding: 4px 10px 4px 4px;
+    border: 1px solid #333; border-radius: 4px; background: #181818; text-decoration: none; font-weight: bold;
+}
+a.tf-class img, a.tf-spec img { width: 26px; height: 26px; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
+a.tf-spec span { color: #ddd; }
+a.tf-class:hover, a.tf-spec:hover, a.tf-slot:hover { border-color: #777; background: #222; }
+a.tf-class.on, a.tf-spec.on, a.tf-slot.on { border-color: #ffd100; background: #2a2400; box-shadow: 0 0 5px rgba(255, 209, 0, .35); }
+a.tf-spec.disabled { opacity: .4; cursor: default; }
+a.tf-slot { padding: 4px 10px; border: 1px solid #333; border-radius: 4px; background: #181818; color: #ddd; text-decoration: none; font-size: 12px; }
+.tf-opts { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; font-size: 13px; color: #ccc; }
+.tf-opts input[type=number] { width: 56px; background: #1a1a1a; border: 1px solid #555; color: #fff; padding: 2px 4px; border-radius: 3px; }
+.tf-qus { display: flex; gap: 12px; }
+.tf-qus label { cursor: pointer; }
+.tf-go { display: flex; align-items: flex-end; gap: 20px; }
+.tf-weights { flex: 1; max-width: 520px; }
+.tf-w { display: grid; grid-template-columns: 170px 1fr 34px; align-items: center; gap: 8px; font-size: 12px; color: #ccc; padding: 1px 0; }
+.tf-w i { display: block; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #7a6000, #ffd100); }
+.tf-w b { text-align: right; color: #fff; font-weight: normal; }
+a.tf-find {
+    margin-left: auto; padding: 9px 22px; border-radius: 4px; font-size: 14px; font-weight: bold; text-decoration: none;
+    background: #ffd100; color: #111 !important; border: 1px solid #ffd100;
+}
+a.tf-find:hover { background: #ffe566; }
+a.tf-find.disabled { opacity: .35; pointer-events: none; }
+
+/* ── Raid Composition ────────────────────────────────────────────── */
+.tool-raidcomp { margin-top: 10px; }
+.rc-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+    padding: 8px 12px; background: #141414; border: 1px solid #2a2a2a; border-radius: 6px; margin-bottom: 10px;
+}
+.rc-size { display: flex; }
+.rc-size a { padding: 5px 12px; border: 1px solid #444; color: #ccc; text-decoration: none; font-weight: bold; }
+.rc-size a:first-child { border-radius: 4px 0 0 4px; }
+.rc-size a:last-child { border-radius: 0 4px 4px 0; border-left: none; }
+.rc-size a.on { background: #ffd100; border-color: #ffd100; color: #111; }
+.rc-roles { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: #aaa; }
+.rc-role b { color: #fff; }
+.rc-actions { margin-left: auto; display: flex; gap: 5px; }
+
+.rc-main { display: flex; gap: 12px; align-items: flex-start; }
+.rc-left { flex: 1; min-width: 0; }
+.rc-right { flex: 0 0 340px; display: flex; flex-direction: column; gap: 10px; }
+
+.rc-palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 4px 12px; padding: 8px 10px; background: #111; border: 1px solid #2c2c2c; border-radius: 6px; margin-bottom: 10px; }
+.rc-pclass { display: flex; align-items: center; gap: 4px; }
+.rc-pname { width: 82px; font-size: 12px; font-weight: bold; }
+a.rc-add img { width: 24px; height: 24px; display: block; border: 1px solid #000; border-radius: 4px; }
+a.rc-add:hover img { border-color: #ffd100; }
+
+.rc-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 8px; }
+.rc-group { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; padding: 6px; }
+.rc-ghead { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #888; margin: 0 2px 4px; }
+.rc-slot { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 6px; margin-bottom: 3px; border-radius: 4px; font-size: 12px; box-sizing: border-box; }
+.rc-slot.empty { border: 1px dashed #333; color: #555; }
+a.rc-slot.full { background: #1b1b1b; border: 1px solid #333; text-decoration: none; }
+a.rc-slot.full:hover { border-color: #c33; background: #2a1414; }
+.rc-slot img { width: 20px; height: 20px; border-radius: 3px; }
+.rc-slot span { flex: 1; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-slot i { font-style: normal; font-size: 10px; font-weight: bold; padding: 0 4px; border-radius: 3px; color: #111; }
+.rc-role-T { background: #6aa8ff; } .rc-role-H { background: #5cf25c; } .rc-role-M { background: #ff7a52; } .rc-role-R { background: #c99cff; }
+.rc-role.rc-role-T, .rc-role.rc-role-H, .rc-role.rc-role-M, .rc-role.rc-role-R { background: none; }
+
+.rc-list { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; overflow: hidden; }
+.rc-lhead { display: flex; justify-content: space-between; padding: 6px 10px; background: #181818; border-bottom: 1px solid #2a2a2a; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: .06em; color: #c8c8c8; }
+.rc-lhead span { color: #888; }
+.rc-buff { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 6px; padding: 3px 10px; font-size: 12px; color: #777; cursor: default; }
+.rc-buff:hover { background: rgba(255, 255, 255, .05); }
+.rc-buff.on { color: #ddd; }
+.rc-check { color: #5cf25c; font-weight: bold; }
+.rc-bsrc { display: flex; gap: 2px; }
+.rc-bsrc img { width: 13px; height: 13px; opacity: .3; border-radius: 2px; }
+.rc-bsrc img.on { opacity: 1; }
+
+/* buttons (as the calculators' toolbar) */
+.tool-raidcomp a.tc-nav-btn {
+    display: inline-block; padding: 4px 10px; font-size: 12px; background: #272727; border: 1px solid #484848;
+    color: #c0c0c0; text-decoration: none; border-radius: 3px; white-space: nowrap;
+}
+.tool-raidcomp a.tc-nav-btn:hover { background: #3a3a3a; color: #fff; border-color: #777; }

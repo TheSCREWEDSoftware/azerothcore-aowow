@@ -1182,6 +1182,8 @@ var mn_tools = [
     [0,"Talentrechner","?talent",mn_talentCalc],
     [4,"Umkleidekabine","?dressing-room"],
     [2,"Begleiterrechner","?petcalc",mn_petCalc],
+    [10,"Gegenstandsfinder","?item-finder"],
+    [11,"Schlachtzugszusammenstellung","?raid-composition"],
     [3,"Gegenstandsvergleich","?compare"],
     [5,"Profiler","?profiler",[
         [0,"Charaktere","?profiles"],

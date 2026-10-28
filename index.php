@@ -54,6 +54,9 @@ switch ($pageCall)
     case 'items':
     case 'item-appearances':                                // every look of a slot
     case 'item-appearance-sets':                            // item sets grouped by look
+    case 'item-finder':                                     // tool: best items for a class and spec
+        if ($pageCall == 'item-finder')
+            $altClass = 'itemfinder';
     case 'itemset':
     case 'itemsets':
     case 'maps':                                            // tool: map listing
@@ -80,6 +83,9 @@ switch ($pageCall)
     case 'quests':
     case 'race':
     case 'races':
+    case 'raid-composition':                                // tool: raid buffs and debuffs of a group
+        if ($pageCall == 'raid-composition')
+            $altClass = 'raidcomposition';
     case 'screenshot':                                      // prepare uploaded screenshots
     case 'search':                                          // tool: searches
     case 'skill':

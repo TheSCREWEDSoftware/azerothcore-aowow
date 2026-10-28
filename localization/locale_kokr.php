@@ -117,6 +117,8 @@ $lang = array(
         'compareTool'   => "Item Comparison Tool",
         'talentCalc'    => "Talent Calculator",
         'petCalc'       => "Hunter Pet Calculator",
+        'itemFinder'    => "Item Finder",
+        'raidComp'      => "Raid Composition",
         'chooseClass'   => "Choose a class",
         'chooseFamily'  => "Choose a pet family",
 

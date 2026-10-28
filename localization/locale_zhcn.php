@@ -117,6 +117,8 @@ $lang = array(
         'compareTool'   => "物品比较工具",
         'talentCalc'    => "天赋模拟器",
         'petCalc'       => "猎人宠物模拟器",
+        'itemFinder'    => "物品查找器",
+        'raidComp'      => "团队配置",
         'chooseClass'   => "选择一个职业",
         'chooseFamily'  => "选择一个宠物家族",
 

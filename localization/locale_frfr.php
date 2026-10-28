@@ -116,6 +116,8 @@ $lang = array(
         'compareTool'   => "Outil de comparaison d'objets",
         'talentCalc'    => "Calculateur de Talents",
         'petCalc'       => "Calculateur de familiers",
+        'itemFinder'    => "Recherche d'objets",
+        'raidComp'      => "Composition de raid",
         'chooseClass'   => "Choisissez une classe",
         'chooseFamily'  => "Choisissez un familier",
 

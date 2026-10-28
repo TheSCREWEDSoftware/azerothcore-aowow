@@ -116,6 +116,8 @@ $lang = array(
         'compareTool'   => "Gegenstandsvergleichswerkzeug",
         'talentCalc'    => "Talentrechner",
         'petCalc'       => "Begleiterrechner",
+        'itemFinder'    => "Gegenstandsfinder",
+        'raidComp'      => "Schlachtzugszusammenstellung",
         'chooseClass'   => "Wählt eine Klasse",
         'chooseFamily'  => "Wählt eine Tierart",
 

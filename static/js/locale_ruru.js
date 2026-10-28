@@ -1182,6 +1182,8 @@ var mn_tools = [
     [0,"Расчёт талантов","?talent",mn_talentCalc],
     [4,"Примерочная","?dressing-room"],
     [2,"Расчёт умений питомцев","?petcalc",mn_petCalc],
+    [10,"Поиск предметов","?item-finder"],
+    [11,"Состав рейда","?raid-composition"],
     [3,"Сравнение предметов","?compare"],
     [5,"Профили персонажей","?profiler",[
         [0,"Просмотр","?profiles"],
