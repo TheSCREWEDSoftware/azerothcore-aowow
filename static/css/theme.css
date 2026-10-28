@@ -720,16 +720,16 @@ html[data-ui="modern"] a.button-red-disabled:hover {
     cursor: default;
 }
 
-/* breadcrumb: muted path, current page highlighted, thin chevrons */
+/* breadcrumb: path in link yellow, current page bold white, thin chevrons */
 html[data-ui="modern"] .breadcrumb {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 2px;
-    font-size: 14px;
+    font-size: 16px;
     padding-left: 22px;
     background-position: left center;
-    color: var(--th-muted);
+    color: var(--th-link);
 }
 html[data-ui="modern"] .breadcrumb a { color: var(--th-link); }
 html[data-ui="modern"] .breadcrumb a:hover { color: var(--th-link-hover); }
