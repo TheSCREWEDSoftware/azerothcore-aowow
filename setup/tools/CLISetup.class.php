@@ -737,7 +737,14 @@ class CLISetup
         }
 
         if (DB::Aowow()->selectCell('SHOW TABLES LIKE ?', 'dbc_'.$name) && DB::Aowow()->selectCell('SELECT count(1) FROM ?#', 'dbc_'.$name))
-            return true;
+        {
+            // made before every client locale had a column (only loc0, 2, 3, 4, 6, 8): read it again
+            $cols = DB::Aowow()->selectCol('SHOW COLUMNS FROM ?#', 'dbc_'.$name);
+            if (!preg_grep('/_loc0$/', $cols) || preg_grep('/_loc1$/', $cols))
+                return true;
+
+            CLI::write('CLISetup::loadDBC() - dbc_'.$name.' has no columns for the newer locales, reading it again', CLI::LOG_INFO);
+        }
 
         $dbc = new DBC($name, ['temporary' => self::getOpt('delete')]);
         if ($dbc->error)
