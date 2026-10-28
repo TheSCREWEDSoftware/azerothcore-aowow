@@ -286,7 +286,7 @@ function tc_updateBanner(classId, data) {
     var trees   = tc_object.getTalentTrees();
     var specName = (trees && trees[tree]) ? trees[tree].n : '';
     var specEl  = $WH.ge('tc-banner-specname');
-    if (specEl) $WH.st(specEl, '[PH] Specialization: ' + specName);
+    if (specEl) $WH.st(specEl, 'Specialization: ' + specName);
 }
 
 // ── Level control ─────────────────────────────────────────────────
