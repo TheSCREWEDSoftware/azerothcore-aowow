@@ -674,6 +674,21 @@ var PageTemplate = new function()
         });
     }
 
+    // the current address below the site root, without a language prefix: "item=123/name", "petcalc#0m", "?npcs&filter=..."
+    function langMenuTarget()
+    {
+        var base = g_host.replace(/^[a-z]+:\/\/[^\/]+/i, '').replace(/\/?$/, '/');
+        var path = location.pathname.indexOf(base) === 0 ? location.pathname.substr(base.length) : '';
+        return path.replace(/^(en|fr|de|es|ru|cn|ko|tw|mx)(\/|$)/, '') + location.search + location.hash;
+    }
+
+    // a language link opens the same page (and #build ...) as it is at the moment of the click
+    document.addEventListener('click', function (e) {
+        var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+        if (a && /[?&]locale=\d+$/.test(a.href) && a.href.indexOf(g_host) === 0)
+            a.href += '&to=' + encodeURIComponent(langMenuTarget());
+    }, true);
+
     function initLanguageMenu()
     {
         var linkBefore = 'http://';
@@ -688,7 +703,7 @@ var PageTemplate = new function()
             var menuItem = [
                 locale.id,
                 locale.description,
-                g_host + '/?locale=' + locale.id,                           // aowow: edited for unsupported subdomains # linkBefore + locale.domain + linkAfter
+                g_host + '/?locale=' + locale.id,                           // aowow: edited for unsupported subdomains; the current page is added on click (langMenuTarget)
                 null,                                                       // more custom
                 null                                                        // also custom
             ];
