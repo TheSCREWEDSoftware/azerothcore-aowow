@@ -184,17 +184,45 @@ var AoM2 = (function () {
         }
         var m = unlit ? new THREE.MeshBasicMaterial(p) : new THREE.MeshLambertMaterial(p);
         m.userData.baseOpacity = 1;
+        if (blend == 3 || blend == 4)
+            glow(m);
         return m;
+    }
+
+    // shader tweaks stack: each adds to the fragment / vertex code and to the program key
+    function patch(m, key, fn) {
+        var prev = m.onBeforeCompile, keys = (m.userData.patches || []).concat(key);
+        m.userData.patches = keys;
+        m.onBeforeCompile = function (sh, r) {
+            if (prev && prev !== THREE.Material.prototype.onBeforeCompile) prev.call(this, sh, r);
+            fn(sh);
+        };
+        m.customProgramCacheKey = function () { return 'aom2-' + keys.join('-'); };
+        return m;
+    }
+
+    // additive glow over a see-through canvas (the page background shows behind the model): the browser
+    // treats the canvas as premultiplied, so light added with almost no alpha would vanish - write the
+    // colour premultiplied and let alpha grow with the brightest channel
+    function glow(m) {
+        m.blending = THREE.CustomBlending;
+        m.blendEquation = THREE.AddEquation;
+        m.blendSrc = THREE.OneFactor;
+        m.blendDst = THREE.OneFactor;
+        m.blendSrcAlpha = THREE.OneFactor;
+        m.blendDstAlpha = THREE.OneFactor;
+        return patch(m, 'glow', function (sh) {
+            sh.fragmentShader = sh.fragmentShader.replace('#include <dithering_fragment>',
+                '#include <dithering_fragment>\n\tgl_FragColor = vec4(gl_FragColor.rgb * gl_FragColor.a, max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b) * gl_FragColor.a);');
+        });
     }
 
     // reflection layers (ArmorReflect, OrbReflectBright, ..): texture coords from the view space normal, like the client
     function sphereMap(m) {
-        m.onBeforeCompile = function (sh) {
+        return patch(m, 'sphere', function (sh) {
             sh.vertexShader = sh.vertexShader.replace('#include <project_vertex>',
                 '#include <project_vertex>\n\tvUv = normalize( normalMatrix * normal ).xy * 0.5 + 0.5;');
-        };
-        m.customProgramCacheKey = function () { return 'aom2-sphere'; };
-        return m;
+        });
     }
 
     // ---------------------------------------------------------------- model
@@ -298,7 +326,7 @@ var AoM2 = (function () {
         this.texAnimLookup = lookup(0x98);
         this.uvLookup     = lookup(0x88);                     // texture coord set per layer: 0 / 1, -1 = sphere (reflection) map
 
-        // attachments (weapons, helms on characters - phase 2)
+        // attachments (weapons, helms on characters)
         var at = r.arr(0xF0);
         this.attachments = [];
         for (i = 0; i < at.n; i++) {
@@ -368,15 +396,36 @@ var AoM2 = (function () {
         if (!tx)
             return null;
         var key = tx.type == 0 ? (tx.name ? keyOf(tx.name) : null) : ((this.opt.tex || {})[tx.type] || null);
+        if (key && key.isTexture)                           // made in the browser (character skin, ..)
+            return key;
         return key ? loadTexture(this.base, key, tx.flags) : null;
     };
 
     Model.prototype.build = function () {
-        var self = this, geo = this.geometry;
         this.root = new THREE.Group();
         this.root.rotation.x = -Math.PI / 2;                // client Z up -> three Y up
         this.root.rotation.z = -Math.PI / 2;                // face the camera
+        this.space = new THREE.Group();                     // model space: the mesh and anything attached to it
+        this.root.add(this.space);
+        this.attached = [];
+        this.buildMesh();
+        this.geometry.computeBoundingBox();
+        this.box = this.geometry.boundingBox.clone();
+        this.play(this.findSeq(0));
+    };
 
+    // visible parts change (hair style, gloves, ..): rebuild the draw groups, keep geometry and animation
+    Model.prototype.setGeosets = function (fn) {
+        this.opt.geosets = fn;
+        this.buildMesh();
+    };
+
+    Model.prototype.buildMesh = function () {
+        var self = this, geo = this.geometry;
+        if (this.mesh) {
+            this.space.remove(this.mesh);
+            this.batchMats.forEach(function (m) { m.dispose(); });
+        }
         var materials = [];
         this.batchMats = [];
         geo.clearGroups();
@@ -435,11 +484,30 @@ var AoM2 = (function () {
         else
             this.mesh = new THREE.Mesh(geo, materials);
         this.mesh.frustumCulled = false;
-        this.root.add(this.mesh);
+        this.space.add(this.mesh);
+        if (this.boneWorld)                                 // keep the pose until the next update
+            this.update(0);
+    };
 
-        geo.computeBoundingBox();
-        this.box = geo.boundingBox.clone();
-        this.play(this.findSeq(0));
+    // attach another model (weapon, helm, shoulder) to one of the attachment points (M2Attachment ids)
+    Model.prototype.attach = function (other, attachmentId) {
+        var at = null;
+        for (var i = 0; i < this.attachments.length; i++)
+            if (this.attachments[i].id == attachmentId) { at = this.attachments[i]; break; }
+        if (!at)
+            return false;
+        var holder = new THREE.Group();
+        holder.matrixAutoUpdate = false;
+        holder.add(other.space);                            // the other model's own space, without its upright turn
+        this.space.add(holder);
+        this.attached.push({ model: other, at: at, holder: holder });
+        return true;
+    };
+
+    Model.prototype.detachAll = function () {
+        var self = this;
+        this.attached.forEach(function (a) { self.space.remove(a.holder); });
+        this.attached = [];
     };
 
     // ---------------------------------------------------------------- animation
@@ -502,6 +570,14 @@ var AoM2 = (function () {
                 this.boneObjs[i].matrixWorldNeedsUpdate = true;
             }
             this.boneWorld = world;
+        }
+
+        // attached models follow their attachment point
+        for (var ai = 0; ai < this.attached.length; ai++) {
+            var A = this.attached[ai], bw = this.boneWorld && this.boneWorld[A.at.bone];
+            A.holder.matrix.copy(bw || _m.identity()).multiply(_p.makeTranslation(A.at.pos.x, A.at.pos.y, A.at.pos.z));
+            A.holder.matrixWorldNeedsUpdate = true;
+            A.model.update(dt);
         }
 
         // transparency / colour alpha / scrolling textures

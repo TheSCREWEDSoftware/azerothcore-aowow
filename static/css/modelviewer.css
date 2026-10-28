@@ -30,8 +30,16 @@ html.mv-noscroll { overflow: hidden; }
     position: relative;
     flex: 1;
     min-height: 0;
-    background: #1d1d1f url(../images/modelviewer/bg-tile.png) repeat;   /* tiled AoWoW logo silhouettes */
+    background: #1d1d1f;
 }
+/* backgrounds (the &#9680; button) */
+.mv-bg-logo  { background: #1d1d1f url(../images/modelviewer/bg-tile.png) repeat !important; }   /* tiled AoWoW logo silhouettes */
+.mv-bg-dark  { background: #141416 !important; }
+.mv-bg-grey  { background: #5a5d63 !important; }
+.mv-bg-light { background: #d9dce1 !important; }
+.mv-bg-green { background: #00b140 !important; }
+.mv-bg-none  { background: repeating-conic-gradient(#2a2a2a 0% 25%, #222 0% 50%) 50% / 20px 20px !important; }
+.mv-stage.mv-bg-grey::after, .mv-stage.mv-bg-light::after, .mv-stage.mv-bg-green::after, .mv-stage.mv-bg-none::after { display: none; }
 .mv-stage::after {                                      /* soft light in the middle */
     content: '';
     position: absolute;
@@ -107,3 +115,50 @@ html.mv-noscroll { overflow: hidden; }
 }
 .mv-close { cursor: pointer; color: var(--th-text, #cfd3d8) !important; text-decoration: none !important; }
 .mv-close:hover { color: #fff !important; }
+
+.mv-foot a { cursor: pointer; margin-left: 12px; color: var(--th-text, #cfd3d8) !important; text-decoration: none !important; }
+.mv-foot a:hover { color: #fff !important; }
+.mv-bar select:disabled, .mv-bar option:disabled { opacity: .45; }
+
+/* background menu */
+.mv-bgmenu {
+    position: absolute;
+    right: 10px;
+    bottom: 48px;
+    z-index: 2;
+    display: none;
+    min-width: 210px;
+    padding: 4px;
+    background: var(--th-surface, #1b1c1f);
+    border: 1px solid var(--th-border-2, #3c4148);
+    border-radius: 4px;
+}
+.mv-bgmenu.open { display: block; }
+.mv-bgmenu a { display: flex; align-items: center; gap: 8px; padding: 5px 8px; color: var(--th-text, #cfd3d8) !important; cursor: pointer; text-decoration: none !important; border-radius: 3px; }
+.mv-bgmenu a:hover { background: rgba(255,255,255,.07); color: #fff !important; }
+.mv-bgmenu i { width: 18px; height: 14px; border-radius: 2px; border: 1px solid rgba(255,255,255,.25); background-size: 40px auto !important; }
+
+/* help box */
+.mv-help {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 3;
+    display: none;
+    width: min(440px, 90%);
+    padding: 14px 18px;
+    transform: translate(-50%, -50%);
+    color: var(--th-text, #cfd3d8);
+    background: rgba(18, 19, 22, .96);
+    border: 1px solid var(--th-border-2, #3c4148);
+    border-radius: 6px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.6);
+}
+.mv-help.open { display: block; }
+.mv-help > b { display: block; margin-bottom: 8px; font-size: 15px; color: #fff; }
+.mv-help p { margin: 4px 0; }
+.mv-help .mv-btn { margin-top: 10px; }
+
+.mv-bar { flex-wrap: nowrap; white-space: nowrap; }
+.mv-btn { white-space: nowrap; }
+.mv-anim-l { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
