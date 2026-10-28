@@ -63,13 +63,16 @@ CLISetup::registerSetup("build", new class extends SetupScript
     {
         $result = [];
 
-        foreach (CLISetup::$locales as $loc)
-            $result[$loc->value] = array(
-                'id'          => '$LOCALE_' . strtoupper($loc->json()),
-                'name'        => $loc->json(),
-                'domain'      => $loc->domain(),
-                'description' => $loc->title()
-            );
+        // every locale enabled in the config (LOCALES), not only the ones this setup run was limited to:
+        // this is the site's language menu
+        foreach (Locale::cases() as $loc)
+            if ($loc->validate())
+                $result[$loc->value] = array(
+                    'id'          => '$LOCALE_' . strtoupper($loc->json()),
+                    'name'        => $loc->json(),
+                    'domain'      => $loc->domain(),
+                    'description' => $loc->title()
+                );
 
         return Util::toJSON($result);
     }
