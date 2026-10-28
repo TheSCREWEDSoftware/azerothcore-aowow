@@ -34,7 +34,9 @@ var AoChar = (function () {
                 14: 'offhand', 23: 'offhand', 15: 'ranged', 25: 'ranged', 26: 'ranged' };
 
     // geoset groups (id / 100) a naked character shows, and which value
-    var DEFAULT_GEO = { 4: 1, 5: 1, 7: 2, 13: 1 };          // bare hands, bare feet, ears, no robe
+    // like the client, every group shows its X01 part unless something picks another (1501 = the neck / upper back
+    // without a cloak, 401 bare hands, 1301 no robe ...); ears use 702
+    var DEFAULT_GEO = { 4: 1, 5: 1, 6: 1, 7: 2, 8: 1, 9: 1, 10: 1, 11: 1, 12: 1, 13: 1, 14: 1, 15: 1, 16: 1, 17: 1, 18: 1 };
 
     var cache = {}, imgCache = {};
 
@@ -145,7 +147,7 @@ var AoChar = (function () {
         if (hide.f2) groups[2] = 0;
         if (hide.f3) groups[3] = 0;
         if (hide.ears) groups[7] = 1;
-        var hairId = hide.hair ? -1 : hair;
+        var hairId = hide.hair || !hair ? 1 : hair;          // bald, or hair hidden by a helm: the bare scalp (geoset 1)
 
         return function (id) {
             if (id == 0) return true;
