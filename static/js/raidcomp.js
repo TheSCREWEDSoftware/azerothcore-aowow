@@ -297,9 +297,9 @@ var AoRaidComp = (function () {
                 return n ? '<span class="q1">' + n + 'x ' + esc(d[0]) + '</span>' : '';
             }).filter(Boolean);
             if (lines.length)
-                out += '<br /><span class="q">' + L[0] + '</span><br />' + lines.join('<br />');
+                out += '<div class="q" style="margin-top: 8px">' + L[0] + '</div>' + lines.join('<br />');
         });
-        return '<b class="c' + s[0] + '">' + esc(specLabel(s)) + '</b><br /><span class="q0">' + ROLE_NAME[s[4]] + '</span>' + (out || '<br /><span class="q0">No raid buffs or debuffs</span>');
+        return '<b class="c' + s[0] + '">' + esc(specLabel(s)) + '</b><br /><span class="q0">' + ROLE_NAME[s[4]] + '</span>' + (out || '<div class="q0" style="margin-top: 8px">No raid buffs or debuffs</div>');
     }
 
     function place(i, spec) { slots[i] = spec; save(); render(); }
