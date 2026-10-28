@@ -260,9 +260,9 @@ CLISetup::registerUtility(new class extends UtilityScript
                 $typeHint[] = '['.CLI::bold(1 << $val).']'.str_pad('', 6 - strlen(1 << $val)).$name;
                 $allBits |= 1 << $val;
             }
-            $typeHint[] = '['.CLI::bold('all').']   every option above ('.$allBits.')';
+            $typeHint[] = '['.CLI::bold($allBits).']'.str_pad('', 6 - strlen($allBits)).'All of the above';
             $typeHint[] = 'Bitmask: sum fields to select multiple options';
-            $pattern = '/^(\d+|all)$/i';
+            $pattern = '/^\d+$/';
         }
         else if ($flags & Cfg::FLAG_TYPE_BOOL)
         {
@@ -289,9 +289,6 @@ CLISetup::registerUtility(new class extends UtilityScript
 
                 $val = $newVal ?? $uiValue['idx'] ?? '';
                 unset($newVal);                             // we loop infinitely if this is set and invalid
-
-                if (isset($allBits) && strtolower(trim($val)) == 'all')
-                    $val = $allBits;
 
                 if ($err = Cfg::set($key, $val, $this->updScripts))
                 {
