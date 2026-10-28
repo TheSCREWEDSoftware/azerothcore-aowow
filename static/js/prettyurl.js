@@ -3,8 +3,9 @@
  *
  *   ?item=35797                  ->  item=35797/drakurus-elixir
  *   ?item=35797 (Russian page)   ->  ru/item=35797/эликсир-дракуру
+ *   ?petcalc#0m, ?items=2.1      ->  petcalc#0m, items=2.1
  *
- * Only detail pages (type=id with a name) are rewritten, and only when nothing else is in the query.
+ * Only a single page[=param] is rewritten; addresses with more parameters (filters ...) keep their query.
  * The server side is in .htaccess (rewrite to index.php?type=id&urlloc=xx) and includes/kernel.php (urlloc).
  */
 (function () {
@@ -25,24 +26,23 @@
         if (logo)
             logo.setAttribute('href', base + prefix);
 
-        // what is shown: ?item=123 (legacy) or item=123[/name] in the path
+        // what is shown: ?page[=param] (legacy) or page[=param][/name] in the path
         var path = location.pathname.substr(base.length).replace(/^(en|fr|de|es|ru|cn|ko|tw|mx)(\/|$)/, '');
         var call = location.search ? location.search.substr(1) : path.split('/')[0];
-        var m    = /^([a-z-]+)=(-?\d+)$/.exec(call);
-        if (!m)
+        if (!call || !/^[a-z-]+(=[^&\/?#]*)?$/.test(call))       // home, or several parameters (filters ...): left as it is
             return;
 
-        // detail pages only: the page knows its own id and name
-        var info = window.g_pageInfo;
-        if (!info || !info.name || info.typeId != m[2])
-            return;
+        // detail pages get their name: the page knows its own id and name
+        var slug = '', m = /^([a-z-]+)=(-?\d+)$/.exec(call), info = window.g_pageInfo;
+        if (m && info && info.name && info.typeId == m[2])
+            slug = encodeURIComponent(String(info.name).toLocaleLowerCase()
+                .replace(/['’`]/g, '')
+                .replace(/[^0-9a-zÀ-ɏͰ-ϿЀ-ӿ぀-ヿ㐀-鿿가-힯]+/g, '-')
+                .replace(/^-+|-+$/g, ''));
+        else if (!location.search)
+            slug = path.split('/')[1] || '';                    // keep what the path had
 
-        var slug = String(info.name).toLocaleLowerCase()
-            .replace(/['’`]/g, '')
-            .replace(/[^0-9a-zÀ-ɏͰ-ϿЀ-ӿ぀-ヿ㐀-鿿가-힯]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-
-        var url = base + prefix + m[1] + '=' + m[2] + (slug ? '/' + encodeURIComponent(slug) : '') + location.hash;
+        var url = base + prefix + call + (slug ? '/' + slug : '') + location.hash;
         if (url != location.pathname + location.search + location.hash)
             history.replaceState(history.state, '', url);
     };
