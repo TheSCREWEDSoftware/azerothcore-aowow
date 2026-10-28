@@ -292,7 +292,7 @@ var AoRaidComp = (function () {
             return '<a href="javascript:;" data-lay="' + k + '"' + (layout == k ? ' class="on"' : '') + '>' + LAYOUTS[k] + '</a>';
         }).join('') + '</span></span>';
         html += '<span class="rc-actions"><label class="rc-opt"><input type="checkbox" class="rc-ask"' + (askDelete ? ' checked' : '') + ' /> Ask before deleting</label>'
-            + '<a href="javascript:;" class="tc-nav-btn rc-clear">Clear</a><a href="javascript:;" class="tc-nav-btn rc-copy">Copy Link</a></span>' + summary(mem) + '</div>';
+            + '<a href="javascript:;" class="tc-nav-btn rc-clear" data-clear="all">Clear All</a><a href="javascript:;" class="tc-nav-btn rc-clear" data-clear="raid">Clear Active Groups</a><a href="javascript:;" class="tc-nav-btn rc-clear" data-clear="bench">Clear Bench Groups</a><a href="javascript:;" class="tc-nav-btn rc-copy">Copy Link</a></span>' + summary(mem) + '</div>';
 
         // palette: a card per class (5 per row) with its three specs; hovering a spec shows its role
         html += '<div class="rc-palette rc-lay-' + layout + '" style="grid-template-columns: repeat(' + (exp == 'v' ? 4 : 5) + ', minmax(0, 1fr))">' + PALETTE.filter(classOk).map(function (c) {
@@ -468,7 +468,16 @@ var AoRaidComp = (function () {
         el.querySelector('.rc-btoggle').onclick = function () { benchOpen = !benchOpen; try { localStorage.setItem('aowow_rc_bench', benchOpen ? '1' : ''); } catch (e) {} render(); };
         $$('.rc-edit').forEach(function (a) { a.onclick = function () { rename(+a.getAttribute('data-slot')); }; });
         $$('.rc-rm').forEach(function (a) { a.onclick = function () { remove(+a.getAttribute('data-slot')); }; });
-        el.querySelector('.rc-clear').onclick = function () { slots = []; names = {}; save(); render(); };
+        // clear everything, only the raid groups or only the bench
+        $$('.rc-clear').forEach(function (a) {
+            a.onclick = function () {
+                var what = a.getAttribute('data-clear'), from = what == 'bench' ? BENCH_AT : 0, to = what == 'raid' ? BENCH_AT : BENCH_AT + BENCH;
+                if (askDelete && !confirm(a.textContent + '?'))
+                    return;
+                for (var i = from; i < to; i++) { slots[i] = null; delete names[i]; }
+                save(); render();
+            };
+        });
         el.querySelector('.rc-copy').onclick = function () {
             var b = this;
             if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(function () { b.textContent = 'Copied!'; setTimeout(function () { b.textContent = 'Copy Link'; }, 1500); });
