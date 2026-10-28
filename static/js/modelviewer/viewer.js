@@ -373,10 +373,12 @@ var AoViewer = (function () {
             var meta = r[0], body = r[1];
             var slot = AoChar.INV[opt.slot] || (meta.models.length ? (meta.models[0].slot == 'head' ? 'head' : meta.models[0].slot == 'shoulder' ? 'shoulder' : 'mainhand') : (meta.cape ? 'back' : 'chest'));
             var alone = meta.models.length > 0 && slot != 'back';    // can be shown without a character
-            var ch = savedChar();
+            var weapon = alone && slot != 'head' && slot != 'shoulder'; // weapons, shields, off-hands: the item on its own
+            var ch = weapon ? { race: 'none', sex: 0 } : savedChar();
             if (!alone && ch.race == 'none') ch = { race: 1, sex: 0 };
 
-            raceSel.style.display = sexSel.style.display = drBtn.style.display = '';
+            drBtn.style.display = '';
+            raceSel.style.display = sexSel.style.display = weapon ? 'none' : '';
             raceSel.querySelector('option[value=none]').disabled = !alone;
             raceSel.value = ch.race;
             sexSel.value = ch.sex || 0;
