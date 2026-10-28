@@ -24,8 +24,8 @@ var AoRaidComp = (function () {
     ];
     var ROLE_NAME = { T: 'Tank', H: 'Healer', M: 'Melee', R: 'Ranged' };
     var ROLES = { T: 'Tanks', H: 'Healers', M: 'Melee', R: 'Ranged' };
-    // palette columns
-    var PALETTE = [['Melee', [1, 2, 4, 6]], ['Ranged', [3, 5, 8, 9]], ['Hybrid', [7, 11]]];
+    // palette columns by spec: tanks and melee damage under Melee, healers and ranged damage under Ranged
+    var PALETTE = [['Melee', [1, 2, 4, 6, 7, 11], 'MT'], ['Ranged', [2, 3, 5, 7, 8, 9, 11], 'RH']];
 
     var EXPANSIONS = {
         v: { name: 'Classic',                   sizes: [40, 20], factions: true },
@@ -242,7 +242,7 @@ var AoRaidComp = (function () {
         html += '<div class="rc-palette">' + PALETTE.map(function (col) {
             return '<div class="rc-pcol"><div class="rc-phead">' + col[0] + '</div>' + col[1].filter(classOk).map(function (c) {
                 return '<div class="rc-pclass"><span class="rc-pname c' + c + '"><img src="' + classIcon(c) + '" alt="" />' + esc(g_chr_classes[c]) + '</span><span class="rc-pspecs">'
-                    + SPECS.map(function (s, i) { return s[0] == c ? i : -1; }).filter(function (i) { return i >= 0; }).map(function (i) {
+                    + SPECS.map(function (s, i) { return s[0] == c && col[2].indexOf(s[4]) != -1 ? i : -1; }).filter(function (i) { return i >= 0; }).map(function (i) {
                         var s = SPECS[i];
                         return '<a href="javascript:;" class="rc-add" draggable="true" data-spec="' + i + '"><img src="' + specIcon(s) + '" alt="" /><span>' + esc(s[2]) + '</span></a>';
                     }).join('') + '</span></div>';
