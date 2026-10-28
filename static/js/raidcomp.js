@@ -45,7 +45,7 @@ var AoRaidComp = (function () {
         ['Mana Tide Totem',  16190, 'spell_frost_summonwaterelemental', [[7, 'resto']]],
         ['Tranquility',      48447, 'spell_nature_tranquility',         [[11, '']]]
     ];
-    var BENCH_AT = 40, BENCH = 10;                  // bench slots live at 40..49
+    var BENCH_AT = 40, BENCH = 25;                  // bench slots live at 40..64
     var ICON_EDIT = '<svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M11.7 1.3a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4L5.4 13.6 1.5 14.5l.9-3.9zM3.6 11.2l-.4 1.6 1.6-.4 7.6-7.6-1.2-1.2z"/></svg>';
     var ICON_DEL  = '<svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M3.3 2.3 8 7l4.7-4.7 1 1L9 8l4.7 4.7-1 1L8 9l-4.7 4.7-1-1L7 8 2.3 3.3z"/></svg>';
     var ROLE_NAME = { T: 'Tank', H: 'Healer', M: 'DPS (Melee)', R: 'DPS (Ranged)' };
@@ -293,13 +293,11 @@ var AoRaidComp = (function () {
         }
         html += '</div>';
 
-        html += summary(mem);
-
-        // bench: two more sets of rows, folded away unless opened
+        // bench: one more row of five, folded away unless opened
         var benched = slots.slice(BENCH_AT, BENCH_AT + BENCH).filter(function (i) { return i != null; }).length;
         html += '<div class="rc-bench' + (benchOpen ? ' open' : '') + '"><a href="javascript:;" class="rc-btoggle">' + (benchOpen ? 'Hide bench' : 'Show bench') + (benched ? ' (' + benched + ')' : '') + '</a>';
         if (benchOpen) {
-            html += '<div class="rc-groups" style="grid-template-columns: repeat(' + perRow + ', minmax(0, 1fr))">';
+            html += '<div class="rc-groups" style="grid-template-columns: repeat(5, minmax(0, 1fr))">';
             for (var b = 0; b < BENCH / 5; b++) {
                 html += '<div class="rc-group"><div class="rc-ghead">Bench</div>';
                 for (var k = 0; k < 5; k++)
@@ -309,6 +307,8 @@ var AoRaidComp = (function () {
             html += '</div>';
         }
         html += '</div>';
+
+        html += summary(mem);
 
         // buffs and debuffs below
         var D = DATA[exp];
