@@ -511,6 +511,22 @@ class CLISetup
         unix systems will throw a fit if you try to get from one to the other, so lets save the paths from 2) and cast it to lowercase
         lookups will be done in lowercase. A successfull match will return the real path.
     */
+    // names and change times of the folders two levels down (setup/mpqdata/<locale>/<folder>): adding a locale or
+    // extracting another folder changes it, so a file index cached before that is not used again
+    private static function srcSignature() : string
+    {
+        $sig = [];
+        foreach (glob(rtrim(self::$srcDir, '\\/').'/*', GLOB_ONLYDIR) ?: [] as $loc)
+        {
+            $sig[] = strtolower(basename($loc)).'@'.filemtime($loc);
+            foreach (glob($loc.'/*', GLOB_ONLYDIR) ?: [] as $sub)
+                $sig[] = strtolower(basename($loc).'/'.basename($sub)).'@'.filemtime($sub);
+        }
+
+        sort($sig);
+        return md5(implode('|', $sig));
+    }
+
     private static function buildFileList() : bool
     {
         // normalise case for relative paths inside setup/ (not needed for absolute paths)
@@ -535,7 +551,7 @@ class CLISetup
         {
             $raw   = file_get_contents(self::MPQ_CACHE_FILE);
             $cache = $raw !== false ? unserialize($raw) : false;
-            if (is_array($cache) && ($cache['src'] ?? '') === self::$srcDir)
+            if (is_array($cache) && ($cache['src'] ?? '') === self::$srcDir && ($cache['sig'] ?? '') === self::srcSignature())
             {
                 self::$mpqFiles = $cache['files'];
                 CLI::write('indexing game data from '.self::$srcDir.'... loaded from cache ('.count(self::$mpqFiles).' files)', CLI::LOG_INFO);
@@ -562,7 +578,7 @@ class CLISetup
 
             CLI::write('indexing game data from '.self::$srcDir.'... done! ('.$count.' files)', CLI::LOG_INFO);
 
-            file_put_contents(self::MPQ_CACHE_FILE, serialize(['src' => self::$srcDir, 'files' => self::$mpqFiles]));
+            file_put_contents(self::MPQ_CACHE_FILE, serialize(['src' => self::$srcDir, 'sig' => self::srcSignature(), 'files' => self::$mpqFiles]));
         }
         catch (UnexpectedValueException $e)
         {
