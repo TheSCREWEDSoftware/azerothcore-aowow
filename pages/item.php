@@ -755,6 +755,17 @@ class ItemPage extends genericPage
             }
         }
 
+        // tab: outfits wearing this - fetched when shown, this page is cached and outfits change
+        if ($_slot && in_array($_slot, AjaxDressingroom::VISIBLE_SLOTS))
+        {
+            $this->addScript([SC_CSS_FILE, 'css/dressingroom.css']);
+            $this->lvTabs[] = [null, array(
+                'data' => '<div class="outfit-lazy" data-item="'.$this->typeId.'"></div>',
+                'name' => Lang::outfit('outfits'),
+                'id'   => 'outfits'
+            )];
+        }
+
         // tab: sold by
         if (!empty($this->subject->getExtendedCost()[$this->subject->id]))
         {

@@ -1706,6 +1706,48 @@ CREATE TABLE `aowow_mails` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `aowow_outfits`
+--
+
+DROP TABLE IF EXISTS `aowow_outfits`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `aowow_outfits` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `userId` int unsigned NOT NULL,
+  `name` varchar(64) NOT NULL,
+  `description` varchar(255) NOT NULL DEFAULT '',
+  `classId` tinyint unsigned NOT NULL DEFAULT 0,
+  `race` tinyint unsigned NOT NULL,
+  `gender` tinyint unsigned NOT NULL DEFAULT 0,
+  `look` varchar(40) NOT NULL DEFAULT '' COMMENT 'skin:face:hairStyle:hairColor:facialHair',
+  `items` varchar(255) NOT NULL DEFAULT '' COMMENT 'item ids, comma separated',
+  `public` tinyint unsigned NOT NULL DEFAULT 1,
+  `views` int unsigned NOT NULL DEFAULT 0,
+  `created` int unsigned NOT NULL,
+  `updated` int unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `userId` (`userId`),
+  KEY `classId` (`classId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `aowow_outfits_items`
+--
+
+DROP TABLE IF EXISTS `aowow_outfits_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `aowow_outfits_items` (
+  `outfitId` int unsigned NOT NULL,
+  `itemId` mediumint unsigned NOT NULL,
+  PRIMARY KEY (`outfitId`, `itemId`),
+  KEY `itemId` (`itemId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `aowow_objects`
 --
 

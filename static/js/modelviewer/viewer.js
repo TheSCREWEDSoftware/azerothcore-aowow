@@ -519,3 +519,16 @@ var AoViewer = (function () {
     }
     if (document.readyState == 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
 })();
+
+// item pages: the Outfits tab is filled when the page opens (the page itself is cached, outfits change)
+(function () {
+    function fill() {
+        document.querySelectorAll('.outfit-lazy[data-item]').forEach(function (el) {
+            var host = typeof g_host != 'undefined' ? g_host.replace(/\/?$/, '/') : '';
+            fetch(host + '?outfit=item&id=' + el.getAttribute('data-item')).then(function (r) { return r.ok ? r.text() : ''; })
+                .then(function (html) { el.innerHTML = html; });
+        });
+    }
+    if (document.readyState == 'loading') document.addEventListener('DOMContentLoaded', fill);
+    else fill();
+})();

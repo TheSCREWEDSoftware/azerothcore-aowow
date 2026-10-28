@@ -1,0 +1,548 @@
+/*
+ * aowow dressing room (?dressing-room) and outfit pages (?outfit=<id>)
+ *
+ * Link format: ?dressing-room#<race>-<body>-<skin>-<face>-<hairStyle>-<hairColor>-<facial>:<items>
+ *   items: comma separated item ids, i<id> (same) or s<itemsetId> (every piece of a set)
+ *
+ * Uses the model viewer core: AoStage / AoViewer (viewer.js), AoChar (charmodel.js), AoM2 (m2.js)
+ */
+var AoDressing = (function () {
+    // paper doll: key, label, inventory types it takes, side, empty slot icon
+    var SLOTS = [
+        ['head',     'Head',      [1],              'L', 'inventoryslot_head'],
+        ['shoulder', 'Shoulder',  [3],              'L', 'inventoryslot_shoulder'],
+        ['back',     'Back',      [16],             'L', 'inventoryslot_chest'],
+        ['chest',    'Chest',     [5, 20],          'L', 'inventoryslot_chest'],
+        ['shirt',    'Shirt',     [4],              'L', 'inventoryslot_shirt'],
+        ['tabard',   'Tabard',    [19],             'L', 'inventoryslot_tabard'],
+        ['wrist',    'Wrist',     [9],              'L', 'inventoryslot_wrists'],
+        ['hands',    'Hands',     [10],             'R', 'inventoryslot_hands'],
+        ['waist',    'Waist',     [6],              'R', 'inventoryslot_waist'],
+        ['legs',     'Legs',      [7],              'R', 'inventoryslot_legs'],
+        ['feet',     'Feet',      [8],              'R', 'inventoryslot_feet'],
+        ['mainhand', 'Main Hand', [13, 17, 21],     'R', 'inventoryslot_mainhand'],
+        ['offhand',  'Off Hand',  [14, 22, 23, 13], 'R', 'inventoryslot_offhand'],
+        ['ranged',   'Ranged',    [15, 25, 26],     'R', 'inventoryslot_ranged']
+    ];
+    var LOOK = [['skin', 'Skin Color'], ['face', 'Face'], ['hairStyle', 'Hair Style'], ['hairColor', 'Hair Color'], ['facial', 'Features']];
+
+    function slotFor(invType, taken) {                      // first paper doll slot for an inventory type
+        taken = taken || {};
+        if (invType == 17 && taken.offhand) return null;                       // two-hander: both hands free
+        if (invType == 13 && taken.mainhand && !taken.offhand) invType = 22;   // second one-hander
+        if ([14, 22, 23].indexOf(invType) >= 0 && taken.mainhand && taken.mainhand.slot == 17) return null;
+        for (var i = 0; i < SLOTS.length; i++)
+            if (SLOTS[i][2].indexOf(invType) >= 0) return SLOTS[i][0];
+        return null;
+    }
+
+    function esc(s) {                                       // safe in text and in quoted attributes
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function host() { return typeof g_host != 'undefined' ? g_host.replace(/\/?$/, '/') : ''; }
+    function icon(name, size) { return g_staticUrl + '/images/wow/icons/' + (size || 'medium') + '/' + name + '.jpg'; }
+    function getJSON(url) { return fetch(host() + url, { credentials: 'same-origin' }).then(function (r) { return r.json(); }); }
+
+    function el(tag, cls, html) {
+        var e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (html != null) e.innerHTML = html;
+        return e;
+    }
+
+    // ---------------------------------------------------------------- link format
+    function parseHash(h) {
+        var out = { race: 1, sex: 0, look: [], tokens: [] };
+        h = (h || '').replace(/^#/, '');
+        if (!h) return out;
+        var parts = h.split(':'), n = parts[0].split('-').map(function (x) { return parseInt(x, 10) || 0; });
+        if (AoViewer.PREFIX[n[0]]) out.race = n[0];
+        out.sex = n[1] ? 1 : 0;
+        out.look = n.slice(2, 7);
+        if (parts[1]) out.tokens = parts[1].split(',').filter(function (t) { return /^(i?\d+|s-?\d+)$/.test(t); });
+        return out;
+    }
+
+    function resolveTokens(tokens) {                        // -> [item rows]
+        var ids = [], sets = [];
+        tokens.forEach(function (t) {
+            if (t[0] == 's') sets.push(+t.slice(1));
+            else ids.push(+t.replace(/^i/, ''));
+        });
+        var jobs = sets.map(function (s) { return getJSON('?dressing-room=set&id=' + s); });
+        if (ids.length) jobs.push(getJSON('?dressing-room=items&ids=' + ids.join(',')).then(function (rows) {
+            return rows.sort(function (a, b) { return ids.indexOf(a.id) - ids.indexOf(b.id); });   // the order of the link
+        }));
+        return Promise.all(jobs).then(function (lists) { return [].concat.apply([], lists); });
+    }
+
+    function itemsMap(items) {                              // {slot: row} -> {slot: {display}} for AoChar
+        var m = {};
+        for (var k in items) if (items[k]) m[k] = { display: items[k].displayId };
+        return m;
+    }
+
+    function stageTools(box, stage) {
+        var tools = el('div', 'mv-tools',
+            '<a class="mv-ico dr-bgbtn" title="Background">&#9680;</a>' +
+            '<a class="mv-ico dr-pause" title="Pause / play">&#10074;&#10074;</a>' +
+            '<a class="mv-ico dr-full" title="Full screen">&#x26F6;</a>');
+        var menu = el('div', 'mv-bgmenu');
+        AoStage.BACKGROUNDS.forEach(function (b) {
+            var a = el('a', null, '<i class="mv-bg-' + b[0] + '"></i>' + b[1]);
+            a.onclick = function () { stage.setBackground(b[0]); menu.classList.remove('open'); };
+            menu.appendChild(a);
+        });
+        box.appendChild(tools);
+        box.appendChild(menu);
+        tools.querySelector('.dr-bgbtn').onclick = function () { menu.classList.toggle('open'); };
+        tools.querySelector('.dr-pause').onclick = function () {
+            stage.paused = !stage.paused;
+            this.innerHTML = stage.paused ? '&#9654;' : '&#10074;&#10074;';
+        };
+        tools.querySelector('.dr-full').onclick = function () {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else if (box.requestFullscreen) box.requestFullscreen();
+        };
+        document.addEventListener('fullscreenchange', function () { stage.resize(); });
+        window.addEventListener('resize', function () { stage.resize(); });
+    }
+
+    // ================================================================ the dressing room
+    function DressingRoom(root, cfg) {
+        this.root = root;
+        this.cfg = cfg || {};
+        this.items = {};
+        this.race = 1;
+        this.sex = 0;
+        this.look = {};
+        this.model = null;
+        this.busy = null;
+        this.outfit = cfg.outfit || null;
+        this.build();
+    }
+
+    DressingRoom.prototype.build = function () {
+        var self = this, r = this.root;
+        r.innerHTML =
+            '<div class="dr-doll">' +
+                '<div class="dr-slots dr-left"></div>' +
+                '<div class="dr-center">' +
+                    '<div class="dr-stage mv-stage"><div class="mv-msg">Loading&hellip;</div></div>' +
+                    '<div class="dr-bar">' +
+                        '<select class="dr-race" title="Race"></select>' +
+                        '<select class="dr-sex" title="Body"><option value="0">Body 1</option><option value="1">Body 2</option></select>' +
+                        '<label class="dr-anim-l">Animation <select class="dr-anim"></select></label>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="dr-slots dr-right"></div>' +
+            '</div>' +
+            '<div class="dr-side">' +
+                '<div class="dr-tabs"><a data-tab="look" class="selected">Character</a><a data-tab="outfit">Outfit</a><a data-tab="help">Help</a></div>' +
+                '<div class="dr-tab dr-tab-look"></div>' +
+                '<div class="dr-tab dr-tab-outfit" style="display:none"></div>' +
+                '<div class="dr-tab dr-tab-help" style="display:none">' +
+                    '<p><b>Items:</b> click a slot to search for anything that can be worn there; the &times; takes it off again.</p>' +
+                    '<p><b>Character:</b> pick the race and body below the model, then skin, face and hair on the Character tab.</p>' +
+                    '<p><b>Model:</b> drag to rotate, right-drag to pan, scroll to zoom; &#9680; changes the background.</p>' +
+                    '<p><b>Share:</b> the address of this page always holds the current outfit &ndash; copy it from the Outfit tab.</p>' +
+                    '<p><b>Save:</b> signed in, you can save outfits; they show up under Database &rsaquo; Outfits and on the pages of their items.</p>' +
+                '</div>' +
+            '</div>';
+
+        var $ = function (s) { return r.querySelector(s); };
+        this.$ = $;
+
+        SLOTS.forEach(function (s) {
+            var b = el('div', 'dr-slot', '<a class="dr-icon" href="javascript:;"><img src="' + icon(s[4]) + '" alt=""></a>' +
+                '<div class="dr-label"><span class="q0">' + s[1] + '</span></div><a class="dr-x" href="javascript:;" title="Remove">&times;</a>');
+            b.setAttribute('data-slot', s[0]);
+            b.querySelector('.dr-icon').onclick = function () { self.pick(s[0], b); };
+            b.querySelector('.dr-x').onclick = function () { self.setItem(s[0], null); };
+            (s[3] == 'L' ? $('.dr-left') : $('.dr-right')).appendChild(b);
+        });
+
+        var race = $('.dr-race');
+        AoViewer.RACES.forEach(function (x) { race.appendChild(new Option(x[1], x[0])); });
+        race.onchange = $('.dr-sex').onchange = function () {
+            self.race = +race.value;
+            self.sex = +$('.dr-sex').value;
+            self.look = {};
+            self.rebuild();
+        };
+        $('.dr-anim').onchange = function () { if (self.model) self.model.play(+this.value); };
+
+        r.querySelectorAll('.dr-tabs a').forEach(function (a) {
+            a.onclick = function () {
+                r.querySelectorAll('.dr-tabs a').forEach(function (x) { x.classList.toggle('selected', x === a); });
+                r.querySelectorAll('.dr-tab').forEach(function (t) { t.style.display = t.classList.contains('dr-tab-' + a.getAttribute('data-tab')) ? '' : 'none'; });
+            };
+        });
+
+        this.buildOutfitTab();
+
+        document.addEventListener('mousedown', function (e) {
+            if (self.picker && !self.picker.contains(e.target) && !e.target.closest('.dr-icon')) self.closePicker();
+        });
+        document.addEventListener('keydown', function (e) { if (e.key == 'Escape') self.closePicker(); });
+    };
+
+    DressingRoom.prototype.start = function () {
+        var self = this;
+        return AoViewer.ready().then(function () {
+            var box = self.$('.dr-stage');
+            self.stage = new AoStage(box);
+            stageTools(box, self.stage);
+            self.stage.start();
+
+            var st = self.outfit ? { race: self.outfit.race, sex: self.outfit.gender, look: self.outfit.look, tokens: [] } : parseHash(location.hash);
+            if (!location.hash && !self.outfit) {
+                var saved = AoViewer.savedChar();
+                if (saved.race != 'none') { st.race = saved.race; st.sex = saved.sex || 0; }
+            }
+            self.race = st.race;
+            self.sex = st.sex;
+            if (st.look && st.look.length)
+                LOOK.forEach(function (l, i) { self.look[l[0]] = st.look[i] || 0; });
+
+            var rows = self.outfit ? Promise.resolve(self.outfit.items) : resolveTokens(st.tokens);
+            return rows.then(function (list) {
+                list.forEach(function (it) {
+                    var s = slotFor(it.slot, self.items);
+                    if (s && !self.items[s]) self.items[s] = it;
+                });
+                self.$('.dr-race').value = self.race;
+                self.$('.dr-sex').value = self.sex;
+                return self.rebuild();
+            });
+        }).catch(function (e) {
+            self.message('The dressing room could not start: ' + esc(e.message || e));
+        });
+    };
+
+    DressingRoom.prototype.message = function (t) {
+        var m = this.$('.mv-msg');
+        m.innerHTML = t || '';
+        m.style.display = t ? '' : 'none';
+    };
+
+    // new race / body: a new model
+    DressingRoom.prototype.rebuild = function () {
+        var self = this, look = { race: this.race, sex: this.sex };
+        for (var k in this.look) look[k] = this.look[k];
+        this.message('Loading&hellip;');
+        var job = this.busy = AoChar.load(AoViewer.base(), look, itemsMap(this.items)).then(function (m) {
+            if (job !== self.busy) return;
+            self.model = m;
+            self.stage.setModel(m);
+            var c = m.character;
+            LOOK.forEach(function (l) { self.look[l[0]] = c.look[l[0]]; });
+            var sel = self.$('.dr-anim'), list = m.animations(AoViewer.animNames());
+            sel.innerHTML = '';
+            list.forEach(function (a) { sel.appendChild(new Option(a.name, a.index)); });
+            sel.value = m.seq;
+            self.message('');
+            self.drawSlots();
+            self.drawLook();
+            self.save();
+        }).catch(function (e) {
+            if (job === self.busy) self.message('Could not build the character.<br><span class="q0">' + esc(e.message || e) + '</span>');
+        });
+        return job;
+    };
+
+    DressingRoom.prototype.setItem = function (slot, row) {
+        var self = this;
+        if (row) this.items[slot] = row; else delete this.items[slot];
+        if (slot == 'mainhand' && row && row.slot == 17) delete this.items.offhand;          // two-handers take both hands
+        if (slot == 'offhand' && row && this.items.mainhand && this.items.mainhand.slot == 17) delete this.items.mainhand;
+        this.drawSlots();
+        this.save();
+        if (!this.model) return;
+        this.model.character.setItems(itemsMap(this.items));
+    };
+
+    DressingRoom.prototype.drawSlots = function () {
+        var self = this;
+        SLOTS.forEach(function (s) {
+            var b = self.root.querySelector('.dr-slot[data-slot=' + s[0] + ']'), it = self.items[s[0]];
+            b.classList.toggle('dr-filled', !!it);
+            b.querySelector('img').src = icon(it ? it.icon : s[4]);
+            b.querySelector('.dr-icon').className = 'dr-icon' + (it ? ' q' + it.quality : '');
+            b.querySelector('.dr-label').innerHTML = it
+                ? '<a class="q' + it.quality + '" href="' + host() + '?item=' + it.id + '">' + esc(it.name) + '</a><small class="q0">' + s[1] + '</small>'
+                : '<span class="q0">' + s[1] + '</span>';
+        });
+    };
+
+    // ---------------------------------------------------------------- skin, face, hair
+    DressingRoom.prototype.drawLook = function () {
+        var self = this, box = this.$('.dr-tab-look'), c = this.model && this.model.character;
+        if (!c) return;
+        var o = c.options();
+        box.innerHTML = '';
+        LOOK.forEach(function (l) {
+            var list = o[l[0]] || [], i = Math.max(0, list.indexOf(c.look[l[0]]));
+            var row = el('div', 'dr-look' + (list.length < 2 ? ' dr-off' : ''),
+                '<span>' + l[1] + '</span><a class="dr-prev" href="javascript:;">&lsaquo;</a><b>' + (list.length ? (i + 1) + ' / ' + list.length : '&ndash;') + '</b><a class="dr-next" href="javascript:;">&rsaquo;</a>');
+            row.querySelector('.dr-prev').onclick = function () { self.step(l[0], -1); };
+            row.querySelector('.dr-next').onclick = function () { self.step(l[0], 1); };
+            box.appendChild(row);
+        });
+        var acts = el('div', 'dr-acts', '<a class="mv-btn dr-rand" href="javascript:;">Random look</a> <a class="mv-btn dr-reset" href="javascript:;">Default look</a>');
+        acts.querySelector('.dr-rand').onclick = function () { self.randomLook(); };
+        acts.querySelector('.dr-reset').onclick = function () { self.look = {}; self.rebuild(); };
+        box.appendChild(acts);
+    };
+
+    // keep choices that depend on others valid (faces per skin colour, colours per hair style)
+    DressingRoom.prototype.fixLook = function (c) {
+        var o = c.options(), L = c.look;
+        ['face', 'hairColor', 'facial'].forEach(function (k) {
+            if (o[k].length && o[k].indexOf(L[k]) < 0) L[k] = o[k][0];
+        });
+    };
+
+    DressingRoom.prototype.step = function (key, dir) {
+        var self = this, c = this.model && this.model.character;
+        if (!c) return;
+        var list = c.options()[key] || [];
+        if (list.length < 2) return;
+        var i = list.indexOf(c.look[key]);
+        c.look[key] = list[(i + dir + list.length) % list.length];
+        this.fixLook(c);
+        c.refresh().then(function () {
+            LOOK.forEach(function (l) { self.look[l[0]] = c.look[l[0]]; });
+            self.drawLook();
+            self.save();
+        });
+    };
+
+    DressingRoom.prototype.randomLook = function () {
+        var self = this, c = this.model && this.model.character;
+        if (!c) return;
+        LOOK.forEach(function (l) {
+            var list = c.options()[l[0]] || [];
+            if (list.length) c.look[l[0]] = list[Math.floor(Math.random() * list.length)];
+            self.fixLook(c);
+        });
+        c.refresh().then(function () {
+            LOOK.forEach(function (l) { self.look[l[0]] = c.look[l[0]]; });
+            self.drawLook();
+            self.save();
+        });
+    };
+
+    // ---------------------------------------------------------------- the address holds the outfit
+    DressingRoom.prototype.hash = function () {
+        var self = this, ids = [];
+        SLOTS.forEach(function (s) { if (self.items[s[0]]) ids.push(self.items[s[0]].id); });
+        return '#' + [this.race, this.sex].concat(LOOK.map(function (l) { return self.look[l[0]] || 0; })).join('-') + (ids.length ? ':' + ids.join(',') : '');
+    };
+
+    DressingRoom.prototype.save = function () {
+        var h = this.hash();
+        if (history.replaceState) history.replaceState(history.state, '', location.pathname + location.search + h);
+        var share = this.$('.dr-share');
+        if (share) share.value = location.href;
+        try { localStorage.setItem('aowow_mv_char', JSON.stringify({ race: this.race, sex: this.sex })); } catch (e) {}
+    };
+
+    // ---------------------------------------------------------------- item search
+    DressingRoom.prototype.closePicker = function () {
+        if (this.picker) this.picker.remove();
+        this.picker = null;
+    };
+
+    DressingRoom.prototype.pick = function (slot, anchor) {
+        var self = this, def = SLOTS.filter(function (s) { return s[0] == slot; })[0];
+        this.closePicker();
+        var p = this.picker = el('div', 'dr-picker',
+            '<input type="text" placeholder="Search ' + def[1].toLowerCase() + ' items&hellip;" autocomplete="off">' +
+            '<div class="dr-results"><div class="q0 dr-hint">Loading&hellip;</div></div>' +
+            (this.items[slot] ? '<a class="dr-remove" href="javascript:;">Remove ' + esc(this.items[slot].name) + '</a>' : ''));
+        anchor.appendChild(p);
+        var input = p.querySelector('input'), list = p.querySelector('.dr-results'), timer = 0, seq = 0, active = -1;
+        if (p.querySelector('.dr-remove'))
+            p.querySelector('.dr-remove').onclick = function () { self.setItem(slot, null); self.closePicker(); };
+
+        function run() {
+            var my = ++seq, q = input.value.trim();
+            getJSON('?dressing-room=search&slot=' + def[2].join(',') + '&q=' + encodeURIComponent(q)).then(function (rows) {
+                if (my != seq || !self.picker) return;
+                active = -1;
+                list.innerHTML = rows.length ? '' : '<div class="q0 dr-hint">Nothing found.</div>';
+                rows.forEach(function (it) {
+                    var a = el('a', 'dr-res', '<ins style="background-image:url(' + icon(it.icon, 'small') + ')"></ins><span class="q' + it.quality + '">' + esc(it.name) + '</span><small class="q0">' + it.level + '</small>');
+                    a.href = 'javascript:;';
+                    a.onclick = function () { self.setItem(slot, it); self.closePicker(); };
+                    list.appendChild(a);
+                });
+            });
+        }
+        input.oninput = function () { clearTimeout(timer); timer = setTimeout(run, 250); };
+        input.onkeydown = function (e) {
+            var rows = list.querySelectorAll('.dr-res');
+            if (e.key == 'ArrowDown' || e.key == 'ArrowUp') {
+                e.preventDefault();
+                active = Math.max(0, Math.min(rows.length - 1, active + (e.key == 'ArrowDown' ? 1 : -1)));
+                rows.forEach(function (x, i) { x.classList.toggle('active', i == active); });
+                if (rows[active]) rows[active].scrollIntoView({ block: 'nearest' });
+            }
+            else if (e.key == 'Enter' && rows[Math.max(active, 0)]) rows[Math.max(active, 0)].click();
+        };
+        run();
+        setTimeout(function () { input.focus(); }, 0);
+    };
+
+    // ---------------------------------------------------------------- share, save
+    DressingRoom.prototype.buildOutfitTab = function () {
+        var self = this, box = this.$('.dr-tab-outfit'), cfg = this.cfg, o = this.outfit;
+        var classes = '<option value="0">Any class</option>' + (cfg.classes || []).map(function (c) {
+            return '<option value="' + c[0] + '"' + (o && o.classId == c[0] ? ' selected' : '') + '>' + esc(c[1]) + '</option>';
+        }).join('');
+        box.innerHTML =
+            '<label class="dr-field">Link to this outfit<span class="dr-row"><input class="dr-share" readonly><a class="mv-btn dr-copy" href="javascript:;">Copy</a></span></label>' +
+            '<div class="dr-acts"><a class="mv-btn dr-shot" href="javascript:;">&#128247; Screenshot</a> <a class="mv-btn dr-clear" href="javascript:;">Take everything off</a></div>' +
+            '<h3>Save</h3>' +
+            (cfg.signedIn
+                ? '<label class="dr-field">Name<input class="dr-name" maxlength="64" value="' + esc(o ? o.name : '') + '"></label>' +
+                  '<label class="dr-field">Class<select class="dr-class">' + classes + '</select></label>' +
+                  '<label class="dr-field">Description <small class="q0">(optional)</small><input class="dr-desc" maxlength="255" value="' + esc(o ? o.desc : '') + '"></label>' +
+                  '<div class="dr-acts"><a class="mv-btn dr-save" href="javascript:;">' + (o && o.mine ? 'Save changes' : 'Save outfit') + '</a>' +
+                  (o && o.mine ? ' <a class="mv-btn dr-saveas" href="javascript:;">Save as new</a>' : '') + '</div>' +
+                  '<div class="dr-status"></div>'
+                : '<p class="q0">Sign in to save outfits &ndash; the link above works without an account.</p>') +
+            '<p><a href="' + host() + '?outfits">Browse outfits</a></p>';
+
+        box.querySelector('.dr-copy').onclick = function () {
+            var i = box.querySelector('.dr-share');
+            i.select();
+            if (navigator.clipboard) navigator.clipboard.writeText(i.value);
+            this.textContent = 'Copied';
+        };
+        box.querySelector('.dr-shot').onclick = function () { if (self.stage) self.stage.screenshot('outfit'); };
+        box.querySelector('.dr-clear').onclick = function () {
+            self.items = {};
+            self.drawSlots();
+            self.save();
+            if (self.model) self.model.character.setItems({});
+        };
+        if (box.querySelector('.dr-save'))
+            box.querySelector('.dr-save').onclick = function () { self.store(!!(o && o.mine)); };
+        if (box.querySelector('.dr-saveas'))
+            box.querySelector('.dr-saveas').onclick = function () { self.store(false); };
+    };
+
+    DressingRoom.prototype.store = function (update) {
+        var self = this, box = this.$('.dr-tab-outfit'), status = box.querySelector('.dr-status');
+        var name = box.querySelector('.dr-name').value.trim();
+        if (!name) { status.innerHTML = '<span class="dr-err">Give the outfit a name first.</span>'; return; }
+        var ids = [];
+        SLOTS.forEach(function (s) { if (self.items[s[0]]) ids.push(self.items[s[0]].id); });
+
+        var fd = new FormData();
+        fd.append('id', update && this.outfit ? this.outfit.id : 0);
+        fd.append('name', name);
+        fd.append('description', box.querySelector('.dr-desc').value.trim());
+        fd.append('classId', box.querySelector('.dr-class').value);
+        fd.append('race', this.race);
+        fd.append('gender', this.sex);
+        fd.append('look', LOOK.map(function (l) { return self.look[l[0]] || 0; }).join(':'));
+        fd.append('items', ids.join(','));
+        if (this.stage && this.model) {                     // a framed picture, then the user's own view back
+            var cam = this.stage.camera, ctl = this.stage.controls, pos = cam.position.clone(), tgt = ctl.target.clone();
+            this.stage.frame();
+            fd.append('shot', this.stage.snapshot(320, 400));
+            cam.position.copy(pos);
+            ctl.target.copy(tgt);
+            ctl.update();
+        }
+        status.textContent = 'Saving…';
+        fetch(host() + '?outfit=save', { method: 'POST', body: fd, credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                if (!res.id) throw new Error(res.error || 'could not save');
+                self.outfit = { id: res.id, name: name, mine: true };
+                status.innerHTML = 'Saved. <a href="' + host() + '?outfit=' + res.id + '">View outfit</a>';
+                if (!update && history.replaceState)
+                    history.replaceState(history.state, '', location.pathname + '?dressing-room=' + res.id + self.hash());
+                box.querySelector('.dr-save').textContent = 'Save changes';
+                box.querySelector('.dr-save').onclick = function () { self.store(true); };
+            })
+            .catch(function (e) { status.innerHTML = '<span class="dr-err">' + esc(e.message || e) + '</span>'; });
+    };
+
+    // ================================================================ an outfit's own page
+    function outfitPage(root, o) {
+        root.innerHTML =
+            '<div class="outfit-stage mv-stage"><div class="mv-msg">Loading&hellip;</div></div>' +
+            '<div class="outfit-info">' +
+                '<table class="outfit-facts">' +
+                    (o.classId ? '<tr><th>Class</th><td class="c' + o.classId + '">' + esc(g_chr_classes[o.classId] || '') + '</td></tr>' : '') +
+                    '<tr><th>Race</th><td>' + esc(g_chr_races[o.race] || '') + ' &middot; ' + (o.gender ? 'Body 2' : 'Body 1') + '</td></tr>' +
+                    '<tr><th>By</th><td>' + esc(o.author || '?') + '</td></tr>' +
+                    '<tr><th>Created</th><td>' + esc(o.created) + (o.updated ? ' <small class="q0">(changed ' + esc(o.updated) + ')</small>' : '') + '</td></tr>' +
+                '</table>' +
+                '<div class="outfit-items"></div>' +
+                '<div class="dr-acts">' +
+                    '<a class="mv-btn" href="' + host() + '?dressing-room#' + [o.race, o.gender].concat(o.look).join('-') + ':' + o.items.map(function (i) { return i.id; }).join(',') + '">Open in the Dressing Room</a>' +
+                    (o.mine ? ' <a class="mv-btn" href="' + host() + '?dressing-room=' + o.id + '">Edit</a> <a class="mv-btn outfit-del" href="javascript:;">Delete</a>' : '') +
+                '</div>' +
+                '<div class="dr-status"></div>' +
+            '</div>';
+
+        var list = root.querySelector('.outfit-items');
+        if (!o.items.length) list.innerHTML = '<p class="q0">No items &ndash; just the character.</p>';
+        o.items.forEach(function (it) {
+            list.appendChild(el('a', 'dr-res', '<ins style="background-image:url(' + icon(it.icon, 'small') + ')"></ins><span class="q' + it.quality + '">' + esc(it.name) + '</span>'));
+            list.lastChild.href = host() + '?item=' + it.id;
+        });
+
+        var del = root.querySelector('.outfit-del');
+        if (del) del.onclick = function () {
+            if (!del.classList.contains('armed')) {
+                del.classList.add('armed');
+                del.textContent = 'Click again to delete';
+                return;
+            }
+            var fd = new FormData();
+            fd.append('id', o.id);
+            fetch(host() + '?outfit=delete', { method: 'POST', body: fd, credentials: 'same-origin' })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.ok) location.href = host() + '?outfits=mine';
+                    else root.querySelector('.dr-status').textContent = res.error || 'Could not delete';
+                });
+        };
+
+        AoViewer.ready().then(function () {
+            var box = root.querySelector('.outfit-stage'), stage = new AoStage(box);
+            stageTools(box, stage);
+            stage.start();
+            var items = {}, taken = {};
+            o.items.forEach(function (it) {
+                var s = slotFor(it.slot, taken);
+                if (s && !taken[s]) { taken[s] = it; items[s] = { display: it.displayId }; }
+            });
+            var look = { race: o.race, sex: o.gender };
+            LOOK.forEach(function (l, i) { look[l[0]] = o.look[i]; });
+            return AoChar.load(AoViewer.base(), look, items).then(function (m) {
+                stage.setModel(m);
+                box.querySelector('.mv-msg').style.display = 'none';
+            });
+        }).catch(function (e) {
+            root.querySelector('.mv-msg').innerHTML = 'Could not show the outfit.<br><span class="q0">' + esc(e.message || e) + '</span>';
+        });
+    }
+
+    return {
+        SLOTS: SLOTS,
+        init: function (root, cfg) {
+            var dr = new DressingRoom(root, cfg);
+            dr.start();
+            return dr;
+        },
+        outfit: outfitPage
+    };
+})();

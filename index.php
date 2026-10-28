@@ -34,6 +34,7 @@ switch ($pageCall)
     case 'currency':
     case 'currencies':
     case 'compare':                                         // tool: item comparison
+    case 'dressing-room':                                   // tool: dress up a character (also its item search)
     case 'emote':
     case 'emotes':
     case 'enchantment':
@@ -62,6 +63,8 @@ switch ($pageCall)
     case 'npcs':
     case 'object':
     case 'objects':
+    case 'outfit':                                          // saved dressing room outfits (also save / delete)
+    case 'outfits':
     case 'pet':
     case 'pets':
     case 'petcalc':                                         // tool: pet talent calculator

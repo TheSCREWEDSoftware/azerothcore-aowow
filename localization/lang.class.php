@@ -12,6 +12,7 @@ class Lang
     private static $user;
     private static $game;
     private static $maps;
+    private static $outfit;
     private static $profiler;
     private static $screenshot;
     private static $privileges;

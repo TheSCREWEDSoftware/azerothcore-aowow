@@ -78,6 +78,9 @@ spl_autoload_register(function ($class) {
         case 'Conditions':
             require_once 'includes/components/Conditions/Conditions.class.php';
             break;
+        case 'Outfit':
+            require_once 'includes/outfit.class.php';
+            break;
     }
 });
 
