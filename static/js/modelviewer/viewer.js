@@ -110,10 +110,10 @@ AoStage.prototype = {
             box = new THREE.Box3(new THREE.Vector3(-1, -1, -1), new THREE.Vector3(1, 1, 1));
         var size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
         var r = Math.max(size.x, size.y, size.z) || 1;
-        var dist = r / (2 * Math.tan(this.camera.fov * Math.PI / 360)) * 1.25;
+        var dist = r / (2 * Math.tan(this.camera.fov * Math.PI / 360)) * 1.1;
         this.camera.near = dist / 100;
         this.camera.far = dist * 100;
-        this.camera.position.set(center.x, center.y + dist * 0.18, center.z + dist);
+        this.camera.position.set(center.x, center.y + dist * 0.08, center.z + dist);
         this.camera.updateProjectionMatrix();
         this.controls.target.copy(center);
         this.controls.update();
@@ -169,7 +169,7 @@ var AoViewer = (function () {
     function loadScript(src) {
         return new Promise(function (ok, fail) {
             var s = document.createElement('script');
-            s.src = src;
+            s.src = src + (typeof g_mvVersion != 'undefined' ? '?v=' + g_mvVersion : '');   // a fresh copy after every update
             s.onload = ok;
             s.onerror = function () { fail(new Error('cannot load ' + src)); };
             document.head.appendChild(s);
@@ -288,7 +288,7 @@ var AoViewer = (function () {
     function drHash(c, opt) {
         var L = c ? c.look : savedChar(), m = c ? c.meta : null;
         if (!c && L.race == 'none') L = { race: 1, sex: 0 };
-        var h = [m ? m.race : L.race, m ? m.sex : L.sex, L.skin || 0, L.face || 0, L.hairStyle || 0, L.hairColor || 0, L.facial || 0].join('-');
+        var h = [m ? m.race : L.race, m ? m.sex : L.sex].concat(c ? [L.skin || 0, L.face || 0, L.hairStyle || 0, L.hairColor || 0, L.facial || 0] : []).join('-');
         if (opt && opt.typeId && opt.type == 3) h += ':i' + opt.typeId;
         else if (opt && opt.typeId && opt.type == 4) h += ':s' + opt.typeId;
         return '#' + h;
@@ -305,7 +305,7 @@ var AoViewer = (function () {
         var sel = dlg.querySelector('.mv-anim'), list = m.animations ? m.animations(animNames) : [];
         sel.innerHTML = '';
         list.forEach(function (a) { sel.appendChild(new Option(a.name, a.index)); });
-        sel.value = m.seq;
+        sel.value = m.want != null ? m.want : m.seq;
         dlg.querySelector('.mv-anim-l').style.display = list.length > 1 ? '' : 'none';
         msg('');
     }

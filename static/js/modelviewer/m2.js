@@ -146,12 +146,13 @@ var AoM2 = (function () {
     // ---------------------------------------------------------------- materials
 
     var texCache = {};
+    var TEX_VERSION = 2;                                    // bump when textures are re-extracted (browsers keep old copies)
 
     function loadTexture(base, key, flags) {
         var id = key + '|' + (flags & 3);
         if (texCache[id])
             return texCache[id];
-        var t = new THREE.TextureLoader().load(base + 't/' + key + '.png');
+        var t = new THREE.TextureLoader().load(base + 't/' + key + '.png?v=' + TEX_VERSION);
         t.encoding = THREE.sRGBEncoding;
         t.wrapS = (flags & 1) ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
         t.wrapT = (flags & 2) ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
@@ -538,6 +539,7 @@ var AoM2 = (function () {
             return Promise.resolve();
         if (s.flags & 0x40 && this.seqs[s.alias])          // alias: play the referenced one
             return this.play(s.alias);
+        this.want = i;                                      // what is playing as soon as its data is in (animation lists)
         var go = function () { self.seq = i; self.time = 0; };
         if (s.flags & 0x20 || this.animBuf[i]) {
             go();
@@ -637,5 +639,5 @@ var AoM2 = (function () {
         });
     }
 
-    return { load: load, keyOf: keyOf };
+    return { load: load, keyOf: keyOf, TEX_VERSION: TEX_VERSION };
 })();

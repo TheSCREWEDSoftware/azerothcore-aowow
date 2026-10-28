@@ -52,7 +52,7 @@ var AoChar = (function () {
                 var i = new Image();
                 i.onload = function () { ok(i); };
                 i.onerror = function () { ok(null); };
-                i.src = url;
+                i.src = url + '?v=' + AoM2.TEX_VERSION;
             });
         return imgCache[url];
     }
@@ -186,7 +186,8 @@ var AoChar = (function () {
             hair  = pick(s.hair, L.hairStyle, L.hairColor, npc),
             facial = pick(s.facial, L.facial, L.hairColor, npc),
             under = pick(s.under, 0, L.skin, npc),
-            showScalp = (m.hair[L.hairStyle] || [0, 1])[1];
+            showScalp = (m.hair[L.hairStyle] || [0, 1])[1],
+            hairTex = hair && hair.t[0] ? hair : pick(s.hair.filter(function (x) { return x.t[0]; }), -1, L.hairColor, npc);
         var layers = [];                                    // [key, region | null (whole)]
         function add(key, region) { if (key) layers.push([key, region]); }
 
@@ -236,7 +237,8 @@ var AoChar = (function () {
             self.skinTex.needsUpdate = true;
         }).then(function () {
             return Promise.all([
-                img(base + (hair && hair.t[0] ? hair.t[0] : 'none') + '.png'),
+                // bald styles have no hair texture, but brows / beards still use the hair colour
+                img(base + (hairTex && hairTex.t[0] ? hairTex.t[0] : 'none') + '.png'),
                 img(base + (skin && skin.t[1] ? skin.t[1] : 'none') + '.png'),
                 self.itemData.back && self.itemData.back.item && self.itemData.back.item.cape ? img(base + self.itemData.back.item.cape + '.png') : null
             ]).then(function (r) {
@@ -321,6 +323,10 @@ var AoChar = (function () {
                 c.helmvis = r[1];
                 var o = c.options();                        // fill in anything not given with the first valid choice
                 ['skin', 'hairStyle'].forEach(function (k) { if (c.look[k] == null || o[k].indexOf(c.look[k]) < 0) c.look[k] = o[k][0] || 0; });
+                if (look.hairStyle == null) {                // first look: a style with hair (style 0 is bald for some races)
+                    var haired = o.hairStyle.filter(function (v) { return c.meta.sections.hair.some(function (x) { return x.v == v && x.t[0] && !x.npc; }); });
+                    if (haired.length) c.look.hairStyle = haired[0];
+                }
                 o = c.options();
                 ['face', 'hairColor', 'facial'].forEach(function (k) { if (c.look[k] == null || o[k].indexOf(c.look[k]) < 0) c.look[k] = o[k][0] || 0; });
                 return c.loadItems(items);

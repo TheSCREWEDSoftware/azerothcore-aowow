@@ -278,7 +278,7 @@ class Outfit
         }
 
         $h .= '<div class="set-links"><a href="javascript:;" onclick="ModelViewer.show(JSON.parse(this.parentNode.parentNode.parentNode.firstChild.dataset.mv))">'.Lang::main('view3D').'</a>';
-        $h .= '<a href="'.self::url('dressing-room').'#'.$race.'-'.$gender.'-0-0-0-0-0:s'.$set['id'].'">'.Lang::outfit('dressingRoom').'</a></div>';
+        $h .= '<a href="'.self::url('dressing-room').'#'.$race.'-'.$gender.':s'.$set['id'].'">'.Lang::outfit('dressingRoom').'</a></div>';
         return $h.'</div></div>';
     }
 

@@ -58,7 +58,7 @@ var AoDressing = (function () {
         var parts = h.split(':'), n = parts[0].split('-').map(function (x) { return parseInt(x, 10) || 0; });
         if (AoViewer.PREFIX[n[0]]) out.race = n[0];
         out.sex = n[1] ? 1 : 0;
-        out.look = n.slice(2, 7);
+        out.look = n.length >= 7 ? n.slice(2, 7) : [];          // race-body only: default looks
         if (parts[1]) out.tokens = parts[1].split(',').filter(function (t) { return /^(i?\d+|s-?\d+)$/.test(t); });
         return out;
     }
@@ -240,7 +240,7 @@ var AoDressing = (function () {
             var sel = self.$('.dr-anim'), list = m.animations(AoViewer.animNames());
             sel.innerHTML = '';
             list.forEach(function (a) { sel.appendChild(new Option(a.name, a.index)); });
-            sel.value = m.seq;
+            sel.value = m.want != null ? m.want : m.seq;
             self.message('');
             self.drawSlots();
             self.drawLook();
@@ -541,6 +541,7 @@ var AoDressing = (function () {
         init: function (root, cfg) {
             var dr = new DressingRoom(root, cfg);
             dr.start();
+            AoDressing.current = dr;                        // for the console
             return dr;
         },
         outfit: outfitPage
