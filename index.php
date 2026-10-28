@@ -35,6 +35,9 @@ switch ($pageCall)
     case 'currencies':
     case 'compare':                                         // tool: item comparison
     case 'dressing-room':                                   // tool: dress up a character (also its item search)
+    case 'discord-webhook':                                 // tool: what the site posts to Discord
+        if ($pageCall == 'discord-webhook')
+            $altClass = 'discordwebhook';
     case 'emote':
     case 'emotes':
     case 'enchantment':

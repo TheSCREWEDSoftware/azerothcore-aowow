@@ -89,3 +89,17 @@ a.rc-slot.full:hover { border-color: #c33; background: #2a1414; }
     color: #c0c0c0; text-decoration: none; border-radius: 3px; white-space: nowrap;
 }
 .tool-raidcomp a.tc-nav-btn:hover { background: #3a3a3a; color: #fff; border-color: #777; }
+
+/* ── Discord Webhook page ────────────────────────────────────────── */
+.tool-discord { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.tool-discord p { margin: 0; }
+.dc-events, .dc-steps { margin: 0; padding-left: 20px; line-height: 1.8; }
+.dc-events { list-style: none; padding-left: 4px; color: #777; }
+.dc-events li.on { color: #ddd; }
+.dc-events li b { display: inline-block; width: 16px; }
+.dc-events li.on b { color: #5cf25c; }
+.dc-steps code, .tool-discord code { background: #222; padding: 1px 5px; border-radius: 3px; }
+.tool-discord .dc-teststep { display: flex; align-items: center; gap: 12px; }
+.dc-events li { list-style: none; background: none !important; padding-left: 0 !important; }
+.dc-events li::marker { content: ''; }
+.tool-discord a.tf-find { margin-left: 0; }

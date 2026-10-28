@@ -466,6 +466,12 @@ class AjaxAdmin extends AjaxHandler
                 DB::Aowow()->query('UPDATE ?_guides SET `rev` = (SELECT `rev` FROM ?_articles WHERE `type` = ?d AND `typeId` = ?d ORDER BY `rev` DESC LIMIT 1), `approveUserId` = ?d, `approveDate` = ?d WHERE `id` = ?d', Type::GUIDE, $id, User::$id, time(), $id);
 
             DB::Aowow()->query('INSERT INTO ?_guides_changelog (`id`, `date`, `userId`, `status`) VALUES (?d, ?d, ?d, ?d)', $id, time(), User::$id, $status);
+
+            if ($status == GUIDE_STATUS_APPROVED && Discord::enabled(Discord::EV_GUIDE))
+            {
+                [$url, $name] = Discord::entry(Type::GUIDE, $id);
+                Discord::post(Discord::EV_GUIDE, 'Guide approved: '.$name, '', $url, 0x5CF25C);
+            }
             if ($msg)
                 DB::Aowow()->query('INSERT INTO ?_guides_changelog (`id`, `date`, `userId`, `msg`)    VALUES (?d, ?d, ?d, ?)', $id, time(), User::$id, $msg);
             return true;

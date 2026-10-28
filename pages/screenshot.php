@@ -260,6 +260,12 @@ class ScreenshotPage extends GenericPage
         else
             return 6;
 
+        if (Discord::enabled(Discord::EV_SCREENSHOT))
+        {
+            [$url, $name] = Discord::entry($this->destType, $this->destTypeId);
+            Discord::post(Discord::EV_SCREENSHOT, 'New screenshot for '.$name, User::$displayName.' uploaded a screenshot (waiting for approval).', $url, 0x2EC4FF);
+        }
+
         return 0;
     }
 

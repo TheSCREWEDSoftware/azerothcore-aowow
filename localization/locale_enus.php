@@ -119,6 +119,7 @@ $lang = array(
         'petCalc'       => "Hunter Pet Calculator",
         'itemFinder'    => "Item Finder",
         'raidComp'      => "Raid Composition",
+        'discordWebhook' => "Discord Webhook",
         'chooseClass'   => "Choose a class",
         'chooseFamily'  => "Choose a pet family",
 

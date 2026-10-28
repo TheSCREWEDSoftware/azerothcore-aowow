@@ -118,6 +118,7 @@ $lang = array(
         'petCalc'       => "Begleiterrechner",
         'itemFinder'    => "Gegenstandsfinder",
         'raidComp'      => "Schlachtzugszusammenstellung",
+        'discordWebhook' => "Discord-Webhook",
         'chooseClass'   => "Wählt eine Klasse",
         'chooseFamily'  => "Wählt eine Tierart",
 

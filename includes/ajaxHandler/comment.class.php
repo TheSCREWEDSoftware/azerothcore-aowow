@@ -108,6 +108,12 @@ class AjaxComment extends AjaxHandler
                     // flag target with hasComment
                     if ($tbl = Type::getClassAttrib($this->_get['type'], 'dataTable'))
                         DB::Aowow()->query('UPDATE '.$tbl.' SET cuFlags = cuFlags | ?d WHERE id = ?d', CUSTOM_HAS_COMMENT, $this->_get['typeid']);
+
+                    if (Discord::enabled(Discord::EV_COMMENT))
+                    {
+                        [$url, $name] = Discord::entry($this->_get['type'], $this->_get['typeid']);
+                        Discord::post(Discord::EV_COMMENT, 'New comment on '.$name, User::$displayName.': '.preg_replace('/\[[^\]]*\]/', '', $this->_post['commentbody']), $url.'#comments:id='.$postIdx);
+                    }
                 }
                 else
                 {

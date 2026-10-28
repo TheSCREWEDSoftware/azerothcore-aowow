@@ -118,6 +118,7 @@ $lang = array(
         'petCalc'       => "Calculadora de mascotas",
         'itemFinder'    => "Buscador de objetos",
         'raidComp'      => "Composición de banda",
+        'discordWebhook' => "Webhook de Discord",
         'chooseClass'   => "Escoge una clase",
         'chooseFamily'  => "Escoge una familia de mascota",
 

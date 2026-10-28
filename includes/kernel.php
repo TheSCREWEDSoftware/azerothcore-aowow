@@ -81,6 +81,9 @@ spl_autoload_register(function ($class) {
         case 'Outfit':
             require_once 'includes/outfit.class.php';
             break;
+        case 'Discord':
+            require_once 'includes/discord.class.php';
+            break;
     }
 });
 

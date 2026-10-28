@@ -119,6 +119,7 @@ $lang = array(
         'petCalc'       => "猎人宠物模拟器",
         'itemFinder'    => "物品查找器",
         'raidComp'      => "团队配置",
+        'discordWebhook' => "Discord Webhook",
         'chooseClass'   => "选择一个职业",
         'chooseFamily'  => "选择一个宠物家族",
 

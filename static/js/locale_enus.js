@@ -1367,7 +1367,7 @@ var mn_tools = [
     [1,"Maps","?maps"],
     [,"Other",,,{colBreak:true}],
     [0,"Aowow Client [PH]",null],
-    [0,"Discord Webhook [PH]",null],
+    [13,"Discord Webhook","?discord-webhook"],
     [12,"Tooltips","?tooltips"],
     [9,"Latest","?latest-comments",[
         [2,"Latest Comments","?latest-comments"],

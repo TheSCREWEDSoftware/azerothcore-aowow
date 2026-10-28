@@ -118,6 +118,7 @@ $lang = array(
         'petCalc'       => "Расчёт умений питомцев",
         'itemFinder'    => "Поиск предметов",
         'raidComp'      => "Состав рейда",
+        'discordWebhook' => "Вебхук Discord",
         'chooseClass'   => "Выберите класс",
         'chooseFamily'  => "Выберите семейство питомцев",
 
