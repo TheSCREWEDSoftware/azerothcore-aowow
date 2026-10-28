@@ -248,7 +248,8 @@ register_shutdown_function(function () use (&$requestHadError) {
         if (time() - $lastGc >= 3600)
         {
             DB::Aowow()->query('DELETE FROM ?_errors WHERE `date` < ?d', time() - $ttl);
-            @file_put_contents($gcFile, time());
+            if (is_dir(dirname($gcFile)) || @mkdir(dirname($gcFile), 0755, true))
+                @file_put_contents($gcFile, time());
         }
     }
 });
