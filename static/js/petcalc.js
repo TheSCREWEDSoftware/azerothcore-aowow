@@ -25,7 +25,6 @@ if (typeof swfobject == 'undefined')
     var swfobject = { embedSWF: function () {} };
 
 var PC_ENCODING    = '0zMcmVokRsaqbdrfwihuGINALpTjnyxtgevElBCDFHJKOPQSUWXYZ123456789';   // as TalentCalc
-var PC_TREE_COLORS = [['#D03A18', '#300804'], ['#2E78D0', '#061428'], ['#38B050', '#062010']];   // banner glow per tree
 var PC_SPECS       = [['b', 'Beast Mastery', 1, 'q2'], ['m', 'Marksmanship', 2, 'q'], ['s', 'Survival', 3, 'q']];
 
 function pc_esc(t) {
@@ -105,8 +104,26 @@ function pc_init() {
         col.id = 'pc-tree-' + tree;
         col.innerHTML = '<div class="pc-tree-head"><img src="' + pc_treeIcon(tree, 'medium') + '" alt="" /><span class="pc-tree-name">' + pc_esc(g_pet_talents[tree].n)
                       + '</span><span class="pc-tree-pts"></span></div><div class="pc-tree-calc"><div id="pc-calc-' + tree + '"></div></div>'
-                      + '<a class="pc-tree-reset" href="javascript:;">Reset</a><div class="pc-tree-pick" title="Pick a ' + pc_esc(g_pet_talents[tree].n) + ' family"></div>';
+                      + '<a class="pc-tree-reset" href="javascript:;">Reset</a><div class="pc-tree-pick" title="Pick a ' + pc_esc(g_pet_talents[tree].n) + ' family"></div>'
+                      + '<div class="pc-tree-fams"></div>';
         $WH.ae(trees, col);
+
+        // the tree's families, below it
+        var famBox = col.querySelector('.pc-tree-fams');
+        fams.forEach(function (f) {
+            var link = $WH.ce('a');
+            link.href = 'javascript:;';
+            link.className = 'pc-nav-icon' + (pc_isExotic(f) ? ' exotic' : '');
+            link.innerHTML = '<img src="' + g_staticUrl + '/images/wow/icons/medium/' + pc_esc(g_pet_icons[f]) + '.jpg" alt="" />';
+            link.onclick     = function () { pc_pick(f); return false; };
+            link.onmouseover = function () {
+                $WH.Tooltip.show(this, '<b>' + pc_esc(g_pet_families[f]) + '</b><br /><span class="q0">' + pc_esc(g_pet_talents[tree].n)
+                    + (pc_isExotic(f) ? ', exotic (needs Beast Mastery)' : '') + '</span>');
+            };
+            link.onmouseout  = $WH.Tooltip.hide;
+            pc_navIcons[f] = link;
+            $WH.ae(famBox, link);
+        });
 
         col.querySelector('.pc-tree-reset').onclick = function () { if (tree == pc_tree) pc_calcs[tree].resetAll(); };
         col.querySelector('.pc-tree-pick').onclick  = function () { if (tree != pc_tree) pc_pick(fams[0]); };
@@ -131,8 +148,7 @@ function pc_pick(family, build) {
         pc_loaded = true;
         $WH.ge('pc-classes').style.display = 'none';
         $WH.ge('pc-itself').className = 'pc-trees';
-        pc_buildNavbar();
-        pc_buildBanner();
+        pc_buildSpecBar();
         pc_buildSections();
     }
 
@@ -165,44 +181,7 @@ function pc_pick(family, build) {
     pc_update();
 }
 
-// ── Navbar: families by tree, build actions ───────────────────────
-function pc_buildNavbar() {
-    var navbar = $WH.ge('pc-navbar');
-    navbar.innerHTML = '';
-
-    var left = $WH.ce('div');
-    left.className = 'tc-navbar-left pc-navbar-left';
-    pc_groups().forEach(function (fams, tree) {
-        var group = $WH.ce('div');
-        group.className = 'pc-nav-group';
-        var icons = $WH.ce('div');
-        icons.className = 'pc-nav-icons';
-        fams.forEach(function (f) {
-            var link = $WH.ce('a');
-            link.href = 'javascript:;';
-            link.className = 'pc-nav-icon';
-            link.innerHTML = '<img src="' + g_staticUrl + '/images/wow/icons/medium/' + pc_esc(g_pet_icons[f]) + '.jpg" alt="" />';
-            link.onclick     = function () { pc_pick(f); return false; };
-            link.onmouseover = function () {
-                $WH.Tooltip.show(this, '<b>' + pc_esc(g_pet_families[f]) + '</b><br /><span class="q0">' + pc_esc(g_pet_talents[tree].n)
-                    + (pc_isExotic(f) ? ', exotic (needs Beast Mastery)' : '') + '</span>');
-            };
-            link.onmouseout  = $WH.Tooltip.hide;
-            pc_navIcons[f] = link;
-            $WH.ae(icons, link);
-        });
-        var label = $WH.ce('div');
-        label.className = 'pc-nav-label pc-tree' + tree;
-        $WH.st(label, g_pet_talents[tree].n);
-        $WH.ae(group, icons);
-        $WH.ae(group, label);
-        $WH.ae(left, group);
-    });
-    $WH.ae(navbar, left);
-
-    navbar.style.display = '';
-}
-
+// ── Build actions (in the spec bar) ──────────────────────────────
 function pc_buildButtons(bar) {
     var right = $WH.ce('div');
     right.className = 'tc-navbar-right pc-buttons';
@@ -245,14 +224,8 @@ function pc_copyLink() {
         prompt('Copy this link:', url);
 }
 
-// ── Banner ────────────────────────────────────────────────────────
-function pc_buildBanner() {
-    var banner = $WH.ge('pc-banner');
-    banner.innerHTML = '<div class="tc-banner-bg" id="pc-banner-bg"></div>'
-        + '<div class="tc-banner-overlay"><span id="pc-banner-name" class="pc-banner-name"></span><span id="pc-banner-tree" class="pc-banner-tree"></span></div>';
-    banner.style.display = '';
-
-    // hunter spec + points, above the trees
+// ── Hunter spec + points bar, above the trees ─────────────────────
+function pc_buildSpecBar() {
     var bar = $WH.ce('div');
     bar.id = 'pc-specbar';
     bar.innerHTML = '<span class="pc-specs"></span><span class="pc-spec-name"></span><span class="pc-spec-tree"></span>'
@@ -295,16 +268,11 @@ function pc_toggleBonus(tree) {
     }
 }
 
-// family related parts: banner, navbar highlight, abilities, tameable beasts
+// family related parts: icon highlight, abilities, tameable beasts
 function pc_updateFamily() {
     for (var f in pc_navIcons)
         pc_navIcons[f].classList.toggle('on', f == pc_classId);
     $WH.ge('pc-btn-family').href = '?pet=' + pc_classId;
-
-    var gc = PC_TREE_COLORS[pc_tree] || ['#2A2A2A', '#0A0A0A'];
-    $WH.ge('pc-banner-bg').style.backgroundImage = 'radial-gradient(ellipse 35% 200% at center, ' + gc[0] + ' 0%, ' + gc[1] + ' 55%, #000 100%)';
-    $WH.ge('pc-banner-name').innerHTML = '<img src="' + g_staticUrl + '/images/wow/icons/large/' + pc_esc(g_pet_icons[pc_classId]) + '.jpg" alt="" />' + pc_esc(g_pet_families[pc_classId]);
-    $WH.ge('pc-banner-tree').innerHTML = pc_esc(g_pet_talents[pc_tree].n) + (pc_isExotic(pc_classId) ? ' &middot; Exotic' : '');
 
     pc_updateAbilities();
     pc_updateTameable();
@@ -349,19 +317,33 @@ function pc_updateTameable() {
         return;
     }
 
-    var html = '<div class="tc-tr-bar"><input type="search" class="tc-tr-filter pc-filter" placeholder="Filter beasts..." /></div><div class="pc-tame">';
+    // beasts that look the same (same model and skin) share a number; the colours repeat after 16
+    var looks = {}, nLooks = 0;
     pets.forEach(function (p) {
+        var key = p.skin || ('d' + p.displayId);
+        if (!looks[key]) looks[key] = ++nLooks;
+        p._look = looks[key];
+    });
+
+    var html = '<div class="tc-tr-bar"><input type="search" class="tc-tr-filter pc-filter" placeholder="Filter beasts..." />'
+             + '<span class="tc-tr-count">' + nLooks + ' looks, the number shows which beasts share one</span></div><div class="pc-tame">';
+    var head = '<div class="pc-tame-row pc-tame-head"><span>#</span><span>Name</span><span></span><span class="pc-tame-lvl">Level</span><span>Preview</span></div>',
+        half = Math.ceil(pets.length / 2);
+    pets.forEach(function (p, i) {
+        if (i == 0 || (i == half && pets.length > 12))     // two columns, each with its header
+            html += (i ? '</div>' : '') + '<div class="pc-tame-col">' + head;
         var lvl = p.minlevel == p.maxlevel ? p.minlevel : p.minlevel + ' - ' + p.maxlevel,
             cls = { 1: ['Elite', 'q2'], 2: ['Rare Elite', 'q3'], 4: ['Rare', 'q3'] }[p.classification];
         html += '<div class="pc-tame-row" data-npc="' + p.id + '" data-name="' + pc_esc(p.name.toLowerCase()) + '">'
+              + '<span class="pc-look pc-look-' + ((p._look - 1) % 16 + 1) + '" title="Look ' + p._look + '">' + p._look + '</span>'
               + '<a class="pc-tame-name" href="?npc=' + p.id + '">' + pc_esc(p.name) + '</a>'
               + (cls ? '<span class="pc-tame-cls ' + cls[1] + '">' + cls[0] + '</span>' : '<span></span>')
               + '<span class="pc-tame-lvl">' + lvl + '</span>'
               + '<a class="pc-tame-3d" href="javascript:;">View in 3D</a></div>';
     });
-    body.innerHTML = html + '</div>';
+    body.innerHTML = html + '</div></div>';
 
-    body.querySelectorAll('.pc-tame-row').forEach(function (row) {
+    body.querySelectorAll('.pc-tame-row[data-npc]').forEach(function (row) {
         var id = +row.getAttribute('data-npc'), p = g_pets[id];
         row.onmouseover = function (e) {
             $WH.Tooltip.showAtCursor(e, '<div class="pc-preview"><b>' + pc_esc(p.name) + '</b><br /><span class="q0">Level ' + (p.minlevel == p.maxlevel ? p.minlevel : p.minlevel + ' - ' + p.maxlevel)
@@ -376,7 +358,7 @@ function pc_updateTameable() {
     });
     body.querySelector('.pc-filter').oninput = function () {
         var q = this.value.trim().toLowerCase();
-        body.querySelectorAll('.pc-tame-row').forEach(function (r) { r.style.display = !q || r.getAttribute('data-name').indexOf(q) != -1 ? '' : 'none'; });
+        body.querySelectorAll('.pc-tame-row[data-npc]').forEach(function (r) { r.style.display = !q || r.getAttribute('data-name').indexOf(q) != -1 ? '' : 'none'; });
     };
 }
 
@@ -401,7 +383,8 @@ function pc_update() {
     var bar = $WH.ge('pc-specbar'), spec = PC_SPECS.filter(function (s) { return s[0] == pc_spec; })[0];
     bar.querySelectorAll('.pc-spec').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-spec') == pc_spec); });
     bar.querySelector('.pc-spec-name').innerHTML = spec ? '<span class="' + spec[3] + '">' + spec[1] + '</span>' : '<span class="q0">No hunter spec</span>';
-    bar.querySelector('.pc-spec-tree').innerHTML = pc_esc(g_pet_talents[pc_tree].n)
+    bar.querySelector('.pc-spec-tree').innerHTML = '<img src="' + g_staticUrl + '/images/wow/icons/small/' + pc_esc(g_pet_icons[pc_classId]) + '.jpg" alt="" /><b>'
+        + pc_esc(g_pet_families[pc_classId]) + '</b> <span class="pc-tree' + pc_tree + '"><span class="pc-tree-name">' + pc_esc(g_pet_talents[pc_tree].n) + '</span></span>'
         + (pc_isExotic(pc_classId) ? ' <span class="' + (pc_spec == 'b' ? 'q0' : 'q10') + '" title="Exotic beasts need the Beast Mastery spec">(exotic)</span>' : '');
     bar.querySelector('.pc-reqlvl').textContent = req || '-';
     bar.querySelector('.pc-ptsleft').textContent = total - spent;
