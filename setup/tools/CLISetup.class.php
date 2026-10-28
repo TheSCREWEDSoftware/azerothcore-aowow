@@ -44,7 +44,7 @@ class CLISetup
         'log'     => [self::OPT_GRP_MISC, [],    self::ARGV_REQUIRED,                    'Write CLI ouput to file.',                                                                                  '=logfile'       ],
         'help'    => [self::OPT_GRP_MISC, ['h'], self::ARGV_NONE,                        'Display contextual help, if available.',                                                                    ''               ],
         'force'   => [self::OPT_GRP_MISC, ['f'], self::ARGV_NONE,                        'Force existing files to be overwritten.',                                                                   ''               ],
-        'locales' => [self::OPT_GRP_MISC, [],    self::ARGV_ARRAY | self::ARGV_OPTIONAL, 'Limit setup to enUS, frFR, deDE, zhCN, esES and/or ruRU. (does not override config settings)',              '=<regionCodes,>'],
+        'locales' => [self::OPT_GRP_MISC, [],    self::ARGV_ARRAY | self::ARGV_OPTIONAL, 'Limit setup to enUS, frFR, deDE, zhCN, esES and/or ruRU, or all of the enabled ones. (does not override config settings)',              '=<regionCodes,|all>'],
         'datasrc' => [self::OPT_GRP_MISC, [],    self::ARGV_OPTIONAL,                    'Manually point to directory with extracted game files. Accepts absolute paths or paths relative to setup/. (default: setup/mpqdata/)', '=path/'         ],
         'batch-size' => [self::OPT_GRP_MISC, [],   self::ARGV_REQUIRED,                    'Number of rows per fetch/insert batch. (default: 1000)',                                                                '=n'                ],
         'beep'      => [self::OPT_GRP_MISC, [],    self::ARGV_NONE,                        'Enable terminal bell after each input prompt.',                                                                         ''                  ],
@@ -173,8 +173,9 @@ class CLISetup
         if (isset(self::$opts['locales']))
         {
             $opt = array_map('strtolower', self::$opts['locales']);
+            $all = in_array('all', $opt);                   // --locales=all: every locale enabled in the config
             foreach (Locale::cases() as $loc)
-                if ($loc->validate() && array_intersect(array_map('strtolower', $loc->gameDirs()), $opt))
+                if ($loc->validate() && ($all || array_intersect(array_map('strtolower', $loc->gameDirs()), $opt)))
                     self::$locales[$loc->value] = $loc;
         }
         if (!self::$locales)
