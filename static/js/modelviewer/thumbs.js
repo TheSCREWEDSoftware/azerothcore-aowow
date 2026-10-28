@@ -10,7 +10,7 @@
  *   AoThumbs.generateList('appearances', button)                              every picture of a listview (staff)
  */
 var AoThumbs = (function () {
-    var SIZE = 256, stage = null, queue = Promise.resolve(), pending = 0, hooked = false, setCache = {};
+    var SIZE = 256, stage = null, queue = Promise.resolve(), pending = 0, hooked = false, setCache = {}, memo = {};
 
     function canStore() {
         return typeof g_user != 'undefined' && g_user.roles && (g_user.roles & U_GROUP_STAFF);
@@ -67,9 +67,12 @@ var AoThumbs = (function () {
         return setCache[id];
     }
 
-    // data url of the picture, or null; one at a time
+    // data url of the picture, or null; one at a time (each picture is drawn once per page)
     function render(type, id, extra) {
         extra = extra || {};
+        var key = type + ':' + id + ':' + (extra.slot || 0) + ':' + (extra.race || 0) + ':' + (extra.sex || 0);
+        if (memo[key])
+            return memo[key];
         var job = queue.then(function () {
             return AoViewer.ready().then(function () {
                 trackLoads();
@@ -99,6 +102,7 @@ var AoThumbs = (function () {
             return null;
         });
         queue = job;
+        memo[key] = job;
         return job;
     }
 
@@ -153,5 +157,24 @@ var AoThumbs = (function () {
         })();
     }
 
-    return { render: render, store: store, generateList: generateList, SIZE: SIZE };
+    // staff: draw and store every missing picture of a list of ids (type item|npc|object|itemset); progress(done, total, made)
+    function generateIds(type, ids, progress) {
+        var rows = ids.filter(function (v, i, a) { return v && a.indexOf(v) == i; }), total = rows.length, done = 0, made = 0;
+        return new Promise(function (finished) {
+            (function next() {
+                if (!rows.length) { finished(made); return; }
+                var id = rows.shift();
+                fetch(g_staticUrl + '/modelviewer/thumbs/' + type + '/' + id + '.png', { method: 'HEAD', cache: 'no-store' }).then(function (res) {
+                    if (res.ok) return false;
+                    return render(type, id).then(function (url) { return store(type, id, url); });
+                }).then(function (stored) {
+                    if (stored) made++;
+                    if (progress) progress(++done, total, made);
+                    next();
+                }, function () { if (progress) progress(++done, total, made); next(); });
+            })();
+        });
+    }
+
+    return { render: render, store: store, generateList: generateList, generateIds: generateIds, canStore: canStore, SIZE: SIZE };
 })();
