@@ -213,9 +213,9 @@ var AoViewer = (function () {
             '<div class="mv-box">' +
                 '<div class="mv-stage"><div class="mv-msg"></div>' +
                     '<div class="mv-tools">' +
-                        '<a class="mv-ico mv-bgbtn" title="Background">&#9680;</a>' +
-                        '<a class="mv-ico mv-pause" title="Pause / play">&#10074;&#10074;</a>' +
-                        '<a class="mv-ico mv-full" title="Full screen">&#x26F6;</a>' +
+                        '<a class="mv-ico mv-bgbtn">Background</a>' +
+                        '<a class="mv-ico mv-pause">Pause</a>' +
+                        '<a class="mv-ico mv-full">Full screen</a>' +
                     '</div>' +
                     '<div class="mv-bgmenu"></div>' +
                     '<div class="mv-help"><b>Model viewer</b>' +
@@ -224,22 +224,22 @@ var AoViewer = (function () {
                         '<p><b>Zoom:</b> mouse wheel</p>' +
                         '<p><b>Race / Body:</b> show worn items on a character, or <i>None</i> for the item on its own</p>' +
                         '<p><b>Animation:</b> play any animation the model has</p>' +
-                        '<p><b>Background</b> (&#9680;): pattern, plain colours, or transparent for screenshots</p>' +
+                        '<p><b>Background:</b> pattern, plain colours, or transparent for screenshots</p>' +
                         '<p><b>Screenshot:</b> saves the current view as a PNG</p>' +
                         '<p class="q0">Models and textures come from the game client. Esc closes the viewer.</p>' +
                         '<a class="mv-btn mv-help-close">Close help</a>' +
                     '</div>' +
                 '</div>' +
                 '<div class="mv-bar">' +
-                    '<a class="mv-btn mv-shot" title="Save a screenshot">&#128247; Screenshot</a>' +
+                    '<a class="mv-btn mv-shot" title="Save a screenshot">Screenshot</a>' +
                     '<select class="mv-race" title="Race"></select>' +
                     '<select class="mv-sex" title="Body"><option value="0">Body 1</option><option value="1">Body 2</option></select>' +
-                    '<a class="mv-btn mv-dr" title="Open in the dressing room">&#128085; Dressing Room</a>' +
+                    '<a class="mv-btn mv-dr" title="Open in the dressing room">Dressing Room</a>' +
                     '<span class="mv-sp"></span>' +
                     '<label class="mv-anim-l">Animation <select class="mv-anim"></select></label>' +
                 '</div>' +
                 '<div class="mv-foot"><span>Drag to rotate. Drag with right-click to pan. Scroll to zoom.</span>' +
-                    '<span><a class="mv-helpbtn">? Help</a> <a class="mv-close">&#10006; Close</a></span></div>' +
+                    '<span><a class="mv-helpbtn">Help</a> <a class="mv-close">Close</a></span></div>' +
             '</div>';
         document.body.appendChild(dlg);
         stage = new AoStage(dlg.querySelector('.mv-stage'));
@@ -250,7 +250,7 @@ var AoViewer = (function () {
         document.addEventListener('keydown', function (e) { if (e.key == 'Escape' && dlg.classList.contains('open')) hide(); });
         $('.mv-pause').onclick = function () {
             stage.paused = !stage.paused;
-            this.innerHTML = stage.paused ? '&#9654;' : '&#10074;&#10074;';
+            this.innerHTML = stage.paused ? 'Play' : 'Pause';
         };
         $('.mv-full').onclick = function () {
             if (document.fullscreenElement) document.exitFullscreen();

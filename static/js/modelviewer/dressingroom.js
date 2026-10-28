@@ -84,9 +84,9 @@ var AoDressing = (function () {
 
     function stageTools(box, stage) {
         var tools = el('div', 'mv-tools',
-            '<a class="mv-ico dr-bgbtn" title="Background">&#9680;</a>' +
-            '<a class="mv-ico dr-pause" title="Pause / play">&#10074;&#10074;</a>' +
-            '<a class="mv-ico dr-full" title="Full screen">&#x26F6;</a>');
+            '<a class="mv-ico dr-bgbtn">Background</a>' +
+            '<a class="mv-ico dr-pause">Pause</a>' +
+            '<a class="mv-ico dr-full">Full screen</a>');
         var menu = el('div', 'mv-bgmenu');
         AoStage.BACKGROUNDS.forEach(function (b) {
             var a = el('a', null, '<i class="mv-bg-' + b[0] + '"></i>' + b[1]);
@@ -98,7 +98,7 @@ var AoDressing = (function () {
         tools.querySelector('.dr-bgbtn').onclick = function () { menu.classList.toggle('open'); };
         tools.querySelector('.dr-pause').onclick = function () {
             stage.paused = !stage.paused;
-            this.innerHTML = stage.paused ? '&#9654;' : '&#10074;&#10074;';
+            this.innerHTML = stage.paused ? 'Play' : 'Pause';
         };
         tools.querySelector('.dr-full').onclick = function () {
             if (document.fullscreenElement) document.exitFullscreen();
@@ -144,7 +144,7 @@ var AoDressing = (function () {
                 '<div class="dr-tab dr-tab-help" style="display:none">' +
                     '<p><b>Items:</b> click a slot to search for anything that can be worn there; the &times; takes it off again.</p>' +
                     '<p><b>Character:</b> pick the race and body below the model, then skin, face and hair on the Character tab.</p>' +
-                    '<p><b>Model:</b> drag to rotate, right-drag to pan, scroll to zoom; &#9680; changes the background.</p>' +
+                    '<p><b>Model:</b> drag to rotate, right-drag to pan, scroll to zoom; Background changes the backdrop.</p>' +
                     '<p><b>Share:</b> the address of this page always holds the current outfit &ndash; copy it from the Outfit tab.</p>' +
                     '<p><b>Save:</b> signed in, you can save outfits; they show up under Database &rsaquo; Outfits and on the pages of their items.</p>' +
                 '</div>' +
@@ -403,7 +403,7 @@ var AoDressing = (function () {
         }).join('');
         box.innerHTML =
             '<label class="dr-field">Link to this outfit<span class="dr-row"><input class="dr-share" readonly><a class="mv-btn dr-copy" href="javascript:;">Copy</a></span></label>' +
-            '<div class="dr-acts"><a class="mv-btn dr-shot" href="javascript:;">&#128247; Screenshot</a> <a class="mv-btn dr-clear" href="javascript:;">Take everything off</a></div>' +
+            '<div class="dr-acts"><a class="mv-btn dr-shot" href="javascript:;">Screenshot</a> <a class="mv-btn dr-clear" href="javascript:;">Take everything off</a></div>' +
             '<h3>Save</h3>' +
             (cfg.signedIn
                 ? '<label class="dr-field">Name<input class="dr-name" maxlength="64" value="' + esc(o ? o.name : '') + '"></label>' +
