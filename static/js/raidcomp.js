@@ -217,13 +217,13 @@ var AoRaidComp = (function () {
         var h = location.hash.substr(1);
         if (h == hash) return false;
         hash = h;
-        var parts = h.split('~'), m = /^([vtw]?)(\d+)([ah]?)(?:-([0-9a-z.]*))?$/.exec(parts[0]);
+        var parts = h.split('~'), m = /^([vtw]?)(\d+)([ah]?)(s?)(?:-([0-9a-z.]*))?$/.exec(parts[0]);
         exp = m && m[1] ? m[1] : 'w';
         size = m && EXPANSIONS[exp].sizes.indexOf(+m[2]) != -1 ? +m[2] : EXPANSIONS[exp].sizes[0];
         faction = m && m[3] ? m[3] : 'a';
         layout  = m && m[4] ? 's' : 'r';
         slots = [];
-        (m && m[4] || '').split('').forEach(function (c, i) {
+        (m && m[5] || '').split('').forEach(function (c, i) {
             var n = c == '.' ? null : parseInt(c, 36);
             slots[i] = n != null && SPECS[n] && classOk(SPECS[n][0]) ? n : null;
         });
@@ -244,7 +244,7 @@ var AoRaidComp = (function () {
         var mem = members(), E = EXPANSIONS[exp], html = '<div class="rc-bar">';
 
         html += '<span class="rc-seg rc-exp">' + Object.keys(EXPANSIONS).map(function (k) {
-            return '<a href="javascript:;" data-exp="' + k + '"' + (exp == k ? ' class="on"' : '') + '>' + esc(EXPANSIONS[k].name) + '</a>';
+            return '<a href="javascript:;" data-exp="' + k + '" class="rc-exp-' + k + (exp == k ? ' on' : '') + '">' + esc(EXPANSIONS[k].name) + '</a>';
         }).join('') + '</span>';
         html += '<span class="rc-seg rc-size">' + E.sizes.slice().sort(function (a, b) { return a - b; }).map(function (n) {
             return '<a href="javascript:;" data-size="' + n + '"' + (size == n ? ' class="on"' : '') + '>' + n + ' players</a>';
