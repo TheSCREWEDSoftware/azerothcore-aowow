@@ -219,7 +219,15 @@ a.rc-gbuff b { position: absolute; right: -3px; bottom: -3px; font-size: 11px; c
 a.rc-btoggle { display: inline-block; padding: 6px 14px; border: 1px solid #444; border-radius: 4px; background: #141414; color: #ccc; font-weight: bold; font-size: 13px; text-decoration: none; margin-bottom: 10px; }
 a.rc-btoggle:hover { border-color: #ffd100; color: #fff; }
 
-.rc-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.rc-lists { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; align-items: start; margin-top: 12px; }
+.rc-lcol { display: flex; flex-direction: column; gap: 12px; }
+.tool-raidcomp a.rc-spell { display: grid; grid-template-columns: 18px 1fr auto auto; align-items: center; gap: 8px; padding: 4px 10px; font-size: 12px; color: #777; text-decoration: none; }
+a.rc-spell:hover { background: rgba(255, 255, 255, .05); }
+.tool-raidcomp a.rc-spell.on { color: #ddd; }
+a.rc-spell img { width: 18px; height: 18px; border: 1px solid #000; border-radius: 3px; opacity: .45; }
+a.rc-spell.on img { opacity: 1; }
+a.rc-spell b { color: #5cf25c; font-size: 12px; }
+a.rc-spell .rc-bsrc img { width: 14px; height: 14px; border: none; }
 .rc-list { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; overflow: hidden; }
 .rc-lhead { display: flex; justify-content: space-between; padding: 7px 12px; background: #181818; border-bottom: 1px solid #2a2a2a; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: .06em; color: #c8c8c8; }
 .rc-lhead span { color: #888; }

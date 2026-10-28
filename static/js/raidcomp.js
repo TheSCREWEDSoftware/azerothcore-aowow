@@ -45,6 +45,29 @@ var AoRaidComp = (function () {
         ['Mana Tide Totem',  16190, 'spell_frost_summonwaterelemental', [[7, 'resto']]],
         ['Tranquility',      48447, 'spell_nature_tranquility',         [[11, '']]]
     ];
+    // raid utility and cooldown spells: name, spell, icon, [[class, spec key or '']], expansions that have it
+    var SPELLS = [
+        ['Rebirth',                48477, 'spell_nature_reincarnation',       [[11, '']],      'vtw'],
+        ['Raise Ally',             61999, 'spell_shadow_deadofnight',         [[6, '']],       'w'],
+        ['Soulstone Resurrection', 47883, 'spell_shadow_soulgem',             [[9, '']],       'vtw'],
+        ['Innervate',              29166, 'spell_nature_lightning',           [[11, '']],      'vtw'],
+        ['Hymn of Hope',           64901, 'spell_holy_symbolofhope',          [[5, '']],       'w'],
+        ['Divine Hymn',            64843, 'spell_holy_divinehymn',            [[5, '']],       'w'],
+        ['Power Infusion',         10060, 'spell_holy_powerinfusion',         [[5, 'disc']],   'vtw'],
+        ['Pain Suppression',       33206, 'spell_holy_painsupression',        [[5, 'disc']],   'tw'],
+        ['Guardian Spirit',        47788, 'spell_holy_guardianspirit',        [[5, 'holy']],   'w'],
+        ['Mass Dispel',            32375, 'spell_arcane_massdispel',          [[5, '']],       'tw'],
+        ['Hand of Sacrifice',       6940, 'spell_holy_sealofsacrifice',       [[2, '']],       'w'],
+        ['Hand of Protection',     10278, 'spell_holy_sealofprotection',      [[2, '']],       'w'],
+        ['Divine Sacrifice',       64205, 'spell_holy_powerwordbarrier',      [[2, 'prot']],   'w'],
+        ['Aura Mastery',           31821, 'spell_holy_auramastery',           [[2, 'holy']],   'w'],
+        ['Lay on Hands',           48788, 'spell_holy_layonhands',            [[2, '']],       'vtw'],
+        ['Anti-Magic Zone',        51052, 'spell_deathknight_antimagiczone',  [[6, 'unholy']], 'w'],
+        ['Misdirection',           34477, 'ability_hunter_misdirection',      [[3, '']],       'tw'],
+        ['Tricks of the Trade',    57934, 'ability_rogue_tricksofthetrade',   [[4, '']],       'w'],
+        ['Shattering Throw',       64382, 'ability_warrior_shatteringthrow',  [[1, '']],       'w'],
+        ['Ritual of Summoning',      698, 'spell_shadow_twilight',            [[9, '']],       'vtw']
+    ];
     var BENCH_AT = 40, BENCH = 25;                  // bench slots live at 40..64
     var ICON_EDIT = '<svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M11.7 1.3a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4L5.4 13.6 1.5 14.5l.9-3.9zM3.6 11.2l-.4 1.6 1.6-.4 7.6-7.6-1.2-1.2z"/></svg>';
     var ICON_DEL  = '<svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M3.3 2.3 8 7l4.7-4.7 1 1L9 8l4.7 4.7-1 1L8 9l-4.7 4.7-1-1L7 8 2.3 3.3z"/></svg>';
@@ -312,7 +335,7 @@ var AoRaidComp = (function () {
 
         // buffs and debuffs below
         var D = DATA[exp];
-        html += '<div class="rc-lists">' + list('Buffs', D.buffs, mem) + list('Debuffs', D.debuffs, mem) + '</div>';
+        html += '<div class="rc-lists"><div class="rc-lcol">' + list('Buffs', D.buffs, mem) + list('Debuffs', D.debuffs, mem) + '</div>' + spells(mem) + '</div>';
 
         el.innerHTML = html;
         bind(mem);
@@ -390,6 +413,19 @@ var AoRaidComp = (function () {
                  }).join('') + '</span></div>';
         });
         return '<div class="rc-list"><div class="rc-lhead">' + title + ' <span>' + have + ' / ' + defs.length + '</span></div><div class="rc-lgrid">' + rows.join('') + '</div></div>';
+    }
+
+    // utility spells: how many in the raid can cast each, with the classes that have it
+    function spells(mem) {
+        var host = g_host.replace(/\/?$/, '/'), list = SPELLS.filter(function (sp) { return sp[4].indexOf(exp) != -1 && sp[3].some(function (src) { return classOk(src[0]); }); });
+        var have = 0, rows = list.map(function (sp) {
+            var n = mem.filter(function (m) { return sp[3].some(function (src) { return provides(m, src); }); }).length;
+            if (n) have++;
+            return '<a href="' + host + '?spell=' + sp[1] + '" class="rc-spell' + (n ? ' on' : '') + '"><img src="' + g_staticUrl + '/images/wow/icons/small/' + sp[2] + '.jpg" alt="" />'
+                 + '<span class="rc-bname">' + esc(sp[0]) + '</span><b>' + (n ? n + 'x' : '') + '</b>'
+                 + '<span class="rc-bsrc">' + sp[3].map(function (src) { return '<img src="' + classIcon(src[0]) + '" class="' + (n ? 'on' : '') + '" alt="" />'; }).join('') + '</span></a>';
+        });
+        return '<div class="rc-list"><div class="rc-lhead">Spells <span>' + have + ' / ' + list.length + '</span></div>' + rows.join('') + '</div>';
     }
 
     // what a spec brings, for its tooltip
