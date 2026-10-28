@@ -1220,7 +1220,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
         $spawns = DB::World()->select(
            'SELECT c.`position_x` AS "x", c.`position_y` AS "y", ct.`minlevel`, ct.`maxlevel`, ct.`faction`
             FROM   creature c
-            JOIN   creature_template ct ON ct.`entry` = c.`id1`
+            JOIN   creature_template ct ON ct.`entry` = c.`id`
             WHERE  c.`map` = ?d AND c.`position_x` BETWEEN ?f AND ?f AND c.`position_y` BETWEEN ?f AND ?f AND
                    ct.`npcflag` = 0 AND c.`npcflag` = 0 AND ct.`type` NOT IN (8, 12) AND ct.`minlevel` > 0 AND
                    (ct.`unit_flags` & ?d) = 0 AND (c.`unit_flags` & ?d) = 0 AND (ct.`flags_extra` & ?d) = 0 AND
