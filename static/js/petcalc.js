@@ -308,7 +308,7 @@ function pc_familyPets(family) {
 }
 
 // ── Tameable beasts of the family: look groups, filter, sort ───────
-var pc_tame = { sort: 'level', desc: false, look: 0, unobtainable: true, q: '' };
+var pc_tame = { sort: 'level', desc: false, look: 0, unobtainable: false, q: '' };
 
 function pc_level(p) {
     return p.minlevel == p.maxlevel ? '' + p.minlevel : p.minlevel + ' - ' + p.maxlevel;
@@ -377,7 +377,7 @@ function pc_updateTameable() {
 }
 
 function pc_renderTameable() {
-    var body = $WH.ge('pc-sec-tameable'), t = pc_tame, cols = [['look', '#'], ['id', 'ID'], ['name', 'Name'], ['level', 'Level'], ['location', 'Location'], ['react', 'React'], ['', 'Preview']];
+    var body = $WH.ge('pc-sec-tameable'), t = pc_tame, cols = [['look', '#'], ['id', 'ID'], ['name', 'Name'], ['level', 'Level'], ['location', 'Location'], ['react', 'React'], ['', '3D']];
     var list = t.pets.filter(function (p) {
         if (!t.unobtainable && pc_unobtainable(p)) return false;
         if (t.look && p._look != t.look) return false;
@@ -394,23 +394,27 @@ function pc_renderTameable() {
     }[t.sort];
     list.sort(function (a, b) { var r = cmp(a, b) || a.minlevel - b.minlevel || a.name.localeCompare(b.name); return t.desc ? -r : r; });
 
-    var html = '<div class="pc-tame-row pc-tame-head">' + cols.map(function (c) {
+    var head = '<div class="pc-tame-row pc-tame-head">' + cols.map(function (c) {
         return c[0] ? '<a href="javascript:;" data-sort="' + c[0] + '"' + (t.sort == c[0] ? ' class="on' + (t.desc ? ' desc' : '') + '"' : '') + '>' + c[1] + '</a>' : '<span>' + c[1] + '</span>';
     }).join('') + '</div>';
-    list.forEach(function (p) {
+    var html = '', half = list.length > 10 ? Math.ceil(list.length / 2) : list.length;   // two columns, each with the header (sorted top to bottom, then the second)
+    list.forEach(function (p, i) {
+        if (i == 0 || i == half)
+            html += (i ? '</div>' : '') + '<div class="pc-tame-col">' + head;
         var cls = { 1: ['Elite', 'q2'], 2: ['Rare Elite', 'q3'], 4: ['Rare', 'q3'] }[p.classification], unob = pc_unobtainable(p);
         html += '<div class="pc-tame-row' + (unob ? ' unob' : '') + '" data-npc="' + p.id + '">'
               + (p._look ? '<a href="javascript:;" class="pc-look pc-look-' + ((p._look - 1) % 16 + 1) + '" title="Show only group ' + p._look + '">' + p._look + '</a>' : '<span></span>')
               + '<span class="pc-tame-id">' + p.id + '</span>'
-              + '<span class="pc-tame-namecell"><a class="pc-tame-name" href="?npc=' + p.id + '">' + pc_esc(p.name) + '</a>'
+              + '<span class="pc-tame-namecell"><a class="pc-tame-name" rel="np" href="?npc=' + p.id + '">' + pc_esc(p.name) + '</a>'
               + (cls ? ' <span class="pc-tame-cls ' + cls[1] + '">' + cls[0] + '</span>' : '') + (unob ? ' <span class="pc-tame-cls q0">Unobtainable</span>' : '') + '</span>'
               + '<span class="pc-tame-lvl">' + pc_level(p) + '</span>'
               + '<span class="pc-tame-loc">' + (pc_zoneText(p) ? pc_esc(pc_zoneText(p)) : '<span class="q0">&mdash;</span>') + '</span>'
               + '<span class="pc-tame-react">' + pc_reactHtml(p) + '</span>'
-              + '<a class="pc-tame-3d" href="javascript:;">View in 3D</a></div>';
+              + '<a class="pc-tame-3d" href="javascript:;" title="View in 3D">3D</a></div>';
     });
     if (!list.length)
-        html += '<div class="pc-tame-empty q0">No beasts match.</div>';
+        html += '<div class="pc-tame-col">' + head + '<div class="pc-tame-empty q0">No beasts match.</div>';
+    html += '</div>';
 
     var table = body.querySelector('.pc-tame-table');
     table.innerHTML = html;
@@ -447,7 +451,7 @@ function pc_buildAllTameable() {
     var box = $WH.ce('div');
     box.className = 'tc-section pc-sec-all';
     box.innerHTML = '<div class="tc-section-header">All tameable beasts<a href="javascript:;" class="tc-nav-btn pc-saveall" style="display:none">Save all previews</a></div><div class="tc-section-body">'
-        + '<label class="pc-check pc-all-unob"><input type="checkbox" checked /> Show unobtainable</label><div id="lv-pc-alltame" class="listview"></div></div>';
+        + '<label class="pc-check pc-all-unob"><input type="checkbox" /> Show unobtainable</label><div id="lv-pc-alltame" class="listview"></div></div>';
     $WH.ae($WH.ge('pc-sections'), box);
 
     var data = [];
@@ -506,7 +510,8 @@ function pc_buildAllTameable() {
             },
             sortFunc: function (a, b) { return a.displayId - b.displayId; }
         }],
-        sort: ['name']
+        sort: ['name'],
+        customFilter: function (row) { return row.location.length > 0; }      // unobtainable ones (no spawn) hidden until asked for
     });
 
     // staff: draw the model picture of every tameable beast that has none yet and store it, so every visitor gets it at once

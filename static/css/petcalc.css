@@ -127,7 +127,8 @@ a.pc-row img { width: 18px; height: 18px; border-radius: 3px; box-shadow: 0 0 0 
 a.pc-look-chip { font-size: 12px; color: #ddd; padding: 2px 6px; border: 1px solid #444; border-radius: 3px; }
 a.pc-look-chip:hover { border-color: #ffd100; color: #fff; }
 .pc-tame-count { margin-left: auto; }
-.pc-tame-row { display: grid; grid-template-columns: 30px 56px minmax(180px, 1.4fr) 70px minmax(140px, 1fr) 50px 80px; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 3px; }
+.pc-tame-table { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 0 18px; align-items: start; }
+.pc-tame-row { display: grid; grid-template-columns: 24px 42px minmax(110px, 1.3fr) 48px minmax(80px, 1fr) 32px 22px; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 3px; }
 .pc-tame-row:not(.pc-tame-head):hover { background: rgba(255, 255, 255, .06); }
 .pc-tame-row.unob { opacity: .6; }
 .pc-tame-head { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #777; border-bottom: 1px solid #2a2a2a; border-radius: 0; margin-bottom: 2px; }
@@ -136,7 +137,7 @@ a.pc-look-chip:hover { border-color: #ffd100; color: #fff; }
 .pc-tame-head a.on::after { content: ' \25B2'; font-size: 8px; }
 .pc-tame-head a.on.desc::after { content: ' \25BC'; }
 .pc-tame-id { font-size: 11px; color: #888; }
-.pc-tame-namecell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-tame-namecell { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pc-tame-cls { font-size: 11px; }
 .pc-tame-lvl { font-size: 12px; color: #bbb; text-align: right; }
 .pc-tame-loc { font-size: 12px; color: #ccc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
