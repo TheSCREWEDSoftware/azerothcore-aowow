@@ -70,40 +70,12 @@ function pc_init() {
             if (g_zones[z] == null)
                 g_zones[z] = g_pet_zones[z];
 
-    var inner = $WH.ge('pc-classes-inner'), groups = pc_groups();
-
-    $WH.ge('pc-classes').className = 'choose';
-    var title = $WH.ce('p');
-    title.textContent = inner.textContent.trim();          // "Choose a pet family:" from the template
-    $WH.ee(inner);
-    $WH.ae(inner, title);
-
-    // choose screen: the three trees side by side, their families below the tree name
-    var wrap = $WH.ce('div');
-    wrap.className = 'pc-choose-groups';
-    groups.forEach(function (fams, tree) {
-        var col = $WH.ce('div');
-        col.className = 'pc-choose-group';
-        col.innerHTML = '<div class="pc-choose-head"><img src="' + pc_treeIcon(tree, 'medium') + '" alt="" />' + pc_esc(g_pet_talents[tree].n) + '</div>';
-        var list = $WH.ce('div');
-        list.className = 'pc-choose-list';
-        fams.forEach(function (f) {
-            var item = $WH.ce('a');
-            item.href = 'javascript:;';
-            item.className = 'pc-choose-item';
-            item.innerHTML = '<img src="' + g_staticUrl + '/images/wow/icons/medium/' + pc_esc(g_pet_icons[f]) + '.jpg" alt="" /><span>' + pc_esc(g_pet_families[f]) + '</span>'
-                           + (pc_isExotic(f) ? '<i>Exotic</i>' : '');
-            item.onclick = function () { pc_pick(f); };
-            $WH.ae(list, item);
-        });
-        $WH.ae(col, list);
-        $WH.ae(wrap, col);
-    });
-    $WH.ae(inner, wrap);
+    var groups = pc_groups();
+    $WH.ge('pc-classes').style.display = 'none';           // no separate choose screen: the trees are the start
 
     // the three trees
     var trees = $WH.ge('pc-itself');
-    trees.className = 'pc-trees choose';
+    trees.className = 'pc-trees none';
     groups.forEach(function (fams, tree) {
         var col = $WH.ce('div');
         col.className = 'pc-tree pc-tree' + tree;
@@ -111,7 +83,7 @@ function pc_init() {
         col.innerHTML = '<div class="pc-tree-head"><img src="' + pc_treeIcon(tree, 'medium') + '" alt="" /><span class="pc-tree-name">' + pc_esc(g_pet_talents[tree].n)
                       + '</span><span class="pc-tree-pts"></span></div><div class="pc-tree-calc"><div id="pc-calc-' + tree + '"></div></div>'
                       + '<a class="pc-tree-reset" href="javascript:;">Reset</a><div class="pc-tree-pick" title="Pick a ' + pc_esc(g_pet_talents[tree].n) + ' family"></div>'
-                      + '<div class="pc-tree-famsbox"><div class="pc-tree-famshead pc-tree' + tree + '"><span class="pc-tree-name">' + pc_esc(g_pet_talents[tree].n) + '</span></div><div class="pc-tree-fams"></div></div>';
+                      + '<div class="pc-tree-famsbox"><div class="pc-tree-famshead pc-tree' + tree + '"><span class="pc-tree-name">' + pc_esc(g_pet_talents[tree].n) + ' Pets</span></div><div class="pc-tree-fams"></div></div>';
         $WH.ae(trees, col);
 
         // the tree's families, below it
@@ -132,15 +104,20 @@ function pc_init() {
             $WH.ae(famBox, link);
         });
 
-        col.querySelector('.pc-tree-reset').onclick = function () { if (tree == pc_tree) pc_calcs[tree].resetAll(); };
-        col.querySelector('.pc-tree-pick').onclick  = function () { if (tree != pc_tree) pc_pick(fams[0]); };
+        col.querySelector('.pc-tree-reset').onclick = function () { if (tree == pc_tree || pc_tree < 0) pc_calcs[tree].resetAll(); };
+        col.querySelector('.pc-tree-pick').onclick  = function () { if (pc_tree >= 0 && tree != pc_tree) pc_pick(fams[0]); };
 
         var calc = new TalentCalc();
         calc.initialize('pc-calc-' + tree, { onChange: pc_onChange.bind(null, tree), mode: TalentCalc.MODE_PET });
-        calc.setClass(fams[0]);                             // shows the tree; locked until it is the chosen one
-        calc.setLock(true);
+        calc.setClass(fams[0]);                             // no family yet: every tree can be filled, the first point picks it
+        calc.setLock(false);
         pc_calcs[tree] = calc;
     });
+
+    pc_loaded = true;
+    pc_buildSpecBar();
+    pc_buildSections();
+    pc_update();
 
     pc_readPound();
     setInterval(pc_readPound, 1000);
@@ -151,14 +128,7 @@ function pc_pick(family, build) {
     var tree = pc_treeOf(family);
     $WH.Tooltip.hide();
 
-    if (!pc_loaded) {
-        pc_loaded = true;
-        $WH.ge('pc-classes').style.display = 'none';
-        $WH.ge('pc-itself').className = 'pc-trees';
-        pc_buildSpecBar();
-        pc_buildSections();
-    }
-
+    $WH.ge('pc-itself').className = 'pc-trees';
     pc_tree    = tree;
     pc_classId = family;
 
@@ -188,11 +158,30 @@ function pc_pick(family, build) {
     pc_update();
 }
 
+// the first point spent without a family: that tree and the family shown in it become the chosen ones
+function pc_adopt(tree, family) {
+    $WH.ge('pc-itself').className = 'pc-trees';
+    pc_tree    = tree;
+    pc_classId = family;
+    pc_calcs.forEach(function (calc, t) {
+        $WH.ge('pc-tree-' + t).classList.toggle('active', t == tree);
+        if (t == tree)
+            return;
+        calc.resetAll();
+        calc.setLock(true);
+    });
+    if ((pc_spec == 'b') != !!pc_calcs[tree].getBonusPoints())
+        pc_toggleBonus(tree);
+    PageTemplate.set({ breadcrumb: [1, 2, family] });
+    pc_updateFamily();
+    pc_update();
+}
+
 // ── Build actions (in the spec bar) ──────────────────────────────
 function pc_buildButtons(bar) {
     var right = $WH.ce('div');
     right.className = 'tc-navbar-right pc-buttons';
-    [['pc-btn-undo', 'Undo', pc_undoBuild], ['pc-btn-reset', 'Reset', function () { pc_calcs[pc_tree].resetAll(); }],
+    [['pc-btn-undo', 'Undo', pc_undoBuild], ['pc-btn-reset', 'Reset', function () { if (pc_tree < 0) pc_calcs.forEach(function (c) { c.resetAll(); }); else pc_calcs[pc_tree].resetAll(); }],
      ['pc-btn-copy', 'Copy Link', pc_copyLink], ['pc-btn-link', 'Link', function () { prompt('Share this build:', location.href); }]].forEach(function (b) {
         var a = $WH.ce('a');
         a.href = 'javascript:;';
@@ -281,6 +270,7 @@ function pc_updateFamily() {
         pc_navIcons[f].classList.toggle('on', f == pc_classId);
     $WH.ge('pc-btn-family').href = '?pet=' + pc_classId;
 
+    pc_familyParts(true);
     pc_updateAbilities();
     pc_updateTameable();
 }
@@ -545,6 +535,9 @@ function pc_buildAllTameable() {
 
 // points, spec bar, chosen talents, hash and title
 function pc_update() {
+    if (pc_tree < 0)
+        return pc_updateNone();
+
     var calc = pc_calcs[pc_tree];
     if (!calc || pc_classId < 0)
         return;
@@ -590,14 +583,39 @@ function pc_update() {
     document.title = g_pet_families[pc_classId] + ' (' + spent + ') - ' + buff;
 }
 
+// no family chosen: every tree shows its points, the family parts are hidden
+function pc_updateNone() {
+    var bonus = pc_spec == 'b' ? 4 : 0, bar = $WH.ge('pc-specbar'), spec = PC_SPECS.filter(function (s) { return s[0] == pc_spec; })[0];
+    pc_calcs.forEach(function (c, t) {
+        $WH.ge('pc-tree-' + t).querySelector('.pc-tree-pts').innerHTML = '0 / ' + (16 + bonus);
+    });
+    bar.querySelectorAll('.pc-spec').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-spec') == pc_spec); });
+    bar.querySelector('.pc-spec-name').innerHTML = spec ? '<span class="' + spec[3] + '">' + spec[1] + '</span>' : '<span class="q0">No hunter spec</span>';
+    bar.querySelector('.pc-spec-tree').innerHTML = '<span class="q0">Pick a pet family or spend a point</span>';
+    bar.querySelector('.pc-reqlvl').textContent = '-';
+    bar.querySelector('.pc-ptsleft').textContent = 16 + bonus;
+    pc_familyParts(false);
+}
+
+// abilities, chosen talents and the family's tameable beasts only make sense with a family
+function pc_familyParts(on) {
+    var row = document.querySelector('#pc-sections .pc-sec-row'), tame = $WH.ge('pc-sec-tameable');
+    if (row) row.style.display = on ? '' : 'none';
+    if (tame) tame.parentNode.style.display = on ? '' : 'none';
+}
+
 function pc_onChange(tree, tc, info, data) {
-    if (tree != pc_tree || !pc_loaded)
+    if (!pc_loaded)
         return;
     if (info.locked) {                                      // a shared build opens locked: always edit here
-        tc.setLock(false);
+        if (pc_tree < 0 || tree == pc_tree)
+            tc.setLock(false);
         return;
     }
-    pc_update();
+    if (pc_tree < 0 && tc.getTalents().length)              // no family yet: the first point picks the tree (and its first family)
+        pc_adopt(tree, info.classId);
+    else if (tree == pc_tree || pc_tree < 0)
+        pc_update();
 }
 
 function pc_readPound() {

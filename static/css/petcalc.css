@@ -68,6 +68,7 @@ a.pc-spec.on { opacity: 1; border-color: #ffd100; box-shadow: 0 0 6px rgba(255, 
 .pc-spec-stat { color: #999; }
 .pc-spec-stat b { color: #fff; }
 #pc-specbar > span { white-space: nowrap; }
+#pc-specbar { flex-wrap: wrap; row-gap: 6px; }
 .pc-buttons { margin-left: auto; }
 
 /* ── the three trees ─────────────────────────────────────────────── */
@@ -179,3 +180,12 @@ a.pc-nav-icon.exotic { box-shadow: inset 0 -3px 0 #a335ee; }
 .pc-all-unob { margin: 0 0 6px 2px; }
 .pc-sec-all .tc-section-header .pc-saveall { text-transform: none; letter-spacing: 0; font-weight: normal; }
 .pc-preview img.ao-thumb-wait { opacity: .3; }
+
+/* no family chosen yet: all three trees in colour and open */
+.pc-trees.none .pc-tree .pc-tree-calc,
+.pc-trees.none .pc-tree .pc-tree-head img { filter: none !important; }
+.pc-trees.none .pc-tree .pc-tree-pick { display: none !important; }
+.pc-trees.none .pc-tree a.pc-tree-reset { opacity: 1; }
+.pc-trees.none .pc-tree0 .pc-tree-name { color: #ff7a52; }
+.pc-trees.none .pc-tree1 .pc-tree-name { color: #6aa8ff; }
+.pc-trees.none .pc-tree2 .pc-tree-name { color: #6ad67e; }
