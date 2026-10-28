@@ -1362,7 +1362,7 @@ var mn_tools = [
     [0,"Gear Planner [PH]",null],
     [10,"Item Finder","?item-finder"],
     [2,"Hunter Pet Calculator","?petcalc",mn_petCalc],
-    [0,"Quest Completion Tracker [PH]",null],
+    [14,"Quest Completion Tracker","?quest-tracker"],
     [11,"Raid Composition","?raid-composition"],
     [1,"Maps","?maps"],
     [,"Other",,,{colBreak:true}],

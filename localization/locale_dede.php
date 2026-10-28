@@ -119,6 +119,7 @@ $lang = array(
         'itemFinder'    => "Gegenstandsfinder",
         'raidComp'      => "Schlachtzugszusammenstellung",
         'discordWebhook' => "Discord-Webhook",
+        'questTracker'  => "Quest-Tracker",
         'chooseClass'   => "Wählt eine Klasse",
         'chooseFamily'  => "Wählt eine Tierart",
 

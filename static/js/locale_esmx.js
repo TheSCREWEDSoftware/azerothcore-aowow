@@ -1184,6 +1184,7 @@ var mn_tools = [
     [2,"Calculadora de mascotas","?petcalc",mn_petCalc],
     [10,"Buscador de objetos","?item-finder"],
     [11,"Composición de banda","?raid-composition"],
+    [14,"Seguimiento de misiones","?quest-tracker"],
     [3,"Comparación de objetos","?compare"],
     [5,"Perfiles","?profiler",[
         [0,"Personajes","?profiles"],

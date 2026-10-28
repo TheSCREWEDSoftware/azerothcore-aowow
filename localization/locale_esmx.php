@@ -119,6 +119,7 @@ $lang = array(
         'itemFinder'    => "Buscador de objetos",
         'raidComp'      => "Composición de banda",
         'discordWebhook' => "Webhook de Discord",
+        'questTracker'  => "Seguimiento de misiones",
         'chooseClass'   => "Escoge una clase",
         'chooseFamily'  => "Escoge una familia de mascota",
 

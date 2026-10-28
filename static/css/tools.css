@@ -103,3 +103,41 @@ a.rc-slot.full:hover { border-color: #c33; background: #2a1414; }
 .dc-events li { list-style: none; background: none !important; padding-left: 0 !important; }
 .dc-events li::marker { content: ''; }
 .tool-discord a.tf-find { margin-left: 0; }
+
+/* ── Quest Completion Tracker ────────────────────────────────────── */
+.tool-questtracker { margin-top: 10px; }
+.qt-main { display: flex; gap: 12px; align-items: flex-start; }
+.qt-zones { flex: 0 0 250px; background: #111; border: 1px solid #2c2c2c; border-radius: 6px; padding: 8px; position: sticky; top: 8px; }
+.qt-zones .tc-tr-filter, .qt-opts .tc-tr-filter { width: 100%; box-sizing: border-box; background: #1a1a1a; border: 1px solid #444; color: #ddd; padding: 4px 8px; border-radius: 3px; }
+.qt-opts .tc-tr-filter { width: 200px; }
+.qt-zlist { max-height: 70vh; overflow-y: auto; margin-top: 6px; }
+.qt-zgroup { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: #888; padding: 8px 6px 3px; }
+a.qt-zone { display: flex; justify-content: space-between; gap: 6px; padding: 2px 8px; color: #ddd; text-decoration: none; border-radius: 3px; font-size: 12px; }
+a.qt-zone:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+a.qt-zone.on { background: #2a2400; color: #ffd100; }
+a.qt-zone i { font-style: normal; font-size: 10px; color: #888; }
+a.qt-zone i.full { color: #5cf25c; }
+.qt-body { flex: 1; min-width: 0; background: #111; border: 1px solid #2c2c2c; border-radius: 6px; padding: 10px; }
+.qt-empty { padding: 20px; text-align: center; }
+.qt-head { display: flex; align-items: center; gap: 16px; margin-bottom: 10px; }
+.qt-title b { font-size: 18px; color: #fff; }
+.qt-progress { flex: 1; position: relative; height: 20px; background: #1d1d1d; border: 1px solid #333; border-radius: 10px; overflow: hidden; }
+.qt-progress i { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #2e7d32, #5cf25c); }
+.qt-progress span { position: relative; display: block; text-align: center; line-height: 20px; font-size: 12px; color: #fff; text-shadow: 0 0 3px #000; }
+.qt-opts { flex-wrap: wrap; gap: 12px; }
+.qt-opts select { background: #1a1a1a; color: #ddd; border: 1px solid #444; padding: 3px; border-radius: 3px; }
+.qt-acts { margin-left: auto; display: flex; gap: 5px; }
+.qt-list { margin-top: 6px; }
+.qt-row { display: grid; grid-template-columns: 22px 1fr 50px 40px 80px; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 3px; font-size: 12px; cursor: pointer; }
+.qt-row:not(.qt-rhead):hover { background: rgba(255, 255, 255, .05); }
+.qt-row.done a { color: #8a8a8a; text-decoration: line-through; }
+.qt-rhead { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #777; border-bottom: 1px solid #2a2a2a; cursor: default; }
+.qt-num { text-align: right; color: #bbb; }
+.qt-tag { font-size: 10px; color: #ffd100; border: 1px solid #555; border-radius: 3px; padding: 0 4px; margin-left: 4px; }
+.qt-io { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 12px; }
+.tool-questtracker a.tc-nav-btn, .tool-discord a.tc-nav-btn {
+    display: inline-block; padding: 4px 10px; font-size: 12px; background: #272727; border: 1px solid #484848;
+    color: #c0c0c0; text-decoration: none; border-radius: 3px; white-space: nowrap;
+}
+.tool-questtracker a.tc-nav-btn:hover { background: #3a3a3a; color: #fff; border-color: #777; }
+.tool-questtracker .pc-check { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #ccc; cursor: pointer; }

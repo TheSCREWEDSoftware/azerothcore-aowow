@@ -120,6 +120,7 @@ $lang = array(
         'itemFinder'    => "物品查找器",
         'raidComp'      => "團隊配置",
         'discordWebhook' => "Discord Webhook",
+        'questTracker'  => "任務完成追蹤",
         'chooseClass'   => "选择一个职业",
         'chooseFamily'  => "选择一个宠物家族",
 

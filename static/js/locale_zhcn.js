@@ -1230,6 +1230,7 @@ var mn_tools = [
     [2,"猎人宠物模拟器","?petcalc",mn_petCalc],
     [10,"物品查找器","?item-finder"],
     [11,"团队配置","?raid-composition"],
+    [14,"任务完成追踪","?quest-tracker"],
     [3,"物品比较","?compare"],
     [5,"Profiler","?profiler",[
         [0,"角色","?profiles"],

@@ -119,6 +119,7 @@ $lang = array(
         'itemFinder'    => "Поиск предметов",
         'raidComp'      => "Состав рейда",
         'discordWebhook' => "Вебхук Discord",
+        'questTracker'  => "Учёт заданий",
         'chooseClass'   => "Выберите класс",
         'chooseFamily'  => "Выберите семейство питомцев",
 

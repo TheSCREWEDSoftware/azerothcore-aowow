@@ -84,6 +84,9 @@ switch ($pageCall)
     case 'profiler':                                        // character profiler main page
     case 'quest':
     case 'quests':
+    case 'quest-tracker':                                   // tool: tick off the quests of a zone
+        if ($pageCall == 'quest-tracker')
+            $altClass = 'questtracker';
     case 'race':
     case 'races':
     case 'raid-composition':                                // tool: raid buffs and debuffs of a group

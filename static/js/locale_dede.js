@@ -1184,6 +1184,7 @@ var mn_tools = [
     [2,"Begleiterrechner","?petcalc",mn_petCalc],
     [10,"Gegenstandsfinder","?item-finder"],
     [11,"Schlachtzugszusammenstellung","?raid-composition"],
+    [14,"Quest-Tracker","?quest-tracker"],
     [3,"Gegenstandsvergleich","?compare"],
     [5,"Profiler","?profiler",[
         [0,"Charaktere","?profiles"],
