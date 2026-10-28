@@ -456,7 +456,7 @@ function pc_renderTameable() {
 function pc_buildAllTameable() {
     var box = $WH.ce('div');
     box.className = 'tc-section pc-sec-all';
-    box.innerHTML = '<div class="tc-section-header">All tameable beasts</div><div class="tc-section-body">'
+    box.innerHTML = '<div class="tc-section-header">All tameable beasts<a href="javascript:;" class="tc-nav-btn pc-saveall" style="display:none">Save all previews</a></div><div class="tc-section-body">'
         + '<label class="pc-check pc-all-unob"><input type="checkbox" checked /> Show unobtainable</label><div id="lv-pc-alltame" class="listview"></div></div>';
     $WH.ae($WH.ge('pc-sections'), box);
 
@@ -518,6 +518,23 @@ function pc_buildAllTameable() {
         }],
         sort: ['name']
     });
+
+    // staff: draw the model picture of every tameable beast that has none yet and store it, so every visitor gets it at once
+    var save = box.querySelector('.pc-saveall');
+    if (typeof AoThumbs != 'undefined' && AoThumbs.canStore()) {
+        save.style.display = '';
+        save.onclick = function () {
+            if (save.busy) return;
+            save.busy = true;
+            var ids = data.map(function (r) { return r.displayId; });
+            AoThumbs.generateIds('npc', ids, function (done, total, made) {
+                $WH.st(save, 'Saving previews: ' + done + ' / ' + total + ' (' + made + ' new)');
+            }).then(function (made) {
+                $WH.st(save, 'Previews saved: ' + made + ' new');
+                save.busy = false;
+            });
+        };
+    }
 
     box.querySelector('.pc-all-unob input').onchange = function () {
         var lv = g_listviews['pc-alltame'], on = this.checked;

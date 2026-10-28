@@ -177,3 +177,5 @@ a.pc-nav-icon.exotic { box-shadow: inset 0 -3px 0 #a335ee; }
 .pc-look-13 { --pg: #c23bff; } .pc-look-14 { --pg: #ffb36b; } .pc-look-15 { --pg: #a0e0ff; } .pc-look-16 { --pg: #ff3d8b; }
 
 .pc-all-unob { margin: 0 0 6px 2px; }
+.pc-sec-all .tc-section-header .pc-saveall { text-transform: none; letter-spacing: 0; font-weight: normal; }
+.pc-preview img.ao-thumb-wait { opacity: .3; }
