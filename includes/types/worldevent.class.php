@@ -69,10 +69,13 @@ class WorldEventList extends BaseType
         $row = DB::Aowow()->SelectRow('
             SELECT
                 IFNULL(h.name_loc0, e.description) AS name_loc0,
+                h.name_loc1,
                 h.name_loc2,
                 h.name_loc3,
                 h.name_loc4,
+                h.name_loc5,
                 h.name_loc6,
+                h.name_loc7,
                 h.name_loc8
             FROM
                 ?_events e

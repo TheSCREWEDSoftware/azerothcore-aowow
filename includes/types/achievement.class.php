@@ -36,8 +36,8 @@ class AchievementList extends BaseType
         $rewards = DB::World()->select('
             SELECT
                 ar.ID AS ARRAY_KEY, ar.TitleA, ar.TitleH, ar.ItemID, ar.Sender AS sender, ar.MailTemplateID,
-                ar.Subject AS subject_loc0, IFNULL(arl2.Subject, "") AS subject_loc2, IFNULL(arl3.Subject, "") AS subject_loc3, IFNULL(arl4.Subject, "") AS subject_loc4, IFNULL(arl6.Subject, "") AS subject_loc6, IFNULL(arl8.Subject, "") AS subject_loc8,
-                ar.Body    AS text_loc0,    IFNULL(arl2.Text,    "") AS text_loc2,    IFNULL(arl3.Text,    "") AS text_loc3,    IFNULL(arl4.Text,    "") AS text_loc4,    IFNULL(arl6.Text,    "") AS text_loc6,    IFNULL(arl8.Text,    "") AS text_loc8
+                ar.Subject AS subject_loc0, IFNULL(arl1.Subject, "") AS subject_loc1, IFNULL(arl2.Subject, "") AS subject_loc2, IFNULL(arl3.Subject, "") AS subject_loc3, IFNULL(arl4.Subject, "") AS subject_loc4, IFNULL(arl5.Subject, "") AS subject_loc5, IFNULL(arl6.Subject, "") AS subject_loc6, IFNULL(arl7.Subject, "") AS subject_loc7, IFNULL(arl8.Subject, "") AS subject_loc8,
+                ar.Body    AS text_loc0,    IFNULL(arl1.Text,    "") AS text_loc1, IFNULL(arl2.Text,    "") AS text_loc2,    IFNULL(arl3.Text,    "") AS text_loc3,    IFNULL(arl4.Text,    "") AS text_loc4, IFNULL(arl5.Text,    "") AS text_loc5,    IFNULL(arl6.Text,    "") AS text_loc6, IFNULL(arl7.Text,    "") AS text_loc7,    IFNULL(arl8.Text,    "") AS text_loc8
             FROM
                 achievement_reward ar
             LEFT JOIN
@@ -50,6 +50,12 @@ class AchievementList extends BaseType
                 achievement_reward_locale arl6 ON arl6.ID = ar.ID AND arl6.Locale = "esES"
             LEFT JOIN
                 achievement_reward_locale arl8 ON arl8.ID = ar.ID AND arl8.Locale = "ruRU"
+            LEFT JOIN
+                achievement_reward_locale arl1 ON arl1.ID = ar.ID AND arl1.Locale = "koKR"
+            LEFT JOIN
+                achievement_reward_locale arl5 ON arl5.ID = ar.ID AND arl5.Locale = "zhTW"
+            LEFT JOIN
+                achievement_reward_locale arl7 ON arl7.ID = ar.ID AND arl7.Locale = "esMX"
             WHERE
                 ar.ID IN (?a)',
             $this->getFoundIDs()

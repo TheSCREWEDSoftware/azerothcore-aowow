@@ -275,7 +275,7 @@ class QuestPage extends GenericPage
 
         if ($bcTargetId = intVal($this->subject->getField('breadcrumbForQuestId')))
         {
-            if ($bcTarget = DB::Aowow()->selectRow('SELECT `id` AS `typeId`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `id` = ?d', $bcTargetId))
+            if ($bcTarget = DB::Aowow()->selectRow('SELECT `id` AS `typeId`, `name_loc0`, `name_loc1`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc5`, `name_loc6`, `name_loc7`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `id` = ?d', $bcTargetId))
             {
                 $bcName = Util::localizedString($bcTarget, 'name');
                 $this->series[] = [
@@ -305,9 +305,9 @@ class QuestPage extends GenericPage
         while ($newLast = DB::Aowow()->selectCell('SELECT `nextQuestIdChain` FROM ?_quests WHERE `id` = ?d AND `id` <> `nextQuestIdChain`', $lastQuestId))
             $lastQuestId = $newLast;
 
-        $end = DB::Aowow()->selectRow('SELECT `id`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `id` = ?d', $lastQuestId ?: $this->typeId);
+        $end = DB::Aowow()->selectRow('SELECT `id`, `name_loc0`, `name_loc1`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc5`, `name_loc6`, `name_loc7`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `id` = ?d', $lastQuestId ?: $this->typeId);
         if (!$end)
-            $end = DB::Aowow()->selectRow('SELECT `id`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `id` = ?d', $this->typeId);
+            $end = DB::Aowow()->selectRow('SELECT `id`, `name_loc0`, `name_loc1`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc5`, `name_loc6`, `name_loc7`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `id` = ?d', $this->typeId);
 
         if (!$end)
             return;
@@ -321,7 +321,7 @@ class QuestPage extends GenericPage
 
         $prevStepIds = [$lastQuestId ?: $this->typeId];
         $visited     = array_fill_keys($prevStepIds, true);
-        while ($prevQuests = DB::Aowow()->select('SELECT `id`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `nextQuestIdChain` IN (?a) AND `id` <> `nextQuestIdChain` AND `breadcrumbForQuestId` = 0', $prevStepIds))
+        while ($prevQuests = DB::Aowow()->select('SELECT `id`, `name_loc0`, `name_loc1`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc5`, `name_loc6`, `name_loc7`, `name_loc8`, `reqRaceMask` FROM ?_quests WHERE `nextQuestIdChain` IN (?a) AND `id` <> `nextQuestIdChain` AND `breadcrumbForQuestId` = 0', $prevStepIds))
         {
             $step = [];
             foreach ($prevQuests as $pQuest)

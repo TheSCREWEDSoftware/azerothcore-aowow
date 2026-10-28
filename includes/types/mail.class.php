@@ -34,7 +34,7 @@ class MailList extends BaseType
 
     public static function getName($id)
     {
-        $n = DB::Aowow()->SelectRow('SELECT subject_loc0, subject_loc2, subject_loc3, subject_loc4, subject_loc6, subject_loc8 FROM ?_mails WHERE id = ?d', $id);
+        $n = DB::Aowow()->SelectRow('SELECT subject_loc0, subject_loc1, subject_loc2, subject_loc3, subject_loc4, subject_loc5, subject_loc6, subject_loc7, subject_loc8 FROM ?_mails WHERE id = ?d', $id);
         return Util::localizedString($n, 'subject');
     }
 

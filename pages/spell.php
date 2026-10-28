@@ -1323,7 +1323,7 @@ class SpellPage extends GenericPage
             return false;
 
         $item = DB::Aowow()->selectRow(
-           'SELECT    `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, i.`id`, ic.`name` AS `iconString`, `quality`
+           'SELECT    `name_loc0`, `name_loc1`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc5`, `name_loc6`, `name_loc7`, `name_loc8`, i.`id`, ic.`name` AS `iconString`, `quality`
             FROM      ?_items i
             LEFT JOIN ?_icons ic ON ic.`id` = i.`iconId`
             WHERE     i.`id` = ?d',
@@ -1366,7 +1366,7 @@ class SpellPage extends GenericPage
         $spells = DB::Aowow()->select(
            'SELECT `reagent1`,      `reagent2`,      `reagent3`,      `reagent4`,      `reagent5`,      `reagent6`,      `reagent7`,      `reagent8`,
                    `reagentCount1`, `reagentCount2`, `reagentCount3`, `reagentCount4`, `reagentCount5`, `reagentCount6`, `reagentCount7`, `reagentCount8`,
-                   `name_loc0`,     `name_loc2`,     `name_loc3`,     `name_loc4`,     `name_loc6`,     `name_loc8`,
+                   `name_loc0`,     `name_loc1`,     `name_loc2`,     `name_loc3`,     `name_loc4`, `name_loc5`,     `name_loc6`, `name_loc7`,     `name_loc8`,
                    `iconIdBak`,
                    s.`id` AS ARRAY_KEY, ic.`name` AS `iconString`
             FROM   ?_spell s
