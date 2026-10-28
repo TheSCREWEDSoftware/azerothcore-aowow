@@ -355,17 +355,20 @@ function pc_previewTip(e, p) {
 function pc_updateTameable() {
     var pets = pc_familyPets(pc_classId), body = $WH.ge('pc-sec-tameable');
 
-    // beasts that look the same (same model and skin) share a number; the colours repeat after 16
-    var looks = {}, nLooks = 0;
+    // beasts that look the same (same model and skin) share a number - only a look two or more beasts have;
+    // the colours repeat after 16
+    var count = {}, looks = {}, nLooks = 0, key = function (p) { return p.skin || ('d' + p.displayId); };
+    pets.forEach(function (p) { count[key(p)] = (count[key(p)] || 0) + 1; });
     pets.forEach(function (p) {
-        var key = p.skin || ('d' + p.displayId);
-        if (!looks[key]) looks[key] = ++nLooks;
-        p._look = looks[key];
+        var k = key(p);
+        if (count[k] < 2) { p._look = 0; return; }
+        if (!looks[k]) looks[k] = ++nLooks;
+        p._look = looks[k];
     });
     pc_tame.look = 0;
     pc_tame.pets = pets;
 
-    $WH.ge('pc-sec-hdr-tameable').innerHTML = 'Tameable <span class="tc-pts-left">' + pets.length + ' beasts, ' + nLooks + ' looks</span>';
+    $WH.ge('pc-sec-hdr-tameable').innerHTML = 'Tameable <span class="tc-pts-left">' + pets.length + ' beasts, ' + nLooks + ' shared looks</span>';
     if (!pets.length) {
         body.innerHTML = '<em class="q0">No tameable beasts found.</em>';
         return;
@@ -374,7 +377,7 @@ function pc_updateTameable() {
     body.innerHTML = '<div class="tc-tr-bar pc-tame-bar"><input type="search" class="tc-tr-filter pc-filter" placeholder="Filter by name, ID or zone..." />'
         + '<label class="pc-check"><input type="checkbox" class="pc-unob"' + (pc_tame.unobtainable ? ' checked' : '') + ' /> Show unobtainable</label>'
         + '<span class="pc-lookfilter"></span><span class="tc-tr-count pc-tame-count"></span></div>'
-        + '<div class="pc-tame-table"></div><div class="pc-tame-note q0">The coloured number groups beasts that look the same (same model and skin); click one to show only that group.</div>';
+        + '<div class="pc-tame-table"></div><div class="pc-tame-note q0">Beasts that look the same (same model and skin) share a coloured group number - beasts with a look of their own have none; click a number to show only that group.</div>';
 
     var f = body.querySelector('.pc-filter');
     f.value = pc_tame.q;
@@ -392,7 +395,7 @@ function pc_renderTameable() {
     });
 
     var cmp = {
-        look:     function (a, b) { return a._look - b._look; },
+        look:     function (a, b) { return (a._look || 1e9) - (b._look || 1e9); },
         id:       function (a, b) { return a.id - b.id; },
         name:     function (a, b) { return a.name.localeCompare(b.name); },
         level:    function (a, b) { return a.minlevel - b.minlevel || a.maxlevel - b.maxlevel; },
@@ -407,7 +410,7 @@ function pc_renderTameable() {
     list.forEach(function (p) {
         var cls = { 1: ['Elite', 'q2'], 2: ['Rare Elite', 'q3'], 4: ['Rare', 'q3'] }[p.classification], unob = pc_unobtainable(p);
         html += '<div class="pc-tame-row' + (unob ? ' unob' : '') + '" data-npc="' + p.id + '">'
-              + '<a href="javascript:;" class="pc-look pc-look-' + ((p._look - 1) % 16 + 1) + '" data-look="' + p._look + '" title="Show only look ' + p._look + '">' + p._look + '</a>'
+              + (p._look ? '<a href="javascript:;" class="pc-look pc-look-' + ((p._look - 1) % 16 + 1) + '" title="Show only group ' + p._look + '">' + p._look + '</a>' : '<span></span>')
               + '<span class="pc-tame-id">' + p.id + '</span>'
               + '<span class="pc-tame-namecell"><a class="pc-tame-name" href="?npc=' + p.id + '">' + pc_esc(p.name) + '</a>'
               + (cls ? ' <span class="pc-tame-cls ' + cls[1] + '">' + cls[0] + '</span>' : '') + (unob ? ' <span class="pc-tame-cls q0">Unobtainable</span>' : '') + '</span>'
@@ -423,7 +426,7 @@ function pc_renderTameable() {
     table.innerHTML = html;
     body.querySelector('.pc-tame-count').textContent = list.length + ' / ' + t.pets.length + ' beasts';
     body.querySelector('.pc-lookfilter').innerHTML = t.look
-        ? '<a href="javascript:;" class="pc-look-chip">Look <span class="pc-look pc-look-' + ((t.look - 1) % 16 + 1) + '">' + t.look + '</span> only &times;</a>' : '';
+        ? '<a href="javascript:;" class="pc-look-chip">Group <span class="pc-look pc-look-' + ((t.look - 1) % 16 + 1) + '">' + t.look + '</span> only &times;</a>' : '';
     var chip = body.querySelector('.pc-look-chip');
     if (chip) chip.onclick = function () { t.look = 0; pc_renderTameable(); };
 
@@ -440,7 +443,8 @@ function pc_renderTameable() {
         row.querySelector('.pc-tame-name').onmouseover = function (e) { pc_previewTip(e, p); };
         row.querySelector('.pc-tame-name').onmousemove = $WH.Tooltip.cursorUpdate;
         row.querySelector('.pc-tame-name').onmouseout  = $WH.Tooltip.hide;
-        row.querySelector('.pc-look').onclick = function () { t.look = t.look == p._look ? 0 : p._look; pc_renderTameable(); };
+        if (p._look)
+            row.querySelector('.pc-look').onclick = function () { t.look = t.look == p._look ? 0 : p._look; pc_renderTameable(); };
         row.querySelector('.pc-tame-3d').onclick = function () {
             $WH.Tooltip.hide();
             ModelViewer.show({ type: 1, typeId: id, displayId: p.displayId });
