@@ -64,6 +64,12 @@ function pc_familyFromBuild(build) {
 }
 
 function pc_init() {
+    // sub zones (starting areas ...) named for the location columns
+    if (typeof g_pet_zones != 'undefined')
+        for (var z in g_pet_zones)
+            if (g_zones[z] == null)
+                g_zones[z] = g_pet_zones[z];
+
     var inner = $WH.ge('pc-classes-inner'), groups = pc_groups();
 
     $WH.ge('pc-classes').className = 'choose';
@@ -105,7 +111,7 @@ function pc_init() {
         col.innerHTML = '<div class="pc-tree-head"><img src="' + pc_treeIcon(tree, 'medium') + '" alt="" /><span class="pc-tree-name">' + pc_esc(g_pet_talents[tree].n)
                       + '</span><span class="pc-tree-pts"></span></div><div class="pc-tree-calc"><div id="pc-calc-' + tree + '"></div></div>'
                       + '<a class="pc-tree-reset" href="javascript:;">Reset</a><div class="pc-tree-pick" title="Pick a ' + pc_esc(g_pet_talents[tree].n) + ' family"></div>'
-                      + '<div class="pc-tree-fams"></div>';
+                      + '<div class="pc-tree-famsbox"><div class="pc-tree-famshead pc-tree' + tree + '"><span class="pc-tree-name">' + pc_esc(g_pet_talents[tree].n) + '</span></div><div class="pc-tree-fams"></div></div>';
         $WH.ae(trees, col);
 
         // the tree's families, below it
@@ -117,8 +123,9 @@ function pc_init() {
             link.innerHTML = '<img src="' + g_staticUrl + '/images/wow/icons/medium/' + pc_esc(g_pet_icons[f]) + '.jpg" alt="" />';
             link.onclick     = function () { pc_pick(f); return false; };
             link.onmouseover = function () {
-                $WH.Tooltip.show(this, '<b>' + pc_esc(g_pet_families[f]) + '</b><br /><span class="q0">' + pc_esc(g_pet_talents[tree].n)
-                    + (pc_isExotic(f) ? ', exotic (needs Beast Mastery)' : '') + '</span>');
+                $WH.Tooltip.show(this, '<b>' + pc_esc(g_pet_families[f]) + '</b>' + (pc_isExotic(f) ? ' <span class="q4">(Exotic)</span>' : '')
+                    + '<br /><span class="q0">' + pc_esc(g_pet_talents[tree].n) + '</span>'
+                    + (pc_isExotic(f) ? '<br /><span class="' + (pc_spec == 'b' ? 'q' : 'q10') + '">Requires to be: Beast Mastery Spec</span>' : ''));
             };
             link.onmouseout  = $WH.Tooltip.hide;
             pc_navIcons[f] = link;
@@ -287,6 +294,7 @@ function pc_buildSections() {
         + '</div>'
         + '<div class="tc-section"><div class="tc-section-header" id="pc-sec-hdr-tameable">Tameable</div><div class="tc-section-body" id="pc-sec-tameable"></div></div>';
     wrap.style.display = '';
+    pc_buildAllTameable();
 }
 
 function pc_spellRow(id, extra) {
@@ -309,13 +317,43 @@ function pc_familyPets(family) {
     return list.sort(function (a, b) { return a.minlevel - b.minlevel || a.name.localeCompare(b.name); });
 }
 
+// ── Tameable beasts of the family: look groups, filter, sort ───────
+var pc_tame = { sort: 'level', desc: false, look: 0, unobtainable: true, q: '' };
+
+function pc_level(p) {
+    return p.minlevel == p.maxlevel ? '' + p.minlevel : p.minlevel + ' - ' + p.maxlevel;
+}
+
+// zone ids of a beast's spawns (g_pets keeps them as an object)
+function pc_zones(p) {
+    var l = p.location, out = [];
+    if (l) for (var k in l) out.push(+l[k]);
+    return out;
+}
+
+function pc_zoneText(p) {
+    return pc_zones(p).map(function (z) { return g_zones[z] || (typeof g_pet_zones != 'undefined' && g_pet_zones[z]) || ('Zone #' + z); }).join(', ');
+}
+
+function pc_reactHtml(p) {
+    var r = p.react || [], sides = [LANG.lvnpc_alliance || 'A', LANG.lvnpc_horde || 'H'];
+    return [0, 1].map(function (k) {
+        return r[k] == null ? '' : '<span class="' + (r[k] < 0 ? 'q10' : r[k] > 0 ? 'q2' : 'q') + '">' + sides[k] + '</span>';
+    }).join(' ');
+}
+
+// a beast with no spawn anywhere cannot be tamed in the game (test and event creatures)
+function pc_unobtainable(p) {
+    return !pc_zones(p).length;
+}
+
+function pc_previewTip(e, p) {
+    $WH.Tooltip.showAtCursor(e, '<div class="pc-preview"><b>' + pc_esc(p.name) + '</b><br /><span class="q0">Level ' + pc_level(p)
+        + (pc_zoneText(p) ? '<br />' + pc_esc(pc_zoneText(p)) : '') + '</span><img src="' + g_staticUrl + '/modelviewer/thumbs/npc/' + p.displayId + '.png" width="160" height="160" alt="" /></div>', 0, 0);
+}
+
 function pc_updateTameable() {
     var pets = pc_familyPets(pc_classId), body = $WH.ge('pc-sec-tameable');
-    $WH.ge('pc-sec-hdr-tameable').innerHTML = 'Tameable <span class="tc-pts-left">' + pets.length + ' beasts</span>';
-    if (!pets.length) {
-        body.innerHTML = '<em class="q0">No tameable beasts found.</em>';
-        return;
-    }
 
     // beasts that look the same (same model and skin) share a number; the colours repeat after 16
     var looks = {}, nLooks = 0;
@@ -324,41 +362,163 @@ function pc_updateTameable() {
         if (!looks[key]) looks[key] = ++nLooks;
         p._look = looks[key];
     });
+    pc_tame.look = 0;
+    pc_tame.pets = pets;
 
-    var html = '<div class="tc-tr-bar"><input type="search" class="tc-tr-filter pc-filter" placeholder="Filter beasts..." />'
-             + '<span class="tc-tr-count">' + nLooks + ' looks, the number shows which beasts share one</span></div><div class="pc-tame">';
-    var head = '<div class="pc-tame-row pc-tame-head"><span>#</span><span>Name</span><span></span><span class="pc-tame-lvl">Level</span><span>Preview</span></div>',
-        half = Math.ceil(pets.length / 2);
-    pets.forEach(function (p, i) {
-        if (i == 0 || (i == half && pets.length > 12))     // two columns, each with its header
-            html += (i ? '</div>' : '') + '<div class="pc-tame-col">' + head;
-        var lvl = p.minlevel == p.maxlevel ? p.minlevel : p.minlevel + ' - ' + p.maxlevel,
-            cls = { 1: ['Elite', 'q2'], 2: ['Rare Elite', 'q3'], 4: ['Rare', 'q3'] }[p.classification];
-        html += '<div class="pc-tame-row" data-npc="' + p.id + '" data-name="' + pc_esc(p.name.toLowerCase()) + '">'
-              + '<span class="pc-look pc-look-' + ((p._look - 1) % 16 + 1) + '" title="Look ' + p._look + '">' + p._look + '</span>'
-              + '<a class="pc-tame-name" href="?npc=' + p.id + '">' + pc_esc(p.name) + '</a>'
-              + (cls ? '<span class="pc-tame-cls ' + cls[1] + '">' + cls[0] + '</span>' : '<span></span>')
-              + '<span class="pc-tame-lvl">' + lvl + '</span>'
+    $WH.ge('pc-sec-hdr-tameable').innerHTML = 'Tameable <span class="tc-pts-left">' + pets.length + ' beasts, ' + nLooks + ' looks</span>';
+    if (!pets.length) {
+        body.innerHTML = '<em class="q0">No tameable beasts found.</em>';
+        return;
+    }
+
+    body.innerHTML = '<div class="tc-tr-bar pc-tame-bar"><input type="search" class="tc-tr-filter pc-filter" placeholder="Filter by name, ID or zone..." />'
+        + '<label class="pc-check"><input type="checkbox" class="pc-unob"' + (pc_tame.unobtainable ? ' checked' : '') + ' /> Show unobtainable</label>'
+        + '<span class="pc-lookfilter"></span><span class="tc-tr-count pc-tame-count"></span></div>'
+        + '<div class="pc-tame-table"></div><div class="pc-tame-note q0">The coloured number groups beasts that look the same (same model and skin); click one to show only that group.</div>';
+
+    var f = body.querySelector('.pc-filter');
+    f.value = pc_tame.q;
+    f.oninput = function () { pc_tame.q = this.value.trim().toLowerCase(); pc_renderTameable(); };
+    body.querySelector('.pc-unob').onchange = function () { pc_tame.unobtainable = this.checked; pc_renderTameable(); };
+    pc_renderTameable();
+}
+
+function pc_renderTameable() {
+    var body = $WH.ge('pc-sec-tameable'), t = pc_tame, cols = [['look', '#'], ['id', 'ID'], ['name', 'Name'], ['level', 'Level'], ['location', 'Location'], ['react', 'React'], ['', 'Preview']];
+    var list = t.pets.filter(function (p) {
+        if (!t.unobtainable && pc_unobtainable(p)) return false;
+        if (t.look && p._look != t.look) return false;
+        return !t.q || p.name.toLowerCase().indexOf(t.q) != -1 || ('' + p.id) == t.q || pc_zoneText(p).toLowerCase().indexOf(t.q) != -1;
+    });
+
+    var cmp = {
+        look:     function (a, b) { return a._look - b._look; },
+        id:       function (a, b) { return a.id - b.id; },
+        name:     function (a, b) { return a.name.localeCompare(b.name); },
+        level:    function (a, b) { return a.minlevel - b.minlevel || a.maxlevel - b.maxlevel; },
+        location: function (a, b) { return pc_zoneText(a).localeCompare(pc_zoneText(b)); },
+        react:    function (a, b) { return String(a.react).localeCompare(String(b.react)); }
+    }[t.sort];
+    list.sort(function (a, b) { var r = cmp(a, b) || a.minlevel - b.minlevel || a.name.localeCompare(b.name); return t.desc ? -r : r; });
+
+    var html = '<div class="pc-tame-row pc-tame-head">' + cols.map(function (c) {
+        return c[0] ? '<a href="javascript:;" data-sort="' + c[0] + '"' + (t.sort == c[0] ? ' class="on' + (t.desc ? ' desc' : '') + '"' : '') + '>' + c[1] + '</a>' : '<span>' + c[1] + '</span>';
+    }).join('') + '</div>';
+    list.forEach(function (p) {
+        var cls = { 1: ['Elite', 'q2'], 2: ['Rare Elite', 'q3'], 4: ['Rare', 'q3'] }[p.classification], unob = pc_unobtainable(p);
+        html += '<div class="pc-tame-row' + (unob ? ' unob' : '') + '" data-npc="' + p.id + '">'
+              + '<a href="javascript:;" class="pc-look pc-look-' + ((p._look - 1) % 16 + 1) + '" data-look="' + p._look + '" title="Show only look ' + p._look + '">' + p._look + '</a>'
+              + '<span class="pc-tame-id">' + p.id + '</span>'
+              + '<span class="pc-tame-namecell"><a class="pc-tame-name" href="?npc=' + p.id + '">' + pc_esc(p.name) + '</a>'
+              + (cls ? ' <span class="pc-tame-cls ' + cls[1] + '">' + cls[0] + '</span>' : '') + (unob ? ' <span class="pc-tame-cls q0">Unobtainable</span>' : '') + '</span>'
+              + '<span class="pc-tame-lvl">' + pc_level(p) + '</span>'
+              + '<span class="pc-tame-loc">' + (pc_zoneText(p) ? pc_esc(pc_zoneText(p)) : '<span class="q0">&mdash;</span>') + '</span>'
+              + '<span class="pc-tame-react">' + pc_reactHtml(p) + '</span>'
               + '<a class="pc-tame-3d" href="javascript:;">View in 3D</a></div>';
     });
-    body.innerHTML = html + '</div></div>';
+    if (!list.length)
+        html += '<div class="pc-tame-empty q0">No beasts match.</div>';
 
-    body.querySelectorAll('.pc-tame-row[data-npc]').forEach(function (row) {
-        var id = +row.getAttribute('data-npc'), p = g_pets[id];
-        row.onmouseover = function (e) {
-            $WH.Tooltip.showAtCursor(e, '<div class="pc-preview"><b>' + pc_esc(p.name) + '</b><br /><span class="q0">Level ' + (p.minlevel == p.maxlevel ? p.minlevel : p.minlevel + ' - ' + p.maxlevel)
-                + '</span><img src="' + g_staticUrl + '/modelviewer/thumbs/npc/' + p.displayId + '.png" width="160" height="160" alt="" /></div>', 0, 0);
+    var table = body.querySelector('.pc-tame-table');
+    table.innerHTML = html;
+    body.querySelector('.pc-tame-count').textContent = list.length + ' / ' + t.pets.length + ' beasts';
+    body.querySelector('.pc-lookfilter').innerHTML = t.look
+        ? '<a href="javascript:;" class="pc-look-chip">Look <span class="pc-look pc-look-' + ((t.look - 1) % 16 + 1) + '">' + t.look + '</span> only &times;</a>' : '';
+    var chip = body.querySelector('.pc-look-chip');
+    if (chip) chip.onclick = function () { t.look = 0; pc_renderTameable(); };
+
+    table.querySelectorAll('.pc-tame-head a').forEach(function (a) {
+        a.onclick = function () {
+            var s = a.getAttribute('data-sort');
+            t.desc = t.sort == s ? !t.desc : false;
+            t.sort = s;
+            pc_renderTameable();
         };
-        row.onmousemove = $WH.Tooltip.cursorUpdate;
-        row.onmouseout  = $WH.Tooltip.hide;
+    });
+    table.querySelectorAll('.pc-tame-row[data-npc]').forEach(function (row) {
+        var id = +row.getAttribute('data-npc'), p = g_pets[id];
+        row.querySelector('.pc-tame-name').onmouseover = function (e) { pc_previewTip(e, p); };
+        row.querySelector('.pc-tame-name').onmousemove = $WH.Tooltip.cursorUpdate;
+        row.querySelector('.pc-tame-name').onmouseout  = $WH.Tooltip.hide;
+        row.querySelector('.pc-look').onclick = function () { t.look = t.look == p._look ? 0 : p._look; pc_renderTameable(); };
         row.querySelector('.pc-tame-3d').onclick = function () {
             $WH.Tooltip.hide();
             ModelViewer.show({ type: 1, typeId: id, displayId: p.displayId });
         };
     });
-    body.querySelector('.pc-filter').oninput = function () {
-        var q = this.value.trim().toLowerCase();
-        body.querySelectorAll('.pc-tame-row[data-npc]').forEach(function (r) { r.style.display = !q || r.getAttribute('data-name').indexOf(q) != -1 ? '' : 'none'; });
+}
+
+// ── Every tameable beast, whatever the family (bottom listview) ─────
+function pc_buildAllTameable() {
+    var box = $WH.ce('div');
+    box.className = 'tc-section pc-sec-all';
+    box.innerHTML = '<div class="tc-section-header">All tameable beasts</div><div class="tc-section-body">'
+        + '<label class="pc-check pc-all-unob"><input type="checkbox" checked /> Show unobtainable</label><div id="lv-pc-alltame" class="listview"></div></div>';
+    $WH.ae($WH.ge('pc-sections'), box);
+
+    var data = [];
+    for (var id in g_pets) {
+        var p = g_pets[id];
+        data.push({ id: p.id, name: p.name, minlevel: p.minlevel, maxlevel: p.maxlevel, classification: p.classification,
+                    location: pc_zones(p), react: p.react, family: p.family, displayId: p.displayId, type: 1 });
+    }
+
+    new Listview({
+        template:    'npc',
+        id:          'pc-alltame',
+        parent:      'lv-pc-alltame',
+        data:        data,
+        hiddenCols:  ['type', 'petfamily'],
+        extraCols:   [{
+            id: 'pc-family',
+            name: LANG.type,
+            type: 'text',
+            width: '12%',
+            after: 'name',
+            compute: function (npc, td) {
+                var a = $WH.ce('a');
+                a.href = '?pet=' + npc.family;
+                $WH.st(a, g_pet_families[npc.family] || '');
+                $WH.ae(td, a);
+                if (pc_isExotic(npc.family)) {
+                    var i = $WH.ce('div');
+                    i.className = 'small q4';
+                    $WH.st(i, 'Exotic');
+                    $WH.ae(td, i);
+                }
+            },
+            getVisibleText: function (npc) { return g_pet_families[npc.family] || ''; },
+            sortFunc: function (a, b) { return $WH.strcmp(g_pet_families[a.family], g_pet_families[b.family]); }
+        }, {
+            id: 'pc-preview',
+            name: 'Preview',
+            type: 'text',
+            width: '60px',
+            before: 'name',
+            filtrable: 0,
+            compute: function (npc, td) {
+                var a = $WH.ce('a'), img = $WH.ce('img');
+                a.href = 'javascript:;';
+                a.className = 'pc-lv-thumb';
+                img.src = g_staticUrl + '/modelviewer/thumbs/npc/' + npc.displayId + '.png';
+                img.loading = 'lazy';
+                img.width = img.height = 44;
+                a.onclick = function () { ModelViewer.show({ type: 1, typeId: npc.id, displayId: npc.displayId }); };
+                a.onmouseover = function (e) { pc_previewTip(e, g_pets[npc.id]); };
+                a.onmousemove = $WH.Tooltip.cursorUpdate;
+                a.onmouseout  = $WH.Tooltip.hide;
+                $WH.ae(a, img);
+                $WH.ae(td, a);
+            },
+            sortFunc: function (a, b) { return a.displayId - b.displayId; }
+        }],
+        sort: ['name']
+    });
+
+    box.querySelector('.pc-all-unob input').onchange = function () {
+        var lv = g_listviews['pc-alltame'], on = this.checked;
+        lv.customFilter = on ? null : function (row) { return row.location.length > 0; };
+        lv.updateFilters(true);
     };
 }
 

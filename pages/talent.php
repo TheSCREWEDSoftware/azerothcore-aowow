@@ -61,7 +61,11 @@ class TalentPage extends GenericPage
             $talents = new SpellList([['s.typeCat', -7], Cfg::get('SQL_LIMIT_NONE')]);
             $this->extendGlobalData($talents->getJSGlobals(GLOBALINFO_SELF));
 
-            $this->addScript([SC_JS_STRING, 'var g_pet_info = '.Util::toJSON($info).';']);
+            // beasts spawn in sub zones and areas g_zones does not name (starting areas ...)
+            $loc   = Lang::getLocale()->value;
+            $zones = DB::Aowow()->selectCol('SELECT `id` AS ARRAY_KEY, IF(`name_loc'.$loc.'` <> "", `name_loc'.$loc.'`, `name_loc0`) FROM ?_zones');
+
+            $this->addScript([SC_JS_STRING, 'var g_pet_info = '.Util::toJSON($info).', g_pet_zones = '.Util::toJSON($zones).';']);
         }
         else
             $this->addScript(
