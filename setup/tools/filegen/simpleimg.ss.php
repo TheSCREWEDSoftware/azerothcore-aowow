@@ -168,9 +168,9 @@ CLISetup::registerSetup("build", new class extends SetupScript
         $allPaths = [];
         foreach ($this->genSteps as $i => [, $path, , [$pattern, $isIcon, $tileSize], $outInfo])
         {
-            $search = CLI::nicePath('', $path);
+            $search = strtr(CLI::nicePath('', $path), ['\\' => '/']);    // forward slashes, as filesInPath compares them
             if ($pattern)
-                $search = '/'.strtr($search, ['\\' => '\\\\', '/' => '\\/']).$pattern.'/i';
+                $search = '/'.strtr($search, ['/' => '\\/']).$pattern.'/i';
 
             $files    = CLISetup::filesInPath($search, !!$pattern);
             $allPaths = array_merge($allPaths, array_map(function ($x) { return substr($x, 0, -4); }, $files));

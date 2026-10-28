@@ -605,10 +605,10 @@ class CLISetup
             if (!self::buildFileList())
                 return [];
 
-        // backslash to forward slash
-        $_ = strtolower(CLI::nicePath($path));
+        // paths are compared with forward slashes on every OS (patterns are written that way too)
+        $_ = strtr(strtolower(CLI::nicePath($path)), ['\\' => '/']);
 
-        // on Windows, backslash path separators can produce invalid PCRE patterns — validate first
+        // a pattern built from a Windows path may still hold raw backslashes — validate first
         if ($useRegEx && @preg_match($path, '') === false)
         {
             CLI::write('filesInPath: invalid regex pattern "'.CLI::bold($path).'" (check path separator escaping on Windows)', CLI::LOG_WARN);
@@ -617,6 +617,7 @@ class CLISetup
 
         foreach (self::$mpqFiles as $lowerFile => $realFile)
         {
+            $lowerFile = strtr($lowerFile, ['\\' => '/']);
             if (!$useRegEx && strstr($lowerFile, $_))
                 $result[] = $realFile;
             else if ($useRegEx && preg_match($path, $lowerFile))

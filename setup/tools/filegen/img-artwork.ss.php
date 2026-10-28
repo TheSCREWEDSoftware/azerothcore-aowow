@@ -61,12 +61,12 @@ CLISetup::registerSetup("build", new class extends SetupScript
 
         $sum       = 0;
         $imgGroups = [];
-        $files     = CLISetup::filesInPath('/'.str_replace('/', '\\/', $realPath).'/i', true);
+        $files     = CLISetup::filesInPath('/'.str_replace('/', '\\/', strtr($realPath, ['\\' => '/'])).'/i', true);
         $fileTpl   = $outInfo[0][0].'%s.png';
 
         foreach ($files as $f)
         {
-            if (preg_match('/([^\/]+)(\d).blp/i', $f, $m))
+            if (preg_match('/([^\/\\\\]+)(\d).blp/i', $f, $m))     // file name: either separator
             {
                 if (!$m[1] || !$m[2])
                     continue;
