@@ -18713,6 +18713,7 @@ var Icon = {
             var w = 364;
             switch (Locale.getId()) {
                 case LOCALE_ESES:
+                case LOCALE_ESMX:
                     w = 380;
                     break;
                 case LOCALE_RURU:

@@ -928,6 +928,9 @@ $WH.g_getLocaleFromDomain.L = {
     cn:  4,
     es:  6,
     ru:  8,
+    ko:  1,
+    tw:  5,
+    mx:  7,
     en:  0
 };
 

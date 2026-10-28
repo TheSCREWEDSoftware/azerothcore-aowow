@@ -48,7 +48,7 @@ RewriteEngine on
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{QUERY_STRING} ^$
-    RewriteRule ^(en|fr|de|es|ru|cn)/([a-z-]+=[^/]*)(?:/[^/]*)?$ index.php?$2&urlloc=$1 [L]
+    RewriteRule ^(en|fr|de|es|ru|cn|ko|tw|mx)/([a-z-]+=[^/]*)(?:/[^/]*)?$ index.php?$2&urlloc=$1 [L]
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{QUERY_STRING} ^$
@@ -56,11 +56,11 @@ RewriteEngine on
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{QUERY_STRING} .
-    RewriteRule ^(en|fr|de|es|ru|cn)/(?:[a-z-]+=[^/]*(?:/[^/]*)?)?$ index.php?%{QUERY_STRING}&urlloc=$1 [L]
+    RewriteRule ^(en|fr|de|es|ru|cn|ko|tw|mx)/(?:[a-z-]+=[^/]*(?:/[^/]*)?)?$ index.php?%{QUERY_STRING}&urlloc=$1 [L]
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{QUERY_STRING} .
     RewriteRule ^[a-z-]+=[^/]*(?:/[^/]*)?$ index.php?%{QUERY_STRING} [L]
 
-    RewriteRule ^(en|fr|de|es|ru|cn)/?$ index.php?&urlloc=$1 [L,QSA]
+    RewriteRule ^(en|fr|de|es|ru|cn|ko|tw|mx)/?$ index.php?&urlloc=$1 [L,QSA]
 </IfModule>

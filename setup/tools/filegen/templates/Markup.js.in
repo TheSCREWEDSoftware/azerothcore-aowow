@@ -79,6 +79,9 @@ var Markup = {
         'cn': 'zhcn',
         'es': 'eses',
         'ru': 'ruru',
+        'ko': 'kokr',
+        'tw': 'zhtw',
+        'mx': 'esmx',
      // 'pt': 'ptbr'
     },
     maps: [],

@@ -26,7 +26,7 @@
             logo.setAttribute('href', base + prefix);
 
         // what is shown: ?item=123 (legacy) or item=123[/name] in the path
-        var path = location.pathname.substr(base.length).replace(/^(en|fr|de|es|ru|cn)(\/|$)/, '');
+        var path = location.pathname.substr(base.length).replace(/^(en|fr|de|es|ru|cn|ko|tw|mx)(\/|$)/, '');
         var call = location.search ? location.search.substr(1) : path.split('/')[0];
         var m    = /^([a-z-]+)=(-?\d+)$/.exec(call);
         if (!m)
