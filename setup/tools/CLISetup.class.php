@@ -23,6 +23,7 @@ class CLISetup
     public  const LOCK_RESTORE    = 2;
 
     private static $lock          = self::LOCK_ON;
+    private const  STATE_FILE     = 'cache/setup/steps-%s.json';  // fingerprint of each --sql / --build step's last successful run
     private const  LOCK_FILE      = 'cache/setup/site-lock';    // site status before setup locked it - left behind if a run didn't finish
 
     public const ARGV_NONE        = 0x00;
@@ -49,6 +50,8 @@ class CLISetup
         'batch-size' => [self::OPT_GRP_MISC, [],   self::ARGV_REQUIRED,                    'Number of rows per fetch/insert batch. (default: 1000)',                                                                '=n'                ],
         'beep'      => [self::OPT_GRP_MISC, [],    self::ARGV_NONE,                        'Enable terminal bell after each input prompt.',                                                                         ''                  ],
         'log-level' => [self::OPT_GRP_MISC, [],    self::ARGV_REQUIRED,                    'Minimum log level written to the log file: all, info, warn, error, none. (default: warn)',                                      '=level'            ],
+        'skip'      => [self::OPT_GRP_MISC, [],    self::ARGV_ARRAY | self::ARGV_REQUIRED, 'Leave out these --sql / --build steps (unless named in --sql= / --build=).',                                            '=<steps,>'         ],
+        'nosound'   => [self::OPT_GRP_MISC, [],    self::ARGV_NONE,                        'Leave out the sound steps (sounds, soundfiles).',                                                                       ''                  ],
     );
 
     private static $utilScriptRefs  = [];
@@ -511,6 +514,145 @@ class CLISetup
         unix systems will throw a fit if you try to get from one to the other, so lets save the paths from 2) and cast it to lowercase
         lookups will be done in lowercase. A successfull match will return the real path.
     */
+    /*****************************************/
+    /* skipping steps whose input is the same */
+    /*****************************************/
+
+    private static array $tableSums = [];
+    private static ?array $dbcIndex = null;
+
+    // steps left out with --skip / --nosound
+    public static function skipList() : array
+    {
+        $skip = array_map(fn($x) => strtolower(trim($x)), self::$opts['skip'] ?? []);
+        if (isset(self::$opts['nosound']))
+            $skip = array_merge($skip, ['sounds', 'soundfiles']);
+
+        return array_values(array_unique(array_filter($skip)));
+    }
+
+    private static function loadState(string $cmd) : array
+    {
+        $file = sprintf(self::STATE_FILE, $cmd);
+        $data = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
+        return is_array($data) ? $data : [];
+    }
+
+    private static function writeState(string $cmd, array $state) : void
+    {
+        $file = sprintf(self::STATE_FILE, $cmd);
+        if (is_dir(dirname($file)) || @mkdir(dirname($file), 0755, true))
+            @file_put_contents($file, json_encode($state, JSON_PRETTY_PRINT));
+    }
+
+    // what a step's result depends on: its code, the setup code, the locales, its game files and world tables, and the steps it builds on
+    public static function fingerprint(string $cmd, SetupScript $ss) : string
+    {
+        $parts = [$cmd, implode(',', array_map(fn($l) => $l->value, self::$locales)), (string)Cfg::get('LOCALES')];
+
+        $files = [(new ReflectionObject($ss))->getFileName(), 'setup/tools/setupScript.class.php', 'setup/tools/dbc.class.php', 'setup/tools/CLISetup.class.php'];
+        foreach ($files as $f)
+            $parts[] = basename($f).'@'.@filemtime($f).'/'.@filesize($f);
+
+        // game files: every locale's copy of each DBC
+        if (self::$dbcIndex === null)
+        {
+            self::$dbcIndex = [];
+            if (self::$mpqFiles || self::buildFileList())
+                foreach (self::$mpqFiles as $lc => $real)
+                    if (substr($lc, -4) == '.dbc')
+                        self::$dbcIndex[basename(strtr($lc, ['\\' => '/']), '.dbc')][] = $real;
+        }
+        foreach ($ss->getRequiredDBCs() as $dbc)
+            foreach (self::$dbcIndex[strtolower($dbc)] ?? [] as $real)
+                $parts[] = strtolower($real).'@'.@filemtime($real).'/'.@filesize($real);
+
+        // build steps also read images, interface files ...: any change in the game data folders counts
+        if ($cmd == 'build')
+            $parts[] = self::srcSignature();
+
+        foreach ($ss->getRequiredDirs() as $dir)            // an output folder that is gone must be made again
+            $parts[] = $dir.':'.(int)is_dir($dir);
+
+        // world tables
+        foreach ($ss->getRemoteDependencies() as $tbl)
+        {
+            if (!isset(self::$tableSums[$tbl]))
+            {
+                $row = DB::isConnected(DB_WORLD) ? DB::World()->selectRow('CHECKSUM TABLE ?#', $tbl) : null;
+                self::$tableSums[$tbl] = $row['Checksum'] ?? 'x';
+            }
+            $parts[] = $tbl.'#'.self::$tableSums[$tbl];
+        }
+
+        // the steps this one builds on, as they were when it last ran
+        [$sqlDeps, $buildDeps] = $ss->getSelfDependencies() + [[], []];
+        $sqlState   = self::loadState('sql');
+        $buildState = self::loadState('build');
+        foreach ($sqlDeps as $d)
+            $parts[] = 'sql:'.$d.'='.($sqlState[$d] ?? '');
+        foreach ($buildDeps as $d)
+            $parts[] = 'build:'.$d.'='.($buildState[$d] ?? '');
+
+        return md5(implode('|', $parts));
+    }
+
+    public static function stepDone(string $cmd, string $step, SetupScript $ss, bool $ok) : void
+    {
+        $state = self::loadState($cmd);
+        if ($ok)
+            $state[$step] = self::fingerprint($cmd, $ss);
+        else
+            unset($state[$step]);
+
+        self::writeState($cmd, $state);
+    }
+
+    // a full --sql / --build run: offer to leave out the steps whose input did not change since they last succeeded
+    public static function onlyChanged(string $cmd, array $todo, array $generators) : array
+    {
+        $state = self::loadState($cmd);
+        if (isset(self::$opts['force']) || !$state)
+            return $todo;
+
+        CLI::write('['.$cmd.'] comparing game files, world tables and code with the last successful run...', CLI::LOG_INFO, true, true);
+
+        $changed = [];
+        foreach ($todo as $step)
+        {
+            $ss = $generators[$step];
+            [$sqlDeps, $buildDeps] = $ss->getSelfDependencies() + [[], []];
+            $depChanged = array_intersect($cmd == 'sql' ? $sqlDeps : $buildDeps, $changed);
+
+            if ($depChanged || ($state[$step] ?? '') !== self::fingerprint($cmd, $ss))
+                $changed[] = $step;
+        }
+
+        $same = array_values(array_diff($todo, $changed));
+        if (!$same)
+        {
+            CLI::write('['.$cmd.'] every step has changed since the last run (or never finished)', CLI::LOG_INFO);
+            return $todo;
+        }
+
+        CLI::write('['.$cmd.'] '.count($same).' of '.count($todo).' steps are unchanged since they last succeeded.', CLI::LOG_INFO);
+        CLI::write('             to do: '.($changed ? implode(', ', $changed) : 'nothing'), CLI::LOG_BLANK, false);
+        CLI::write();
+
+        $q = $changed ? 'Run only the '.count($changed).' changed steps? [Y / N] (N = start from zero)' : 'Start from zero anyway? [Y / N] (N = stop here)';
+        if (!CLI::read(['x' => [$q, true, true, '/y|n/i']], $ui) || !$ui)
+            $yes = !$changed ? false : true;               // no answer: only what changed
+        else
+            $yes = strtolower($ui['x']) == 'y';
+
+        CLI::write();
+
+        if ($changed)
+            return $yes ? $changed : $todo;
+
+        return $yes ? $todo : [];
+    }
+
     // names and change times of the folders two levels down (setup/mpqdata/<locale>/<folder>): adding a locale or
     // extracting another folder changes it, so a file index cached before that is not used again
     private static function srcSignature() : string

@@ -77,15 +77,29 @@ CLISetup::registerUtility(new class extends UtilityScript
                 return false;
             }
 
+            // left out with --skip / --nosound, unless named
+            if ($buildArgs === [] && ($skip = array_intersect($todo, CLISetup::skipList())))
+                $todo = array_values(array_diff($todo, $skip));
+
             // supplement self::NOTE_START
             CLI::write('             - '.implode(', ', $todo), CLI::LOG_BLANK, false);
+            if (!empty($skip))
+                CLI::write('             (left out: '.implode(', ', $skip).')', CLI::LOG_BLANK, false);
             CLI::write();
+
+            // everything asked for: steps whose input did not change can be left out
+            if ($buildArgs === [])
+                $todo = CLISetup::onlyChanged('build', $todo, $this->generators);
         }
         else if ($todo)
         {
             $todo = array_intersect(array_keys($this->generators), is_array($todo) ? $todo : [$todo]);
             if (!$todo)
                 return false;
+
+            $todo = array_diff($todo, CLISetup::skipList());
+            if (!$todo)                                     // left out on purpose (--skip / --nosound): nothing failed
+                return true;
         }
         else
             return false;
@@ -118,6 +132,8 @@ CLISetup::registerUtility(new class extends UtilityScript
                 $allOk = false;
             else
                 $done[] = $cmd;
+
+            CLISetup::stepDone('build', $cmd, $scriptRef, $success);
 
             CLI::write('[build] subscript \''.$cmd.'\' returned '.($success ? 'successfully' : 'with errors'), $success ? CLI::LOG_OK : CLI::LOG_ERROR);
             CLI::write();
