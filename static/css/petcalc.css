@@ -190,3 +190,4 @@ a.pc-nav-icon.exotic { box-shadow: inset 0 -3px 0 #a335ee; }
 .pc-trees.none .pc-tree0 .pc-tree-name { color: #ff7a52; }
 .pc-trees.none .pc-tree1 .pc-tree-name { color: #6aa8ff; }
 .pc-trees.none .pc-tree2 .pc-tree-name { color: #6ad67e; }
+a.tc-nav-btn.disabled { opacity: .4; pointer-events: none; filter: grayscale(1); }

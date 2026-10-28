@@ -197,7 +197,9 @@ function pc_buildButtons(bar) {
     var fam = $WH.ce('a');
     fam.id = 'pc-btn-family';
     fam.className = 'tc-nav-btn tc-nav-btn-abilities';
-    $WH.st(fam, 'Family Page');
+    $WH.st(fam, "View Pet's Family Page");
+    fam.className += ' disabled';                           // until a family is chosen
+    fam.title = 'Pick a pet family first';
     $WH.ae(right, fam);
     $WH.ae(bar, right);
 }
@@ -268,7 +270,10 @@ function pc_toggleBonus(tree) {
 function pc_updateFamily() {
     for (var f in pc_navIcons)
         pc_navIcons[f].classList.toggle('on', f == pc_classId);
-    $WH.ge('pc-btn-family').href = '?pet=' + pc_classId;
+    var famBtn = $WH.ge('pc-btn-family');
+    famBtn.href = '?pet=' + pc_classId;
+    famBtn.classList.remove('disabled');
+    famBtn.title = g_pet_families[pc_classId];
 
     pc_familyParts(true);
     pc_updateAbilities();
