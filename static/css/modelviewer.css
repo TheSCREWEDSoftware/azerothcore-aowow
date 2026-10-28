@@ -162,3 +162,10 @@ html.mv-noscroll { overflow: hidden; }
 .mv-bar { flex-wrap: nowrap; white-space: nowrap; }
 .mv-btn { white-space: nowrap; }
 .mv-anim-l { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+/* thumbnails being drawn in the browser */
+img.ao-thumb-wait { opacity: .3; }
+img.ao-thumb-none { visibility: hidden; }
+
+/* model thumbnails in listviews (same model as, item appearances) */
+td.screenshot-cell img[src*="/modelviewer/thumbs/"], td.screenshot-cell img[data-ao-thumb] { width: 150px; height: 150px; object-fit: contain; }

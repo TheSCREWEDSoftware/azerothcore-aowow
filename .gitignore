@@ -6,6 +6,8 @@
 /cache/alphaMaps/*
 /cache/setup/*
 /cache/mv/
+/static/modelviewer/thumbs/
+/static/uploads/outfits/
 
 # extract from MPQ
 /setup/mpqdata/*

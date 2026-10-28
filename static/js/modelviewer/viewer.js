@@ -118,6 +118,21 @@ AoStage.prototype = {
         this.controls.target.copy(center);
         this.controls.update();
     },
+    // the current view as a PNG data url, w x h pixels, see-through background (thumbnails)
+    snapshot: function (w, h) {
+        var r = this.renderer, size = new THREE.Vector2(), ratio = r.getPixelRatio();
+        r.getSize(size);
+        r.setPixelRatio(1);
+        r.setSize(w, h, false);
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+        r.render(this.scene, this.camera);
+        var url = r.domElement.toDataURL('image/png');
+        r.setPixelRatio(ratio);
+        r.setSize(size.x, size.y, false);
+        this.resize();
+        return url;
+    },
     screenshot: function (name) {
         this.renderer.render(this.scene, this.camera);
         var src = this.renderer.domElement, out = src;
@@ -265,8 +280,18 @@ var AoViewer = (function () {
         };
         $('.mv-dr').onclick = function () {
             var m = stage.model, c = m && m.character;
-            location.href = '?dressing-room' + (window.AoDressing ? AoDressing.hashFor(c, current) : '');
+            location.href = (typeof g_host != 'undefined' ? g_host.replace(/\/?$/, '/') : '') + '?dressing-room' + drHash(c, current);
         };
+    }
+
+    // what the dressing room should open with: race / body / looks, then the item (i123) or item set (s45)
+    function drHash(c, opt) {
+        var L = c ? c.look : savedChar(), m = c ? c.meta : null;
+        if (!c && L.race == 'none') L = { race: 1, sex: 0 };
+        var h = [m ? m.race : L.race, m ? m.sex : L.sex, L.skin || 0, L.face || 0, L.hairStyle || 0, L.hairColor || 0, L.facial || 0].join('-');
+        if (opt && opt.typeId && opt.type == 3) h += ':i' + opt.typeId;
+        else if (opt && opt.typeId && opt.type == 4) h += ':s' + opt.typeId;
+        return '#' + h;
     }
 
     function msg(text) {
@@ -378,12 +403,46 @@ var AoViewer = (function () {
         raceSel.value = ch.race;
         sexSel.value = ch.sex;
         sexSel.disabled = false;
-        var items = {}, l = opt.equipList;
+        return AoChar.load(base(), { race: ch.race, sex: ch.sex }, setItems(opt.equipList));
+    }
+
+    // [slot, display, slot, display, ..] or [[slot, display], ..] (item set pages) -> {slot: {display}}
+    function setItems(list) {
+        var items = {}, l = [].concat.apply([], list || []);
         for (var i = 0; i + 1 < l.length; i += 2) {
             var slot = AoChar.INV[l[i]];
             if (slot && l[i + 1] && !items[slot]) items[slot] = { display: +l[i + 1] };
         }
-        return AoChar.load(base(), { race: ch.race, sex: ch.sex }, items);
+        return items;
+    }
+
+    // a model for opt without the window (thumbnails): ch = {race, sex} for anything worn
+    function build(opt, ch) {
+        ch = ch || { race: 1, sex: 0 };
+        if (opt.type == 4)
+            return AoChar.load(base(), ch, setItems(opt.equipList));
+        if (opt.type == 1)
+            return fetchJson(base() + 'meta/npc/' + opt.displayId + '.json').then(function (meta) {
+                if (meta.extra)
+                    return fetchJson(base() + 'meta/npcx/' + meta.extra + '.json').then(npcCharacter);
+                return AoM2.load(base(), meta.f, { tex: meta.tex });
+            });
+        if (opt.type == 2)
+            return fetchJson(base() + 'meta/object/' + opt.displayId + '.json').then(function (meta) {
+                return AoM2.load(base(), meta.f, { tex: meta.tex });
+            });
+        return fetchJson(base() + 'meta/item/' + opt.displayId + '.json').then(function (meta) {
+            var slot = AoChar.INV[opt.slot] || (meta.models.length ? (meta.models[0].slot == 'head' ? 'head' : meta.models[0].slot == 'shoulder' ? 'shoulder' : 'mainhand') : (meta.cape ? 'back' : 'chest'));
+            if (meta.models.length && slot != 'back') {
+                var first = meta.models[0];
+                if (first.slot == 'head')
+                    first = { slot: 'head', f: first.race[PREFIX[ch.race] + (ch.sex ? 'F' : 'M')] || first.race[Object.keys(first.race)[0]], tex: first.tex };
+                return loadItemAlone(meta, first);
+            }
+            var items = {};
+            items[slot] = { display: opt.displayId };
+            return AoChar.load(base(), ch, items);
+        });
     }
 
     // an item on its own: shoulders as a pair side by side, weapons / shields side on
@@ -436,7 +495,7 @@ var AoViewer = (function () {
 
     return {
         show: show, hide: hide, ready: ready, base: base, animNames: function () { return animNames; },
-        RACES: RACES, PREFIX: PREFIX,
+        RACES: RACES, PREFIX: PREFIX, build: build, drHash: drHash, savedChar: savedChar,
         model: function () { return stage && stage.model; },
         frame: function () { if (stage) stage.frame(); }
     };

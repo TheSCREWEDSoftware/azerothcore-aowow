@@ -36,6 +36,7 @@ endforeach;
     <script type="text/javascript" src="<?=Cfg::get('STATIC_URL'); ?>/js/prettyurl.js?<?=@filemtime('static/js/prettyurl.js'); ?>"></script>
     <link rel="stylesheet" type="text/css" href="<?=Cfg::get('STATIC_URL'); ?>/css/modelviewer.css?<?=@filemtime('static/css/modelviewer.css'); ?>" />
     <script type="text/javascript" src="<?=Cfg::get('STATIC_URL'); ?>/js/modelviewer/viewer.js?<?=@filemtime('static/js/modelviewer/viewer.js'); ?>"></script>
+    <script type="text/javascript" src="<?=Cfg::get('STATIC_URL'); ?>/js/modelviewer/thumbs.js?<?=@filemtime('static/js/modelviewer/thumbs.js'); ?>"></script>
     <script type="text/javascript">
         var g_user = <?=Util::toJSON($this->gUser, JSON_UNESCAPED_UNICODE); ?>;
         var g_pageAccess = <?=Util::toJSON([

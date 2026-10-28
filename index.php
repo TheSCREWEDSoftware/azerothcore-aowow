@@ -93,6 +93,7 @@ switch ($pageCall)
     case 'data':                                            // tool: dataset-loader
     case 'cookie':                                          // lossless cookies and user settings
     case 'contactus':
+    case 'modelviewer-thumb':                               // model thumbnails drawn in staff browsers
     case 'comment':
     case 'edit':                                            // guide editor: targeted by QQ fileuploader, detail-page article editor
     case 'trainerrank':                                       // tool: class trainer spell ranks

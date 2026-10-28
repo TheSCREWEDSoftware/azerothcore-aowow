@@ -16813,6 +16813,8 @@ Listview.templates = {
                 a.onclick = this.template.modelShow.bind(this.template, type, typeId, displayId, slot, false);
 
                 var img = $WH.ce('img');
+                img.loading = 'lazy';
+                if (slot) img.setAttribute('data-slot', slot);     // thumbs.js draws missing pictures
                 img.src = g_staticUrl + '/modelviewer/thumbs/' + linkType + '/' + displayId + '.png';
                 $WH.ae(a, img);
 
