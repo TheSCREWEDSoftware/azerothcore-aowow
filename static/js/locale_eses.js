@@ -1131,6 +1131,10 @@ var mn_database = [
     [, "Objetos"],
     [0,"Objetos","?items",mn_items],
     [2,"Conjuntos de objetos","?itemsets",mn_itemSets],
+    [20,"Conjuntos por clase","?gear-sets"],
+    [21,"Conjuntos de apariencia","?item-appearance-sets"],
+    [22,"Apariencias de objetos","?item-appearances"],
+    [23,"Atuendos","?outfits"],
     [101,"Encantamientos","?enchantments",mn_enchantments],
     [, "Personaje",,,{colBreak:true}],
     [9,"Logros","?achievements",mn_achievements],
@@ -1176,6 +1180,7 @@ var mn_guides = [
 
 var mn_tools = [
     [0,"Calculadora de talentos","?talent",mn_talentCalc],
+    [4,"Probador","?dressing-room"],
     [2,"Calculadora de mascotas","?petcalc",mn_petCalc],
     [3,"Comparación de objetos","?compare"],
     [5,"Perfiles","?profiler",[

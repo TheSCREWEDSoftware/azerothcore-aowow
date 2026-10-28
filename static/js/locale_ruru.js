@@ -1131,6 +1131,10 @@ var mn_database = [
     [, "Предметы"],
     [0,"Предметы","?items",mn_items],
     [2,"Комплекты","?itemsets",mn_itemSets],
+    [20,"Комплекты классов","?gear-sets"],
+    [21,"Наборы обликов","?item-appearance-sets"],
+    [22,"Облики предметов","?item-appearances"],
+    [23,"Наряды","?outfits"],
     [101,"Улучшения","?enchantments",mn_enchantments],
     [, "Персонаж",,,{colBreak:true}],
     [9,"Достижения","?achievements",mn_achievements],
@@ -1176,6 +1180,7 @@ var mn_guides = [
 
 var mn_tools = [
     [0,"Расчёт талантов","?talent",mn_talentCalc],
+    [4,"Примерочная","?dressing-room"],
     [2,"Расчёт умений питомцев","?petcalc",mn_petCalc],
     [3,"Сравнение предметов","?compare"],
     [5,"Профили персонажей","?profiler",[

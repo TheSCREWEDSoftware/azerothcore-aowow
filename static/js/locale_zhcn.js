@@ -1177,6 +1177,10 @@ var mn_database = [
     [, "物品"],
     [0,"物品","?items",mn_items],
     [2,"物品组合","?itemsets",mn_itemSets],
+    [20,"职业套装","?gear-sets"],
+    [21,"外观套装","?item-appearance-sets"],
+    [22,"物品外观","?item-appearances"],
+    [23,"服装","?outfits"],
     [101,"附魔","?enchantments",mn_enchantments],
     [, "角色",,,{colBreak:true}],
     [9,"成就","?achievements",mn_achievements],
@@ -1222,6 +1226,7 @@ var mn_guides = [
 
 var mn_tools = [
     [0,"天赋模拟器","?talent",mn_talentCalc],
+    [4,"试衣间","?dressing-room"],
     [2,"猎人宠物模拟器","?petcalc",mn_petCalc],
     [3,"物品比较","?compare"],
     [5,"Profiler","?profiler",[

@@ -269,32 +269,55 @@ var mn_itemSets = [
     [9,"Warlock",,,{className:"c9",smallIcon:"class_warlock"}],
     [1,"Warrior",,,{className:"c1",smallIcon:"class_warrior"}]
 ];
-// [PH] placeholder sub-menus for pages not yet implemented in aowow
-var mn_gearsets_ph = [
+// sub-menus by class (gear sets, outfits); [PH] entries are pages not yet implemented in aowow
+var mn_gearSets = [
     [,"By Class"],
-    [6,"Death Knight",,,{className:"c6",smallIcon:"class_deathknight"}],
-    [11,"Druid",,,{className:"c11",smallIcon:"class_druid"}],
-    [3,"Hunter",,,{className:"c3",smallIcon:"class_hunter"}],
-    [8,"Mage",,,{className:"c8",smallIcon:"class_mage"}],
-    [2,"Paladin",,,{className:"c2",smallIcon:"class_paladin"}],
-    [5,"Priest",,,{className:"c5",smallIcon:"class_priest"}],
-    [4,"Rogue",,,{className:"c4",smallIcon:"class_rogue"}],
-    [7,"Shaman",,,{className:"c7",smallIcon:"class_shaman"}],
-    [9,"Warlock",,,{className:"c9",smallIcon:"class_warlock"}],
-    [1,"Warrior",,,{className:"c1",smallIcon:"class_warrior"}]
+    [6,"Death Knight","?gear-sets=6",,{className:"c6",smallIcon:"class_deathknight"}],
+    [11,"Druid","?gear-sets=11",,{className:"c11",smallIcon:"class_druid"}],
+    [3,"Hunter","?gear-sets=3",,{className:"c3",smallIcon:"class_hunter"}],
+    [8,"Mage","?gear-sets=8",,{className:"c8",smallIcon:"class_mage"}],
+    [2,"Paladin","?gear-sets=2",,{className:"c2",smallIcon:"class_paladin"}],
+    [5,"Priest","?gear-sets=5",,{className:"c5",smallIcon:"class_priest"}],
+    [4,"Rogue","?gear-sets=4",,{className:"c4",smallIcon:"class_rogue"}],
+    [7,"Shaman","?gear-sets=7",,{className:"c7",smallIcon:"class_shaman"}],
+    [9,"Warlock","?gear-sets=9",,{className:"c9",smallIcon:"class_warlock"}],
+    [1,"Warrior","?gear-sets=1",,{className:"c1",smallIcon:"class_warrior"}]
 ];
-var mn_outfits_ph = [
+var mn_outfits = [
     [,"By Class"],
-    [6,"Death Knight",null,,{className:"c6",smallIcon:"class_deathknight"}],
-    [11,"Druid",null,,{className:"c11",smallIcon:"class_druid"}],
-    [3,"Hunter",null,,{className:"c3",smallIcon:"class_hunter"}],
-    [8,"Mage",null,,{className:"c8",smallIcon:"class_mage"}],
-    [2,"Paladin",null,,{className:"c2",smallIcon:"class_paladin"}],
-    [5,"Priest",null,,{className:"c5",smallIcon:"class_priest"}],
-    [4,"Rogue",null,,{className:"c4",smallIcon:"class_rogue"}],
-    [7,"Shaman",null,,{className:"c7",smallIcon:"class_shaman"}],
-    [9,"Warlock",null,,{className:"c9",smallIcon:"class_warlock"}],
-    [1,"Warrior",null,,{className:"c1",smallIcon:"class_warrior"}]
+    [6,"Death Knight","?outfits=6",,{className:"c6",smallIcon:"class_deathknight"}],
+    [11,"Druid","?outfits=11",,{className:"c11",smallIcon:"class_druid"}],
+    [3,"Hunter","?outfits=3",,{className:"c3",smallIcon:"class_hunter"}],
+    [8,"Mage","?outfits=8",,{className:"c8",smallIcon:"class_mage"}],
+    [2,"Paladin","?outfits=2",,{className:"c2",smallIcon:"class_paladin"}],
+    [5,"Priest","?outfits=5",,{className:"c5",smallIcon:"class_priest"}],
+    [4,"Rogue","?outfits=4",,{className:"c4",smallIcon:"class_rogue"}],
+    [7,"Shaman","?outfits=7",,{className:"c7",smallIcon:"class_shaman"}],
+    [9,"Warlock","?outfits=9",,{className:"c9",smallIcon:"class_warlock"}],
+    [1,"Warrior","?outfits=1",,{className:"c1",smallIcon:"class_warrior"}]
+];
+var mn_appearanceSets = [
+    [4,"Plate","?item-appearance-sets=4"],
+    [3,"Mail","?item-appearance-sets=3"],
+    [2,"Leather","?item-appearance-sets=2"],
+    [1,"Cloth","?item-appearance-sets=1"],
+    [0,"Other","?item-appearance-sets=0"]
+];
+var mn_appearances = [
+    [1,"Head","?item-appearances=head"],
+    [2,"Shoulder","?item-appearances=shoulder"],
+    [3,"Back","?item-appearances=back"],
+    [4,"Chest","?item-appearances=chest"],
+    [5,"Shirt","?item-appearances=shirt"],
+    [6,"Tabard","?item-appearances=tabard"],
+    [7,"Wrist","?item-appearances=wrist"],
+    [8,"Hands","?item-appearances=hands"],
+    [9,"Waist","?item-appearances=waist"],
+    [10,"Legs","?item-appearances=legs"],
+    [11,"Feet","?item-appearances=feet"],
+    [12,"Main Hand","?item-appearances=mainhand"],
+    [13,"Off Hand","?item-appearances=offhand"],
+    [14,"Ranged","?item-appearances=ranged"]
 ];
 var mn_resources_ph = [
     [0,"Blood Rune",null],
@@ -311,8 +334,7 @@ var mn_resources_ph = [
 ];
 var mn_achievements_wh = [
     [0,"Character Achievements","?achievements",mn_achievements],
-    [0,"Character Statistics [PH]",null],
-    [0,"Guild Achievements [PH]",null]
+    [0,"Character Statistics [PH]",null]
 ];
 
 var mn_npcs = [
@@ -1223,13 +1245,12 @@ var mn_database = [
     [, "Items"],
     [0,"Items","?items",mn_items],
     [2,"Item Sets","?itemsets",mn_itemSets],
-    [0,"Gear Sets [PH]",null,mn_gearsets_ph],
-    [0,"Item Appearance Sets [PH]",null],
-    [0,"Item Appearances [PH]",null],
-    [0,"Outfits [PH]",null,mn_outfits_ph],
+    [20,"Gear Sets","?gear-sets",mn_gearSets],
+    [21,"Item Appearance Sets","?item-appearance-sets",mn_appearanceSets],
+    [22,"Item Appearances","?item-appearances",mn_appearances],
+    [23,"Outfits","?outfits",mn_outfits],
     [, "Character",,,{colBreak:true}],
     [9,"Achievements","?achievements",mn_achievements_wh],
-    [0,"Battle Pets [PH]",null],
     [12,"Classes","?classes",mn_classes],
     [8,"Hunter Pets","?pets",mn_pets],
     [14,"Professions & Skills","?skills",mn_skills],
@@ -1337,7 +1358,7 @@ var mn_guides = [
 
 var mn_tools = [
     [0,"Talent Calculator","?talent",mn_talentCalc],
-    [0,"Dressing Room [PH]",null],
+    [4,"Dressing Room","?dressing-room"],
     [0,"Gear Planner [PH]",null],
     [0,"Item Finder [PH]",null],
     [2,"Hunter Pet Calculator","?petcalc",mn_petCalc],
