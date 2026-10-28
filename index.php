@@ -43,6 +43,7 @@ switch ($pageCall)
     case 'events':
     case 'faction':
     case 'factions':
+    case 'gear-sets':                                       // armour sets of a class, worn
     case 'guide':
     case 'guides':
     case 'guild':
@@ -51,6 +52,8 @@ switch ($pageCall)
     case 'icons':
     case 'item':
     case 'items':
+    case 'item-appearances':                                // every look of a slot
+    case 'item-appearance-sets':                            // item sets grouped by look
     case 'itemset':
     case 'itemsets':
     case 'maps':                                            // tool: map listing
