@@ -83,7 +83,7 @@ function pc_init() {
         col.innerHTML = '<div class="pc-tree-head"><img src="' + pc_treeIcon(tree, 'medium') + '" alt="" /><span class="pc-tree-name">' + pc_esc(g_pet_talents[tree].n)
                       + '</span><span class="pc-tree-pts"></span></div><div class="pc-tree-calc"><div id="pc-calc-' + tree + '"></div></div>'
                       + '<a class="pc-tree-reset" href="javascript:;">Reset</a><div class="pc-tree-pick" title="Pick a ' + pc_esc(g_pet_talents[tree].n) + ' family"></div>'
-                      + '<div class="pc-tree-famsbox"><div class="pc-tree-famshead pc-tree' + tree + '"><span class="pc-tree-name">' + pc_esc(g_pet_talents[tree].n) + ' Pets</span></div><div class="pc-tree-fams"></div></div>';
+                      + '<div class="pc-tree-famsbox"><div class="pc-tree-fams"></div></div>';
         $WH.ae(trees, col);
 
         // the tree's families, below it
