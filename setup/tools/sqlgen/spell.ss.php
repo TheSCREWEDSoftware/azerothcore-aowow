@@ -24,7 +24,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         $ssQuery = 'SELECT
                            id,
                            0 AS category,
-                           IFNULL(DispelType, 0) AS Dispel,
+                           DispelType AS Dispel,
                            Mechanic,
                            Attributes,         AttributesEx,       AttributesEx2,      AttributesEx3,      AttributesEx4,      AttributesEx5,      AttributesEx6,      AttributesEx7,
                            ?d AS cuFlags,
@@ -212,20 +212,20 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         DB::Aowow()->query('TRUNCATE ?_spell');
 
         // merge serverside spells into aowow_spell
-        $lastMax = 0;
         $n = 0;
         CLI::write('[spell] - copying serverside spells into aowow_spell');
+        $total = DB::World()->selectCell('SELECT COUNT(*) FROM spell_dbc');
+        $done  = 0;
         while ($spells = DB::World()->select($ssQuery, CUSTOM_SERVERSIDE, $n++ * CLISetup::$SQL_BATCH, CLISetup::$SQL_BATCH))
         {
-            $newMax = max(array_column($spells, 'id'));
-
-            CLI::write(' * sets '.($lastMax + 1).' - '.$newMax, CLI::LOG_BLANK, true, true);
-
-            $lastMax = $newMax;
-
-            foreach ($spells as $spell)
-                DB::Aowow()->query('INSERT INTO ?_spell VALUES (?a)', array_values($spell));
+            foreach ($spells as $spell)                     // spell_dbc allows NULL in columns aowow_spell does not
+            {
+                DB::Aowow()->query('INSERT INTO ?_spell VALUES (?a)', array_map(fn($v) => $v ?? 0, array_values($spell)));
+                if (++$done % 250 == 0)
+                    CLI::write('[spell] - serverside spells: '.$done.' / '.$total, CLI::LOG_BLANK, true, true);
+            }
         }
+        CLI::write('[spell] - '.$done.' serverside spells copied');
 
         // apply spell radii, duration & casting time
         DB::Aowow()->query('UPDATE ?_spell s LEFT JOIN dbc_spellradius    sr  ON s.`effect1RadiusMin` = sr.`id`  SET s.`effect1RadiusMin` = IFNULL(sr.`radiusMin`, 0), s.`effect1RadiusMax` = IFNULL(sr.`radiusMax`, 0)');
@@ -235,20 +235,20 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         DB::Aowow()->query('UPDATE ?_spell s LEFT JOIN dbc_spellcasttimes sct ON s.`castTime`         = sct.`id` SET s.`castTime` = GREATEST(IFNULL(sct.`baseTime`, 0), 0) / 1000');
 
         // merge spell.dbc into aowow_spell
-        $lastMax = 0;
         $n = 0;
         CLI::write('[spell] - merging spell.dbc into aowow_spell');
+        $total = DB::Aowow()->selectCell('SELECT COUNT(*) FROM dbc_spell');
+        $done  = 0;
         while ($spells = DB::Aowow()->select($baseQry, $n++ * CLISetup::$SQL_BATCH, CLISetup::$SQL_BATCH))
         {
-            $newMax = max(array_column($spells, 'id'));
-
-            CLI::write(' * sets '.($lastMax + 1).' - '.$newMax, CLI::LOG_BLANK, true, true);
-
-            $lastMax = $newMax;
-
             foreach ($spells as $spell)                     // a spell the world db also lists as serverside: the client's version wins (names, icons, text)
+            {
                 DB::Aowow()->query('REPLACE INTO ?_spell VALUES (?a)', array_values($spell));
+                if (++$done % 250 == 0)
+                    CLI::write('[spell] - spell.dbc: '.$done.' / '.$total.' ('.round($done * 100 / max(1, $total)).'%)', CLI::LOG_BLANK, true, true);
+            }
         }
+        CLI::write('[spell] - '.$done.' spells merged from spell.dbc');
 
         // apply flag: CUSTOM_DISABLED [0xD: players (0x1), pets (0x4), general (0x8); only generally disabled spells]
         if ($disables = DB::World()->selectCol('SELECT `entry` FROM disables WHERE `sourceType` = 0 AND `params_0` = "" AND `params_1` = "" AND `flags` & 0xD'))
