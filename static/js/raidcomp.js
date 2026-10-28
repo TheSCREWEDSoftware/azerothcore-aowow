@@ -20,7 +20,7 @@ var AoRaidComp = (function () {
         [7,  'ele',     'Elemental',     1, 'R'], [7,  'enh',     'Enhancement',   2, 'M'], [7,  'resto',  'Restoration',   3, 'H'],
         [8,  'arcane',  'Arcane',        1, 'R'], [8,  'fire',    'Fire',          2, 'R'], [8,  'frost',  'Frost',         3, 'R'],
         [9,  'aff',     'Affliction',    1, 'R'], [9,  'demo',    'Demonology',    2, 'R'], [9,  'destro', 'Destruction',   3, 'R'],
-        [11, 'balance', 'Balance',       1, 'R'], [11, 'cat',     'Feral (Cat)',   2, 'M'], [11, 'bear',   'Feral (Bear)',  2, 'T'], [11, 'resto', 'Restoration', 3, 'H']
+        [11, 'balance', 'Balance',       1, 'R'], [11, 'feral',   'Feral Combat',  2, 'M'], [11, 'resto',  'Restoration',   3, 'H']
     ];
     var ROLE_NAME = { T: 'Tank', H: 'Healer', M: 'DPS (Melee)', R: 'DPS (Ranged)' };
     var SLOT_ROLE = { T: 'Tank', H: 'Healer', M: 'Melee', R: 'Ranged' };
@@ -52,7 +52,7 @@ var AoRaidComp = (function () {
                 ['+20% Melee haste',           [[6, 'frost', 'Improved Icy Talons'], [7, '', 'Windfury Totem']]],
                 ['+5% Spell haste',            [[7, '', 'Wrath of Air Totem']]],
                 ['+3% Haste',                  [[11, 'balance', 'Improved Moonkin Form'], [2, 'ret', 'Swift Retribution']]],
-                ['+5% Melee & ranged crit',    [[11, 'cat', 'Leader of the Pack'], [11, 'bear', 'Leader of the Pack'], [1, 'fury', 'Rampage']]],
+                ['+5% Melee & ranged crit',    [[11, 'feral', 'Leader of the Pack'], [1, 'fury', 'Rampage']]],
                 ['+5% Spell crit',             [[11, 'balance', 'Moonkin Aura'], [7, 'ele', 'Elemental Oath']]],
                 ['Spell power',                [[7, 'ele', 'Totem of Wrath'], [7, '', 'Flametongue Totem'], [9, 'demo', 'Demonic Pact']]],
                 ['+3% Damage',                 [[3, 'bm', 'Ferocious Inspiration'], [2, 'ret', 'Sanctified Retribution'], [8, 'arcane', 'Arcane Empowerment']]],
@@ -66,13 +66,13 @@ var AoRaidComp = (function () {
                 ['-20% Armor',                 [[1, '', 'Sunder Armor'], [4, '', 'Expose Armor']]],
                 ['-5% Armor',                  [[11, '', 'Faerie Fire'], [9, '', 'Curse of Weakness'], [3, '', 'Sting (Wasp)']]],
                 ['+4% Physical damage taken',  [[1, 'arms', 'Blood Frenzy'], [4, 'combat', 'Savage Combat']]],
-                ['+30% Bleed damage taken',    [[11, 'cat', 'Mangle'], [11, 'bear', 'Mangle'], [1, 'arms', 'Trauma']]],
+                ['+30% Bleed damage taken',    [[11, 'feral', 'Mangle'], [1, 'arms', 'Trauma']]],
                 ['+3% Crit taken',             [[2, 'ret', 'Heart of the Crusader'], [4, 'assa', 'Master Poisoner'], [7, 'ele', 'Totem of Wrath']]],
                 ['+13% Spell damage taken',    [[6, 'unholy', 'Ebon Plaguebringer'], [11, 'balance', 'Earth and Moon'], [9, '', 'Curse of the Elements']]],
                 ['+3% Spell hit taken',        [[11, 'balance', 'Improved Faerie Fire'], [5, 'shadow', 'Misery']]],
                 ['+5% Spell crit taken',       [[8, 'fire', 'Improved Scorch'], [8, 'frost', "Winter's Chill"], [9, 'destro', 'Improved Shadow Bolt']]],
-                ['-20% Attack speed',          [[1, '', 'Thunder Clap'], [6, '', 'Frost Fever'], [2, 'prot', 'Judgements of the Just'], [11, 'cat', 'Infected Wounds'], [11, 'bear', 'Infected Wounds']]],
-                ['-Attack power',              [[1, '', 'Demoralizing Shout'], [11, 'bear', 'Demoralizing Roar'], [9, '', 'Curse of Weakness'], [2, 'prot', 'Vindication']]],
+                ['-20% Attack speed',          [[1, '', 'Thunder Clap'], [6, '', 'Frost Fever'], [2, 'prot', 'Judgements of the Just'], [11, 'feral', 'Infected Wounds']]],
+                ['-Attack power',              [[1, '', 'Demoralizing Shout'], [11, 'feral', 'Demoralizing Roar'], [9, '', 'Curse of Weakness'], [2, 'prot', 'Vindication']]],
                 ['-3% Hit',                    [[11, 'balance', 'Insect Swarm'], [3, '', 'Scorpid Sting']]],
                 ['-50% Healing received',      [[1, 'arms', 'Mortal Strike'], [1, 'fury', 'Furious Attacks'], [4, '', 'Wound Poison'], [3, 'mm', 'Aimed Shot']]],
                 ['Mana on hit',                [[2, '', 'Judgement of Wisdom']]],
@@ -95,7 +95,7 @@ var AoRaidComp = (function () {
                 ['Melee haste',                [[7, '', 'Windfury Totem']]],
                 ['Spell power',                [[7, '', 'Wrath of Air Totem']]],
                 ['+3% Spell hit & crit',       [[7, 'ele', 'Totem of Wrath']]],
-                ['+5% Melee & ranged crit',    [[11, 'cat', 'Leader of the Pack'], [11, 'bear', 'Leader of the Pack']]],
+                ['+5% Melee & ranged crit',    [[11, 'feral', 'Leader of the Pack']]],
                 ['+5% Spell crit',             [[11, 'balance', 'Moonkin Aura']]],
                 ['+3% Damage',                 [[3, 'bm', 'Ferocious Inspiration']]],
                 ['+10% Holy damage',           [[2, 'ret', 'Sanctity Aura']]],
@@ -112,7 +112,7 @@ var AoRaidComp = (function () {
                 ['Armor (Curse of Recklessness)', [[9, '', 'Curse of Recklessness']]],
                 ['Ranged attack power',        [[3, 'mm', "Improved Hunter's Mark"]]],
                 ['+4% Physical damage taken',  [[1, 'arms', 'Blood Frenzy']]],
-                ['+30% Bleed damage taken',    [[11, 'cat', 'Mangle'], [11, 'bear', 'Mangle']]],
+                ['+30% Bleed damage taken',    [[11, 'feral', 'Mangle']]],
                 ['+3% Crit taken',             [[2, 'ret', 'Improved Seal of the Crusader']]],
                 ['+5% Spell damage taken',     [[5, 'shadow', 'Misery']]],
                 ['+10% Shadow damage taken',   [[5, 'shadow', 'Shadow Weaving']]],
@@ -121,7 +121,7 @@ var AoRaidComp = (function () {
                 ['Frost crit taken',           [[8, 'frost', "Winter's Chill"]]],
                 ['Shadow damage taken',        [[9, 'destro', 'Improved Shadow Bolt']]],
                 ['-Attack speed',              [[1, '', 'Thunder Clap']]],
-                ['-Attack power',              [[1, '', 'Demoralizing Shout'], [11, 'bear', 'Demoralizing Roar']]],
+                ['-Attack power',              [[1, '', 'Demoralizing Shout'], [11, 'feral', 'Demoralizing Roar']]],
                 ['-Hit',                       [[11, 'balance', 'Insect Swarm'], [3, '', 'Scorpid Sting']]],
                 ['-50% Healing received',      [[1, 'arms', 'Mortal Strike'], [4, '', 'Wound Poison'], [3, 'mm', 'Aimed Shot']]],
                 ['Mana on hit',                [[2, '', 'Judgement of Wisdom']]],
@@ -140,7 +140,7 @@ var AoRaidComp = (function () {
                 ['Strength',                   [[7, '', 'Strength of Earth Totem']]],
                 ['Agility',                    [[7, '', 'Grace of Air Totem']]],
                 ['Windfury',                   [[7, '', 'Windfury Totem']]],
-                ['+3% Melee & ranged crit',    [[11, 'cat', 'Leader of the Pack'], [11, 'bear', 'Leader of the Pack']]],
+                ['+3% Melee & ranged crit',    [[11, 'feral', 'Leader of the Pack']]],
                 ['+3% Spell crit',             [[11, 'balance', 'Moonkin Aura']]],
                 ['Mana per 5 sec.',            [[2, '', 'Blessing of Wisdom'], [7, '', 'Mana Spring Totem']]],
                 ['Mana Tide',                  [[7, 'resto', 'Mana Tide Totem']]],
@@ -162,7 +162,7 @@ var AoRaidComp = (function () {
                 ['Shadow damage taken',        [[9, 'destro', 'Improved Shadow Bolt']]],
                 ['Nature damage taken',        [[7, 'enh', 'Stormstrike']]],
                 ['-Attack speed',              [[1, '', 'Thunder Clap']]],
-                ['-Attack power',              [[1, '', 'Demoralizing Shout'], [11, 'bear', 'Demoralizing Roar']]],
+                ['-Attack power',              [[1, '', 'Demoralizing Shout'], [11, 'feral', 'Demoralizing Roar']]],
                 ['-50% Healing received',      [[1, 'arms', 'Mortal Strike'], [4, '', 'Wound Poison'], [3, 'mm', 'Aimed Shot']]],
                 ['Mana on hit',                [[2, '', 'Judgement of Wisdom']]],
                 ['Health on hit',              [[2, '', 'Judgement of Light']]]
@@ -239,7 +239,7 @@ var AoRaidComp = (function () {
             + '<span class="rc-actions"><label class="rc-check"><input type="checkbox" class="rc-rename"' + (renameMode ? ' checked' : '') + ' /> Double-click renames</label>'
             + '<a href="javascript:;" class="tc-nav-btn rc-clear">Clear</a><a href="javascript:;" class="tc-nav-btn rc-copy">Copy Link</a></span></div>';
 
-        // palette: each class with its specs; hovering a spec shows its role
+        // palette: a card per class (5 per row) with its three specs; hovering a spec shows its role
         html += '<div class="rc-palette">' + PALETTE.filter(classOk).map(function (c) {
             return '<div class="rc-pclass"><span class="rc-pname c' + c + '"><img src="' + classIcon(c) + '" alt="" />' + esc(g_chr_classes[c]) + '</span><span class="rc-pspecs">'
                 + SPECS.map(function (s, i) { return s[0] == c ? i : -1; }).filter(function (i) { return i >= 0; }).map(function (i) {

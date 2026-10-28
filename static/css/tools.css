@@ -146,7 +146,7 @@ a.gp-prow.nofit { opacity: .55; }
     .qt-main { flex-direction: column; }
     .qt-zones { flex: none; width: 100%; box-sizing: border-box; position: static; }
     .rc-lists { grid-template-columns: 1fr !important; }
-    .rc-pclass { grid-template-columns: 1fr; }
+    .rc-palette { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .rc-groups { grid-template-columns: 1fr 1fr !important; }
 }
 
@@ -166,13 +166,12 @@ a.gp-prow.nofit { opacity: .55; }
 .tool-raidcomp a.tc-nav-btn { display: inline-block; padding: 5px 12px; font-size: 12px; background: #272727; border: 1px solid #484848; color: #c0c0c0; text-decoration: none; border-radius: 3px; white-space: nowrap; }
 .tool-raidcomp a.tc-nav-btn:hover { background: #3a3a3a; color: #fff; border-color: #777; }
 
-.rc-palette { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; padding: 6px 10px; margin-bottom: 10px; }
-.rc-pclass { display: grid; grid-template-columns: 140px 1fr; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid #1d1d1d; }
-.rc-pclass:last-child { border-bottom: none; }
-.rc-pname { display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 13px; }
+.rc-palette { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+.rc-pclass { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; padding: 8px; }
+.rc-pname { display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 13px; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid #2a2a2a; }
 .rc-pname img { width: 18px; height: 18px; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
-.rc-pspecs { display: flex; flex-wrap: wrap; gap: 4px; }
-a.rc-add { width: 130px; box-sizing: border-box; display: flex; align-items: center; gap: 6px; padding: 3px 6px 3px 3px; border: 1px solid #333; border-radius: 4px; background: #181818; color: #ddd; text-decoration: none; font-size: 12px; cursor: grab; }
+.rc-pspecs { display: flex; flex-direction: column; gap: 4px; }
+a.rc-add { display: flex; align-items: center; gap: 6px; padding: 3px 6px 3px 3px; border: 1px solid #333; border-radius: 4px; background: #181818; color: #ddd; text-decoration: none; font-size: 12px; cursor: grab; }
 a.rc-add:hover { border-color: #ffd100; background: #222; color: #fff; }
 a.rc-add img { width: 20px; height: 20px; border-radius: 3px; flex: none; }
 a.rc-add span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
