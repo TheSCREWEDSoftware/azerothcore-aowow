@@ -111,8 +111,10 @@ AoStage.prototype = {
         var size = box.getSize(new THREE.Vector3()), center = box.getCenter(new THREE.Vector3());
         var r = Math.max(size.x, size.y, size.z) || 1;
         var dist = r / (2 * Math.tan(this.camera.fov * Math.PI / 360)) * 1.1;
-        this.camera.near = dist / 100;
+        this.camera.near = Math.max(0.002, r / 500);        // close up without slicing the face open
         this.camera.far = dist * 100;
+        this.controls.minDistance = r * 0.2;                // no zooming into the head
+        this.controls.maxDistance = dist * 6;
         this.camera.position.set(center.x, center.y + dist * 0.08, center.z + dist);
         this.camera.updateProjectionMatrix();
         this.controls.target.copy(center);
