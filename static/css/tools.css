@@ -191,27 +191,27 @@ a.rc-add span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
 .rc-seg a.rc-exp-w { color: #5ab8f0; } .rc-seg a.rc-exp-w.on { background: #5ab8f0; border-color: #5ab8f0; color: #111; }
 
 .rc-groups { display: grid; gap: 12px; }
-.rc-group { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; padding: 8px 6px 10px 2px; }
-.rc-ghead { font-size: 13px; font-weight: bold; color: #e0e0e0; margin: 0 0 6px 28px; }
-.rc-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; }
-.rc-num { flex: 0 0 18px; text-align: right; font-size: 12px; font-weight: bold; color: #666; }
-.rc-slot { flex: 1; min-width: 0; height: 46px; display: flex; align-items: center; gap: 6px; padding: 0 6px; border-radius: 5px; box-sizing: border-box; position: relative; }
+.rc-group { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; padding: 8px 6px 10px 0; }
+.rc-ghead { font-size: 13px; font-weight: bold; color: #e0e0e0; margin: 0 0 6px 26px; }
+.rc-line { display: flex; align-items: center; gap: 3px; margin-bottom: 5px; }
+.rc-num { flex: 0 0 22px; align-self: stretch; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #666; }
+.rc-slot { flex: 1; min-width: 0; height: 46px; display: flex; align-items: center; gap: 5px; padding: 0 5px; border-radius: 5px; box-sizing: border-box; position: relative; }
 .rc-slot.empty { border: 1px dashed #3a3a3a; color: #555; font-size: 12px; }
 .rc-slot.full { background: #1b1b1b; border: 1px solid #333; cursor: grab; }
 .rc-slot.full:hover { border-color: #666; }
 .rc-slot.over { border-color: #ffd100 !important; background: #2a2400 !important; }
-.rc-slot img { width: 30px; height: 30px; border-radius: 4px; flex: none; box-shadow: 0 0 0 1px #000; }
+.rc-slot img { width: 28px; height: 28px; border-radius: 4px; flex: none; box-shadow: 0 0 0 1px #000; }
 .rc-who { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
 .rc-who b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rc-who i { font-style: normal; font-size: 11px; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rc-rolename { flex: none; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: .04em; padding: 2px 0; width: 6.4em; box-sizing: border-box; text-align: center; border-radius: 3px; color: #111; }
+.rc-rolename { flex: none; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0; padding: 3px 0; width: 5em; box-sizing: border-box; text-align: center; border-radius: 3px; color: #111; }
 .rc-rT { background: #6aa8ff; } .rc-rH { background: #5cf25c; } .rc-rM { background: #ff7a52; } .rc-rR { background: #c99cff; }
-a.rc-act { flex: 0 0 22px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 1px solid #333; border-radius: 4px; background: #1b1b1b; color: #999; text-decoration: none; }
-span.rc-act { flex: 0 0 22px; }
+a.rc-act { flex: 0 0 20px; height: 20px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 1px solid #333; border-radius: 4px; background: #1b1b1b; color: #999; text-decoration: none; }
+span.rc-act { flex: 0 0 20px; }
 a.rc-edit:hover { color: #ffd100; border-color: #ffd100; }
 a.rc-rm:hover { color: #f55; border-color: #f55; }
 input.rc-name { font-size: 13px; font-weight: bold; background: #0d0d0d; border: 1px solid #ffd100; color: #fff; border-radius: 3px; padding: 1px 4px; width: 100%; box-sizing: border-box; }
-.rc-gbuffs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0 24px; }
+.rc-gbuffs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0 25px; }
 a.rc-gbuff { position: relative; display: block; text-decoration: none; }
 a.rc-gbuff img { width: 22px; height: 22px; display: block; border: 1px solid #000; border-radius: 3px; box-shadow: 0 0 0 1px #555; }
 a.rc-gbuff b { position: absolute; right: -3px; bottom: -3px; font-size: 11px; color: #fff; text-shadow: 0 0 2px #000, 0 0 2px #000, 1px 1px 0 #000; }

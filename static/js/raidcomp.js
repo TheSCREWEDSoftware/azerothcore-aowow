@@ -354,7 +354,7 @@ var AoRaidComp = (function () {
     function slotLine(idx, num) {
         var s = slots[idx] != null ? SPECS[slots[idx]] : null;
         return '<div class="rc-line"><span class="rc-num">' + num + '</span>' + (s
-            ? '<div class="rc-slot full" draggable="true" data-slot="' + idx + '"><img src="' + classIcon(s[0], 'medium') + '" alt="" />'
+            ? '<div class="rc-slot full" draggable="true" data-slot="' + idx + '"><img src="' + specIcon(s) + '" alt="" />'
               + '<span class="rc-who"><b class="c' + s[0] + '">' + esc(names[idx] || g_chr_classes[s[0]]) + '</b><i>' + esc(s[2]) + (names[idx] ? ' ' + esc(g_chr_classes[s[0]]) : '') + '</i></span>'
               + '<span class="rc-rolename rc-r' + s[4] + '">' + SLOT_ROLE[s[4]] + '</span></div>'
               + '<a href="javascript:;" class="rc-act rc-edit" data-slot="' + idx + '" title="Rename">' + ICON_EDIT + '</a>'
