@@ -531,6 +531,21 @@ class CLISetup
         return array_values(array_unique(array_filter($skip)));
     }
 
+    // every locale's copy of a DBC in the game data
+    private static function dbcFiles(string $name) : array
+    {
+        if (self::$dbcIndex === null)
+        {
+            self::$dbcIndex = [];
+            if (self::$mpqFiles || self::buildFileList())
+                foreach (self::$mpqFiles as $lc => $real)
+                    if (substr($lc, -4) == '.dbc')
+                        self::$dbcIndex[basename(strtr($lc, ['\\' => '/']), '.dbc')][] = $real;
+        }
+
+        return self::$dbcIndex[strtolower($name)] ?? [];
+    }
+
     private static function loadState(string $cmd) : array
     {
         $file = sprintf(self::STATE_FILE, $cmd);
@@ -555,16 +570,8 @@ class CLISetup
             $parts[] = basename($f).'@'.@filemtime($f).'/'.@filesize($f);
 
         // game files: every locale's copy of each DBC
-        if (self::$dbcIndex === null)
-        {
-            self::$dbcIndex = [];
-            if (self::$mpqFiles || self::buildFileList())
-                foreach (self::$mpqFiles as $lc => $real)
-                    if (substr($lc, -4) == '.dbc')
-                        self::$dbcIndex[basename(strtr($lc, ['\\' => '/']), '.dbc')][] = $real;
-        }
         foreach ($ss->getRequiredDBCs() as $dbc)
-            foreach (self::$dbcIndex[strtolower($dbc)] ?? [] as $real)
+            foreach (self::dbcFiles($dbc) as $real)
                 $parts[] = strtolower($real).'@'.@filemtime($real).'/'.@filesize($real);
 
         // build steps also read images, interface files ...: any change in the game data folders counts
@@ -895,14 +902,15 @@ class CLISetup
             return false;
         }
 
+        // dbc_* tables are kept between runs: reuse one only if it was read with the same locales from the same files
+        $key   = self::dbcKey($name);
+        $known = self::loadState('dbc');
         if (DB::Aowow()->selectCell('SHOW TABLES LIKE ?', 'dbc_'.$name) && DB::Aowow()->selectCell('SELECT count(1) FROM ?#', 'dbc_'.$name))
         {
-            // made before every client locale had a column (only loc0, 2, 3, 4, 6, 8): read it again
-            $cols = DB::Aowow()->selectCol('SHOW COLUMNS FROM ?#', 'dbc_'.$name);
-            if (!preg_grep('/_loc0$/', $cols) || preg_grep('/_loc1$/', $cols))
+            if (($known[$name] ?? '') === $key)
                 return true;
 
-            CLI::write('CLISetup::loadDBC() - dbc_'.$name.' has no columns for the newer locales, reading it again', CLI::LOG_INFO);
+            CLI::write('CLISetup::loadDBC() - dbc_'.$name.' was read with other locales or files, reading it again', CLI::LOG_INFO);
         }
 
         $dbc = new DBC($name, ['temporary' => self::getOpt('delete')]);
@@ -918,7 +926,24 @@ class CLISetup
             return false;
         }
 
+        if (!self::getOpt('delete'))
+        {
+            $known = self::loadState('dbc');
+            $known[$name] = $key;
+            self::writeState('dbc', $known);
+        }
+
         return true;
+    }
+
+    // the locales of this run and every locale's copy of the file (size and date)
+    private static function dbcKey(string $name) : string
+    {
+        $parts = [implode(',', array_map(fn($l) => $l->value, self::$locales))];
+        foreach (self::dbcFiles($name) as $real)
+            $parts[] = strtolower($real).'@'.@filemtime($real).'/'.@filesize($real);
+
+        return md5(implode('|', $parts));
     }
 }
 
