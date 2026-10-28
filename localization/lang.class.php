@@ -58,8 +58,19 @@ class Lang
 
         if (!file_exists('localization/locale_'.$loc->json().'.php'))
             die('File for locale '.$loc->name.' not found.');
-        else
-            require 'localization/locale_'.$loc->json().'.php';
+
+        // texts a translation does not have yet fall back to English
+        $en = null;
+        if ($loc != Locale::EN && file_exists('localization/locale_enus.php'))
+        {
+            require 'localization/locale_enus.php';
+            $en = $lang;
+        }
+
+        require 'localization/locale_'.$loc->json().'.php';
+
+        if ($en)
+            $lang = array_replace_recursive($en, $lang);
 
         foreach ($lang as $k => $v)
             self::$$k = $v;
