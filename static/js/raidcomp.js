@@ -22,6 +22,23 @@ var AoRaidComp = (function () {
         [9,  'aff',     'Affliction',    1, 'R'], [9,  'demo',    'Demonology',    2, 'R'], [9,  'destro', 'Destruction',   3, 'R'],
         [11, 'balance', 'Balance',       1, 'R'], [11, 'feral',   'Feral Combat',  2, 'M'], [11, 'resto',  'Restoration',   3, 'H']
     ];
+    // spec icons, same order as SPECS
+    var SPEC_ICON = [
+        'ability_warrior_savageblow', 'ability_warrior_innerrage', 'ability_warrior_defensivestance',
+        'spell_holy_holybolt', 'spell_holy_devotionaura', 'spell_holy_auraoflight',
+        'ability_hunter_beasttaming', 'ability_marksmanship', 'ability_hunter_swiftstrike',
+        'ability_rogue_eviscerate', 'ability_backstab', 'ability_stealth',
+        'spell_holy_wordfortitude', 'spell_holy_guardianspirit', 'spell_shadow_shadowwordpain',
+        'spell_deathknight_bloodpresence', 'spell_deathknight_frostpresence', 'spell_deathknight_unholypresence',
+        'spell_nature_lightning', 'spell_nature_lightningshield', 'spell_nature_magicimmunity',
+        'spell_holy_magicalsentry', 'spell_fire_firebolt02', 'spell_frost_frostbolt02',
+        'spell_shadow_deathcoil', 'spell_shadow_metamorphosis', 'spell_shadow_rainoffire',
+        'spell_nature_starfall', 'ability_racial_bearform', 'spell_nature_healingtouch'
+    ];
+    // class colours as r,g,b for the tinted palette cards
+    var CLASS_RGB = { 1: '199,156,110', 2: '245,140,186', 3: '171,212,115', 4: '255,245,105', 5: '255,255,255', 6: '196,31,59', 7: '0,112,222', 8: '105,204,240', 9: '148,130,201', 11: '255,125,10' };
+    // palette layouts: r = rows with names, s = squares with spec icons
+    var LAYOUTS = { r: 'Rows with names', s: 'Squares with Specs' };
     var ROLE_NAME = { T: 'Tank', H: 'Healer', M: 'DPS (Melee)', R: 'DPS (Ranged)' };
     var SLOT_ROLE = { T: 'Tank', H: 'Healer', M: 'Melee', R: 'Ranged' };
     var ROLES = { T: 'Tanks', H: 'Healers', M: 'Melee DPS', R: 'Ranged DPS' };
@@ -170,12 +187,12 @@ var AoRaidComp = (function () {
         }
     };
 
-    var el, exp = 'w', size = 25, faction = 'a', slots = [], names = {}, hash = '', renameMode = false;
+    var el, exp = 'w', size = 25, faction = 'a', layout = 'r', slots = [], names = {}, hash = '', renameMode = false;
 
     function esc(t) {
         return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
     }
-    function specIcon(s) { return g_staticUrl + '/images/wow/talents/trees/' + g_file_classes[s[0]] + '_' + s[3] + '.gif'; }
+    function specIcon(s, size) { return g_staticUrl + '/images/wow/icons/' + (size || 'medium') + '/' + SPEC_ICON[SPECS.indexOf(s)] + '.jpg'; }
     function classIcon(c, size) { return g_staticUrl + '/images/wow/icons/' + (size || 'small') + '/class_' + g_file_classes[c] + '.jpg'; }
     function specLabel(s) { return s[2] + ' ' + g_chr_classes[s[0]]; }
     function provides(spec, p) { return spec[0] == p[0] && (!p[1] || p[1] == spec[1]); }
@@ -192,7 +209,7 @@ var AoRaidComp = (function () {
     function save() {
         var code = slots.slice(0, size).map(function (i) { return i == null ? '.' : i.toString(36); }).join('').replace(/\.+$/, '');
         var nm = Object.keys(names).filter(function (k) { return names[k] && k < size; }).map(function (k) { return k + '=' + encodeURIComponent(names[k]); }).join('|');
-        hash = exp + size + (EXPANSIONS[exp].factions ? faction : '') + (code ? '-' + code : '') + (nm ? '~' + nm : '');
+        hash = exp + size + (EXPANSIONS[exp].factions ? faction : '') + (layout == 's' ? 's' : '') + (code ? '-' + code : '') + (nm ? '~' + nm : '');
         location.replace('#' + hash);
     }
 
@@ -204,6 +221,7 @@ var AoRaidComp = (function () {
         exp = m && m[1] ? m[1] : 'w';
         size = m && EXPANSIONS[exp].sizes.indexOf(+m[2]) != -1 ? +m[2] : EXPANSIONS[exp].sizes[0];
         faction = m && m[3] ? m[3] : 'a';
+        layout  = m && m[4] ? 's' : 'r';
         slots = [];
         (m && m[4] || '').split('').forEach(function (c, i) {
             var n = c == '.' ? null : parseInt(c, 36);
@@ -233,6 +251,9 @@ var AoRaidComp = (function () {
         }).join('') + '</span>';
         if (E.factions)
             html += '<span class="rc-seg rc-fac"><a href="javascript:;" data-fac="a"' + (faction == 'a' ? ' class="on"' : '') + '>Alliance</a><a href="javascript:;" data-fac="h"' + (faction == 'h' ? ' class="on"' : '') + '>Horde</a></span>';
+        html += '<span class="rc-ltype"><span class="q0">Selector Type</span><span class="rc-seg rc-lay">' + Object.keys(LAYOUTS).map(function (k) {
+            return '<a href="javascript:;" data-lay="' + k + '"' + (layout == k ? ' class="on"' : '') + '>' + LAYOUTS[k] + '</a>';
+        }).join('') + '</span></span>';
         html += '<span class="rc-roles">' + Object.keys(ROLES).map(function (r) {
             return '<span class="rc-role">' + ROLES[r] + ' <b>' + mem.filter(function (s) { return s[4] == r; }).length + '</b></span>';
         }).join('') + '<span class="rc-role">Players <b>' + mem.length + ' / ' + size + '</b></span></span>'
@@ -240,11 +261,13 @@ var AoRaidComp = (function () {
             + '<a href="javascript:;" class="tc-nav-btn rc-clear">Clear</a><a href="javascript:;" class="tc-nav-btn rc-copy">Copy Link</a></span></div>';
 
         // palette: a card per class (5 per row) with its three specs; hovering a spec shows its role
-        html += '<div class="rc-palette">' + PALETTE.filter(classOk).map(function (c) {
-            return '<div class="rc-pclass"><span class="rc-pname c' + c + '"><img src="' + classIcon(c) + '" alt="" />' + esc(g_chr_classes[c]) + '</span><span class="rc-pspecs">'
+        html += '<div class="rc-palette rc-lay-' + layout + '" style="grid-template-columns: repeat(' + (exp == 'v' ? 4 : 5) + ', minmax(0, 1fr))">' + PALETTE.filter(classOk).map(function (c) {
+            return '<div class="rc-pclass" style="--cc: ' + CLASS_RGB[c] + '">'
+                + (layout == 'r' ? '<a href="' + g_host.replace(/\/?$/, '/') + '?class=' + c + '" class="rc-pname c' + c + '"><img src="' + classIcon(c, 'medium') + '" alt="" />' + esc(g_chr_classes[c]) + '</a>' : '')
+                + '<span class="rc-pspecs">'
                 + SPECS.map(function (s, i) { return s[0] == c ? i : -1; }).filter(function (i) { return i >= 0; }).map(function (i) {
                     var s = SPECS[i];
-                    return '<a href="javascript:;" class="rc-add" draggable="true" data-spec="' + i + '"><img src="' + specIcon(s) + '" alt="" /><span>' + esc(s[2]) + '</span></a>';
+                    return '<a href="javascript:;" class="rc-add" draggable="true" data-spec="' + i + '"><img src="' + specIcon(s, layout == 's' ? 'large' : 'medium') + '" alt="" />' + (layout == 'r' ? '<span>' + esc(s[2]) + '</span>' : '') + '</a>';
                 }).join('') + '</span></div>';
         }).join('') + '</div>';
 
@@ -314,6 +337,7 @@ var AoRaidComp = (function () {
                 save(); render();
             };
         });
+        $$('.rc-lay a').forEach(function (a) { a.onclick = function () { layout = a.getAttribute('data-lay'); save(); render(); }; });
         $$('.rc-size a').forEach(function (a) { a.onclick = function () { size = +a.getAttribute('data-size'); save(); render(); }; });
         $$('.rc-fac a').forEach(function (a) {
             a.onclick = function () {
