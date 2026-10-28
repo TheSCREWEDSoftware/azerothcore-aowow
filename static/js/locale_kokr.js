@@ -334,7 +334,7 @@ var mn_resources_ph = [                                    // spells by the reso
 ];
 var mn_achievements_wh = [
     [0,"Character Achievements","?achievements",mn_achievements],
-    [0,"Character Statistics [PH]",null]
+    [1,"Character Statistics","?achievements=1"]
 ];
 
 var mn_npcs = [
