@@ -23,7 +23,8 @@ Options:
     --data   the client's Data folder (with common.MPQ, lichking.MPQ, ..)
     --dbc    DBFilesClient folder (default: setup/mpqdata/enGB/DBFilesClient, any case)
     --out    output folder (default: static/modelviewer/data)
-    --only   item | npc | object (default: all)
+    --only   item | npc | object | char | body | npcx (default: all)
+             char: character models + customisation, body: armour textures, npcx: humanoid npcs
     --ids    limit to these display ids
     --force  rewrite files that already exist
     --limit  stop after N seconds (run again to continue - finished displays are skipped)
@@ -404,6 +405,106 @@ def objects(w, dbc_dir, ids, deadline, part=None):
     return True
 
 
+# ---------------------------------------------------------------------- characters (dressing room)
+
+RACES = {1: ('Human', 'Hu'), 2: ('Orc', 'Or'), 3: ('Dwarf', 'Dw'), 4: ('NightElf', 'Ni'), 5: ('Scourge', 'Sc'),
+         6: ('Tauren', 'Ta'), 7: ('Gnome', 'Gn'), 8: ('Troll', 'Tr'), 10: ('BloodElf', 'Be'), 11: ('Draenei', 'Dr')}
+SEXES = {0: 'Male', 1: 'Female'}
+SECTION = {0: 'skin', 1: 'face', 2: 'facial', 3: 'hair', 4: 'under'}
+
+
+def chars(w, dbc_dir, ids, deadline, part=None):
+    """per race / body: model + every customisation texture (CharSections) and the hair / facial hair geosets"""
+    sec, ss = read_dbc(os.path.join(dbc_dir, 'CharSections.dbc'))            # ID Race Sex Base Tex[3] Flags Variation Color
+    hair, _ = read_dbc(os.path.join(dbc_dir, 'CharHairGeosets.dbc'))         # ID Race Sex Variation Geoset ShowScalp
+    facial, _ = read_dbc(os.path.join(dbc_dir, 'CharacterFacialHairStyles.dbc'))  # Race Sex Variation Geoset[5]
+    n = 0
+    for race, (folder, prefix) in RACES.items():
+        for sex, gname in SEXES.items():
+            if (ids and race not in ids) or not mine(n, part):
+                n += 1
+                continue
+            n += 1
+            if deadline and time.time() > deadline:
+                return False
+            if w.has_meta('char', race * 10 + sex):
+                continue
+            k, _ = w.model('Character\\%s\\%s\\%s%s' % (folder, gname, folder, gname))
+            if not k:
+                print('  no model for', folder, gname)
+                continue
+            sections = {v: [] for v in SECTION.values()}
+            for r in sec:
+                if r[1] != race or r[2] != sex or r[3] not in SECTION:
+                    continue
+                tex = [w.texture(ss(r[4 + i])) if ss(r[4 + i]) else None for i in range(3)]
+                sections[SECTION[r[3]]].append({'v': r[8], 'c': r[9], 't': tex, 'npc': 0 if r[7] & 1 else 1})
+            meta = {
+                'f': k, 'race': race, 'sex': sex, 'prefix': prefix + ('M' if sex == 0 else 'F'), 'sections': sections,
+                'hair':   {r[3]: [r[4], r[5]] for r in hair if r[1] == race and r[2] == sex},           # style -> [geoset, show scalp]
+                'facial': {r[2]: list(r[3:8]) for r in facial if r[0] == race and r[1] == sex}      # style -> geosets
+            }
+            w.meta('char', race * 10 + sex, meta)
+            print('  %s %s: %d textures' % (folder, gname, sum(len(x) for x in sections.values())))
+
+    # what helms hide: HelmetGeosetVisData (ID, HideGeoset[7]: hair, facial 1-3, ears, misc, eyes - race masks)
+    rows, _ = read_dbc(os.path.join(dbc_dir, 'HelmetGeosetVisData.dbc'))
+    w._write('helmvis.json', json.dumps({r[0]: [struct.unpack('<i', struct.pack('<I', v))[0] for v in r[1:8]] for r in rows}, separators=(',', ':')).encode())
+    return True
+
+
+BODY_DIRS = ['ArmUpperTexture', 'ArmLowerTexture', 'HandTexture', 'TorsoUpperTexture', 'TorsoLowerTexture',
+             'LegUpperTexture', 'LegLowerTexture', 'FootTexture']
+
+
+def itembody(w, dbc_dir, ids, deadline, part=None):
+    """armour textures painted on the character (ItemDisplayInfo Texture[8]): meta/body/<displayId>.json"""
+    rows, s = read_dbc(os.path.join(dbc_dir, 'ItemDisplayInfo.dbc'))
+    for i, r in enumerate(rows):
+        did = r[0]
+        names = [s(r[15 + j]) for j in range(8)]
+        if not any(names) or (ids and did not in ids) or not mine(i, part) or w.has_meta('body', did):
+            continue
+        if deadline and time.time() > deadline:
+            return False
+        regions = {}
+        for j, name in enumerate(names):
+            if not name:
+                continue
+            found = {}
+            for g in ('U', 'M', 'F'):                       # unisex, or one per body
+                t = w.texture('Item\\TextureComponents\\%s\\%s_%s' % (BODY_DIRS[j], name, g))
+                if t:
+                    found[g] = t
+            if not found:                                   # a few have no suffix at all
+                t = w.texture('Item\\TextureComponents\\%s\\%s' % (BODY_DIRS[j], name))
+                if t:
+                    found['U'] = t
+            if found:
+                regions[j] = found
+        w.meta('body', did, {'regions': regions})
+    return True
+
+
+def npcx(w, dbc_dir, ids, deadline, part=None):
+    """humanoid npcs (CreatureDisplayInfoExtra): race, body, looks, worn items and the pre-baked skin texture"""
+    rows, s = read_dbc(os.path.join(dbc_dir, 'CreatureDisplayInfoExtra.dbc'))
+    for i, r in enumerate(rows):
+        did = r[0]
+        if (ids and did not in ids) or not mine(i, part) or w.has_meta('npcx', did):
+            continue
+        if deadline and time.time() > deadline:
+            return False
+        bake = s(r[20])
+        t = w.texture('Textures\\BakedNpcTextures\\' + bake) if bake else None
+        w.meta('npcx', did, {
+            'race': r[1], 'sex': r[2], 'skin': r[3], 'face': r[4], 'hairStyle': r[5], 'hairColor': r[6], 'facial': r[7],
+            # Head Shoulder Shirt Chest Belt Legs Boots Wrist Gloves Tabard Cape (item display ids)
+            'items': list(r[8:19]), 'flags': r[19], 'bake': t
+        })
+    return True
+
+
 # ---------------------------------------------------------------------- main
 
 def main():
@@ -411,7 +512,7 @@ def main():
     ap.add_argument('--data', required=True)
     ap.add_argument('--dbc')
     ap.add_argument('--out', default='static/modelviewer/data')
-    ap.add_argument('--only', choices=['item', 'npc', 'object'])
+    ap.add_argument('--only', choices=['item', 'npc', 'object', 'char', 'body', 'npcx'])
     ap.add_argument('--ids', default='')
     ap.add_argument('--force', action='store_true')
     ap.add_argument('--limit', type=int, default=0)
@@ -437,7 +538,7 @@ def main():
         print('  AnimationData.dbc:', e)
 
     done = True
-    for kind, fn in (('item', items), ('npc', npcs), ('object', objects)):
+    for kind, fn in (('item', items), ('npc', npcs), ('object', objects), ('char', chars), ('body', itembody), ('npcx', npcx)):
         if a.only and a.only != kind:
             continue
         print('[%s]' % kind)
