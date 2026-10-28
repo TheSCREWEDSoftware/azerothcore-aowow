@@ -28,10 +28,13 @@ CLISetup::registerSetup("sql", new class extends SetupScript
                       0 AS event,                                            -- linked worldevent
                       displayId,
                       go.name,
+                      IFNULL(gtl1.`name`, "") AS name_loc1,
                       IFNULL(gtl2.`name`, "") AS name_loc2,
                       IFNULL(gtl3.`name`, "") AS name_loc3,
                       IFNULL(gtl4.`name`, "") AS name_loc4,
+                      IFNULL(gtl5.`name`, "") AS name_loc5,
                       IFNULL(gtl6.`name`, "") AS name_loc6,
+                      IFNULL(gtl7.`name`, "") AS name_loc7,
                       IFNULL(gtl8.`name`, "") AS name_loc8,
                       IFNULL(goa.faction, 0),
                       IFNULL(goa.flags, 0),
@@ -59,6 +62,9 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             LEFT JOIN gameobject_template_locale gtl4 ON go.entry = gtl4.entry AND gtl4.`locale` = "zhCN"
             LEFT JOIN gameobject_template_locale gtl6 ON go.entry = gtl6.entry AND gtl6.`locale` = "esES"
             LEFT JOIN gameobject_template_locale gtl8 ON go.entry = gtl8.entry AND gtl8.`locale` = "ruRU"
+            LEFT JOIN gameobject_template_locale gtl1 ON go.entry = gtl1.entry AND gtl1.`locale` = "koKR"
+            LEFT JOIN gameobject_template_locale gtl5 ON go.entry = gtl5.entry AND gtl5.`locale` = "zhTW"
+            LEFT JOIN gameobject_template_locale gtl7 ON go.entry = gtl7.entry AND gtl7.`locale` = "esMX"
             LEFT JOIN gameobject_questitem gqi ON gqi.GameObjectEntry = go.entry
            { WHERE     go.entry IN (?a) }
             GROUP BY  go.entry

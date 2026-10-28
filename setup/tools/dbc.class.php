@@ -47,7 +47,7 @@ class DBC
     public $file   = '';
 
     private $macro = array(
-        'LOC'   => 'sxsssxsxsxxxxxxxx',                     // pre 4.x locale block (in use)
+        'LOC'   => 'sssssssssxxxxxxxx',                     // pre 4.x locale block (in use): enUS koKR frFR deDE zhCN zhTW esES esMX ruRU
         'X_LOC' => 'xxxxxxxxxxxxxxxxx'                      // pre 4.x locale block (unused)
     );
 

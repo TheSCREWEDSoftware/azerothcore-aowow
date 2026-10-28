@@ -36,7 +36,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
                         0,                                 -- cuFlags
                         parentFaction,
                         spilloverRateIn, spilloverRateOut, spilloverMaxRank,
-                        name_loc0, name_loc2, name_loc3, name_loc4, name_loc6, name_loc8
+                        name_loc0, name_loc1, name_loc2, name_loc3, name_loc4, name_loc5, name_loc6, name_loc7, name_loc8
             FROM        dbc_faction f
             LEFT JOIN   dbc_factiontemplate ft ON ft.factionid = f.id
             GROUP BY    f.id'

@@ -54,7 +54,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
                    100 - ROUND((tn.posY - wma.right)  * 100 / (wma.left - wma.right), 1) AS posX,
                    100 - ROUND((tn.posX - wma.bottom) * 100 / (wma.top - wma.bottom), 1) AS poxY,
                    1 AS `type`, 0 AS `typeId`, 1 AS reactA, 1 AS reactH,
-                   tn.name_loc0, tn.name_loc2, tn.name_loc3, tn.name_loc4, tn.name_loc6, tn.name_loc8,
+                   tn.name_loc0, tn.name_loc1, tn.name_loc2, tn.name_loc3, tn.name_loc4, tn.name_loc5, tn.name_loc6, tn.name_loc7, tn.name_loc8,
                    tn.mapId AS origMap, tn.posX AS origPosX, tn.posY AS origPosY,
                    IF (tn.id NOT IN (15, 148, 225, 235) AND (
                           tn.id IN (64, 250) OR (
@@ -70,7 +70,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
                    100 - ROUND((tn.posY + wmt.offsetY - wma.right)  * 100 / (wma.left - wma.right), 1) AS posX,
                    100 - ROUND((tn.posX + wmt.offsetX - wma.bottom) * 100 / (wma.top - wma.bottom), 1) AS poxY,
                    1 AS `type`, 0 AS `typeId`, 1 AS reactA, 1 AS reactH,
-                   tn.name_loc0, tn.name_loc2, tn.name_loc3, tn.name_loc4, tn.name_loc6, tn.name_loc8,
+                   tn.name_loc0, tn.name_loc1, tn.name_loc2, tn.name_loc3, tn.name_loc4, tn.name_loc5, tn.name_loc6, tn.name_loc7, tn.name_loc8,
                    tn.mapId AS origMap, tn.posX AS origPosX, tn.posY AS origPosY,
                    IF (tn.name_loc0 NOT LIKE "%Transport%" AND tn.name_loc0 NOT LIKE "%Quest%" AND tn.name_loc0 NOT LIKE "%Start%" AND tn.name_loc0 NOT LIKE "%End%",
                        0, 1 ) AS scripted

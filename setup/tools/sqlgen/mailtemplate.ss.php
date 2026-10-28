@@ -21,15 +21,15 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         DB::Aowow()->query('TRUNCATE ?_mails');
 
         // copy data over from dbc
-        DB::Aowow()->query('INSERT INTO ?_mails SELECT `id`, 0, `subject_loc0`, `subject_loc2`, `subject_loc3`, `subject_loc4`, `subject_loc6`, `subject_loc8`, `text_loc0`, `text_loc2`, `text_loc3`, `text_loc4`, `text_loc6`, `text_loc8`, 0 FROM dbc_mailtemplate');
+        DB::Aowow()->query('INSERT INTO ?_mails SELECT `id`, 0, `subject_loc0`, `subject_loc1`, `subject_loc2`, `subject_loc3`, `subject_loc4`, `subject_loc5`, `subject_loc6`, `subject_loc7`, `subject_loc8`, `text_loc0`, `text_loc1`, `text_loc2`, `text_loc3`, `text_loc4`, `text_loc5`, `text_loc6`, `text_loc7`, `text_loc8`, 0 FROM dbc_mailtemplate');
 
         CLI::write('[mails] - loading data from achievement_reward');
 
         $acvMail = DB::World()->select(
            'SELECT    -ar.ID, 0,
-                      IFNULL(ar.Subject, "") AS s0, IFNULL(arl2.Subject, "") AS s2, IFNULL(arl3.Subject, "") AS s3, IFNULL(arl4.Subject, "") AS s4, IFNULL(arl6.Subject, "") AS s6, IFNULL(arl8.Subject, "") AS s8,
-                      -- IFNULL(ar.Body, "")    AS t0, IFNULL(arl2.Body, "")    AS t2, IFNULL(arl3.Body, "")    AS t3, IFNULL(arl4.Body, "")    AS t4, IFNULL(arl6.Body, "")    AS t6, IFNULL(arl8.Body, "")    AS t8, -- TC
-                      IFNULL(ar.Body, "")    AS t0, IFNULL(arl2.Text, "")    AS t2, IFNULL(arl3.Text, "")    AS t3, IFNULL(arl4.Text, "")    AS t4, IFNULL(arl6.Text, "")    AS t6, IFNULL(arl8.Text, "")    AS t8, -- AC
+                      IFNULL(ar.Subject, "") AS s0, IFNULL(arl1.Subject, "") AS s1, IFNULL(arl2.Subject, "") AS s2, IFNULL(arl3.Subject, "") AS s3, IFNULL(arl4.Subject, "") AS s4, IFNULL(arl5.Subject, "") AS s5, IFNULL(arl6.Subject, "") AS s6, IFNULL(arl7.Subject, "") AS s7, IFNULL(arl8.Subject, "") AS s8,
+                      -- IFNULL(ar.Body, "")    AS t0, IFNULL(arl1.Body, "")    AS t1, IFNULL(arl2.Body, "")    AS t2, IFNULL(arl3.Body, "")    AS t3, IFNULL(arl4.Body, "")    AS t4, IFNULL(arl5.Body, "")    AS t5, IFNULL(arl6.Body, "")    AS t6, IFNULL(arl7.Body, "")    AS t7, IFNULL(arl8.Body, "")    AS t8, -- TC
+                      IFNULL(ar.Body, "")    AS t0, IFNULL(arl1.Text, "")    AS t1, IFNULL(arl2.Text, "")    AS t2, IFNULL(arl3.Text, "")    AS t3, IFNULL(arl4.Text, "")    AS t4, IFNULL(arl5.Text, "")    AS t5, IFNULL(arl6.Text, "")    AS t6, IFNULL(arl7.Text, "")    AS t7, IFNULL(arl8.Text, "")    AS t8, -- AC
                       ItemID
             FROM      achievement_reward ar
             LEFT JOIN achievement_reward_locale arl2 ON ar.ID = arl2.ID AND arl2.Locale = "frFR"
@@ -37,6 +37,9 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             LEFT JOIN achievement_reward_locale arl4 ON ar.ID = arl4.ID AND arl4.Locale = "zhCN"
             LEFT JOIN achievement_reward_locale arl6 ON ar.ID = arl6.ID AND arl6.Locale = "esES"
             LEFT JOIN achievement_reward_locale arl8 ON ar.ID = arl8.ID AND arl8.Locale = "ruRU"
+            LEFT JOIN achievement_reward_locale arl1 ON ar.ID = arl1.ID AND arl1.Locale = "koKR"
+            LEFT JOIN achievement_reward_locale arl5 ON ar.ID = arl5.ID AND arl5.Locale = "zhTW"
+            LEFT JOIN achievement_reward_locale arl7 ON ar.ID = arl7.ID AND arl7.Locale = "esMX"
             WHERE     ar.MailTemplateID = 0 AND ar.Body <> ""'
         );
 

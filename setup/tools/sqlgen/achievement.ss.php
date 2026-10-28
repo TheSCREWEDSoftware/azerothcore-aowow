@@ -56,9 +56,9 @@ CLISetup::registerSetup('sql', new class extends SetupScript
                         a.refAchievement,
                         0,
                         0,
-                        a.name_loc0,        a.name_loc2,        a.name_loc3,        a.name_loc4,        a.name_loc6,        a.name_loc8,
-                        a.description_loc0, a.description_loc2, a.description_loc3, a.description_loc4, a.description_loc6, a.description_loc8,
-                        a.reward_loc0,      a.reward_loc2,      a.reward_loc3,      a.reward_loc4,      a.reward_loc6,      a.reward_loc8
+                        a.name_loc0,        a.name_loc1,        a.name_loc2,        a.name_loc3,        a.name_loc4, a.name_loc5,        a.name_loc6, a.name_loc7,        a.name_loc8,
+                        a.description_loc0, a.description_loc1, a.description_loc2, a.description_loc3, a.description_loc4, a.description_loc5, a.description_loc6, a.description_loc7, a.description_loc8,
+                        a.reward_loc0,      a.reward_loc1,      a.reward_loc2,      a.reward_loc3,      a.reward_loc4, a.reward_loc5,      a.reward_loc6, a.reward_loc7,      a.reward_loc8
             FROM        dbc_achievement a
             LEFT JOIN   dbc_achievement_category ac ON ac.id = a.category
             LEFT JOIN   dbc_spellicon si ON si.id = a.iconId

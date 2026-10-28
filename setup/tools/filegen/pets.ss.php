@@ -40,7 +40,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
     {
         $petList   = DB::Aowow()->Select(
            'SELECT   cr.`id`,
-                     cr.`name_loc0`, cr.`name_loc2`, cr.`name_loc3`, cr.`name_loc4`, cr.`name_loc6`, cr.`name_loc8`,
+                     cr.`name_loc0`, cr.`name_loc1`, cr.`name_loc2`, cr.`name_loc3`, cr.`name_loc4`, cr.`name_loc5`, cr.`name_loc6`, cr.`name_loc7`, cr.`name_loc8`,
                      cr.`minLevel`, cr.`maxLevel`,
                      ft.`A`, ft.`H`,
                      cr.`rank` AS "classification",

@@ -73,41 +73,50 @@ CLISetup::registerSetup("sql", new class extends SetupScript
                       IF (RewardFactionOverride3 <> 0, RewardFactionOverride3 / 100, RewardFactionValue3),
                       IF (RewardFactionOverride4 <> 0, RewardFactionOverride4 / 100, RewardFactionValue4),
                       IF (RewardFactionOverride5 <> 0, RewardFactionOverride5 / 100, RewardFactionValue5),
-                      q.LogTitle,                         IFNULL(qtl2.Title, ""),              IFNULL(qtl3.Title, ""),              IFNULL(qtl4.Title, ""),              IFNULL(qtl6.Title, ""),              IFNULL(qtl8.Title, ""),
-                      q.LogDescription,                   IFNULL(qtl2.Objectives, ""),         IFNULL(qtl3.Objectives, ""),         IFNULL(qtl4.Objectives, ""),         IFNULL(qtl6.Objectives, ""),         IFNULL(qtl8.Objectives, ""),
-                      q.QuestDescription,                 IFNULL(qtl2.Details, ""),            IFNULL(qtl3.Details, ""),            IFNULL(qtl4.Details, ""),            IFNULL(qtl6.Details, ""),            IFNULL(qtl8.Details, ""),
-                      q.AreaDescription,                  IFNULL(qtl2.EndText, ""),            IFNULL(qtl3.EndText, ""),            IFNULL(qtl4.EndText, ""),            IFNULL(qtl6.EndText, ""),            IFNULL(qtl8.EndText, ""),
-                      IFNULL(qor.RewardText, ""),         IFNULL(qorl2.RewardText, ""),        IFNULL(qorl3.RewardText, ""),        IFNULL(qorl4.RewardText, ""),        IFNULL(qorl6.RewardText, ""),        IFNULL(qorl8.RewardText, ""),
-                      IFNULL(qri.CompletionText, ""),     IFNULL(qril2.CompletionText, ""),    IFNULL(qril3.CompletionText, ""),    IFNULL(qril4.CompletionText, ""),    IFNULL(qril6.CompletionText, ""),    IFNULL(qril8.CompletionText, ""),
-                      q.QuestCompletionLog,               IFNULL(qtl2.CompletedText, ""),      IFNULL(qtl3.CompletedText, ""),      IFNULL(qtl4.CompletedText, ""),      IFNULL(qtl6.CompletedText, ""),      IFNULL(qtl8.CompletedText, ""),
+                      q.LogTitle,                         IFNULL(qtl1.Title, ""),                         IFNULL(qtl2.Title, ""),              IFNULL(qtl3.Title, ""),              IFNULL(qtl4.Title, ""), IFNULL(qtl5.Title, ""),              IFNULL(qtl6.Title, ""), IFNULL(qtl7.Title, ""),              IFNULL(qtl8.Title, ""),
+                      q.LogDescription,                   IFNULL(qtl1.Objectives, ""),                   IFNULL(qtl2.Objectives, ""),         IFNULL(qtl3.Objectives, ""),         IFNULL(qtl4.Objectives, ""), IFNULL(qtl5.Objectives, ""),         IFNULL(qtl6.Objectives, ""), IFNULL(qtl7.Objectives, ""),         IFNULL(qtl8.Objectives, ""),
+                      q.QuestDescription,                 IFNULL(qtl1.Details, ""),                 IFNULL(qtl2.Details, ""),            IFNULL(qtl3.Details, ""),            IFNULL(qtl4.Details, ""), IFNULL(qtl5.Details, ""),            IFNULL(qtl6.Details, ""), IFNULL(qtl7.Details, ""),            IFNULL(qtl8.Details, ""),
+                      q.AreaDescription,                  IFNULL(qtl1.EndText, ""),                  IFNULL(qtl2.EndText, ""),            IFNULL(qtl3.EndText, ""),            IFNULL(qtl4.EndText, ""), IFNULL(qtl5.EndText, ""),            IFNULL(qtl6.EndText, ""), IFNULL(qtl7.EndText, ""),            IFNULL(qtl8.EndText, ""),
+                      IFNULL(qor.RewardText, ""),         IFNULL(qorl1.RewardText, ""),         IFNULL(qorl2.RewardText, ""),        IFNULL(qorl3.RewardText, ""),        IFNULL(qorl4.RewardText, ""), IFNULL(qorl5.RewardText, ""),        IFNULL(qorl6.RewardText, ""), IFNULL(qorl7.RewardText, ""),        IFNULL(qorl8.RewardText, ""),
+                      IFNULL(qri.CompletionText, ""),     IFNULL(qril1.CompletionText, ""),     IFNULL(qril2.CompletionText, ""),    IFNULL(qril3.CompletionText, ""),    IFNULL(qril4.CompletionText, ""), IFNULL(qril5.CompletionText, ""),    IFNULL(qril6.CompletionText, ""), IFNULL(qril7.CompletionText, ""),    IFNULL(qril8.CompletionText, ""),
+                      q.QuestCompletionLog,               IFNULL(qtl1.CompletedText, ""),               IFNULL(qtl2.CompletedText, ""),      IFNULL(qtl3.CompletedText, ""),      IFNULL(qtl4.CompletedText, ""), IFNULL(qtl5.CompletedText, ""),      IFNULL(qtl6.CompletedText, ""), IFNULL(qtl7.CompletedText, ""),      IFNULL(qtl8.CompletedText, ""),
                       RequiredNpcOrGo1,                   RequiredNpcOrGo2,                    RequiredNpcOrGo3,                    RequiredNpcOrGo4,
                       RequiredNpcOrGoCount1,              RequiredNpcOrGoCount2,               RequiredNpcOrGoCount3,               RequiredNpcOrGoCount4,
                       ItemDrop1,                          ItemDrop2,                           ItemDrop3,                           ItemDrop4,
                       ItemDropQuantity1,                  ItemDropQuantity2,                   ItemDropQuantity3,                   ItemDropQuantity4,
                       RequiredItemId1,                    RequiredItemId2,                     RequiredItemId3,                     RequiredItemId4,                     RequiredItemId5,                      RequiredItemId6,
                       RequiredItemCount1,                 RequiredItemCount2,                  RequiredItemCount3,                  RequiredItemCount4,                  RequiredItemCount5,                   RequiredItemCount6,
-                      q.ObjectiveText1,                   IFNULL(qtl2.ObjectiveText1, ""),     IFNULL(qtl3.ObjectiveText1, ""),     IFNULL(qtl4.ObjectiveText1, ""),     IFNULL(qtl6.ObjectiveText1, ""),     IFNULL(qtl8.ObjectiveText1, ""),
-                      q.ObjectiveText2,                   IFNULL(qtl2.ObjectiveText2, ""),     IFNULL(qtl3.ObjectiveText2, ""),     IFNULL(qtl4.ObjectiveText2, ""),     IFNULL(qtl6.ObjectiveText2, ""),     IFNULL(qtl8.ObjectiveText2, ""),
-                      q.ObjectiveText3,                   IFNULL(qtl2.ObjectiveText3, ""),     IFNULL(qtl3.ObjectiveText3, ""),     IFNULL(qtl4.ObjectiveText3, ""),     IFNULL(qtl6.ObjectiveText3, ""),     IFNULL(qtl8.ObjectiveText3, ""),
-                      q.ObjectiveText4,                   IFNULL(qtl2.ObjectiveText4, ""),     IFNULL(qtl3.ObjectiveText4, ""),     IFNULL(qtl4.ObjectiveText4, ""),     IFNULL(qtl6.ObjectiveText4, ""),     IFNULL(qtl8.ObjectiveText4, "")
+                      q.ObjectiveText1,                   IFNULL(qtl1.ObjectiveText1, ""),                   IFNULL(qtl2.ObjectiveText1, ""),     IFNULL(qtl3.ObjectiveText1, ""),     IFNULL(qtl4.ObjectiveText1, ""), IFNULL(qtl5.ObjectiveText1, ""),     IFNULL(qtl6.ObjectiveText1, ""), IFNULL(qtl7.ObjectiveText1, ""),     IFNULL(qtl8.ObjectiveText1, ""),
+                      q.ObjectiveText2,                   IFNULL(qtl1.ObjectiveText2, ""),                   IFNULL(qtl2.ObjectiveText2, ""),     IFNULL(qtl3.ObjectiveText2, ""),     IFNULL(qtl4.ObjectiveText2, ""), IFNULL(qtl5.ObjectiveText2, ""),     IFNULL(qtl6.ObjectiveText2, ""), IFNULL(qtl7.ObjectiveText2, ""),     IFNULL(qtl8.ObjectiveText2, ""),
+                      q.ObjectiveText3,                   IFNULL(qtl1.ObjectiveText3, ""),                   IFNULL(qtl2.ObjectiveText3, ""),     IFNULL(qtl3.ObjectiveText3, ""),     IFNULL(qtl4.ObjectiveText3, ""), IFNULL(qtl5.ObjectiveText3, ""),     IFNULL(qtl6.ObjectiveText3, ""), IFNULL(qtl7.ObjectiveText3, ""),     IFNULL(qtl8.ObjectiveText3, ""),
+                      q.ObjectiveText4,                   IFNULL(qtl1.ObjectiveText4, ""),                   IFNULL(qtl2.ObjectiveText4, ""),     IFNULL(qtl3.ObjectiveText4, ""),     IFNULL(qtl4.ObjectiveText4, ""), IFNULL(qtl5.ObjectiveText4, ""),     IFNULL(qtl6.ObjectiveText4, ""), IFNULL(qtl7.ObjectiveText4, ""),     IFNULL(qtl8.ObjectiveText4, "")
             FROM      quest_template q
             LEFT JOIN quest_template_locale qtl2 ON q.ID = qtl2.ID AND qtl2.locale = "frFR"
             LEFT JOIN quest_template_locale qtl3 ON q.ID = qtl3.ID AND qtl3.locale = "deDE"
             LEFT JOIN quest_template_locale qtl4 ON q.ID = qtl4.ID AND qtl4.locale = "zhCN"
             LEFT JOIN quest_template_locale qtl6 ON q.ID = qtl6.ID AND qtl6.locale = "esES"
             LEFT JOIN quest_template_locale qtl8 ON q.ID = qtl8.ID AND qtl8.locale = "ruRU"
+            LEFT JOIN quest_template_locale qtl1 ON q.ID = qtl1.ID AND qtl1.locale = "koKR"
+            LEFT JOIN quest_template_locale qtl5 ON q.ID = qtl5.ID AND qtl5.locale = "zhTW"
+            LEFT JOIN quest_template_locale qtl7 ON q.ID = qtl7.ID AND qtl7.locale = "esMX"
             LEFT JOIN quest_offer_reward qor ON q.ID = qor.ID
             LEFT JOIN quest_offer_reward_locale qorl2 ON q.ID = qorl2.ID AND qorl2.locale = "frFR"
             LEFT JOIN quest_offer_reward_locale qorl3 ON q.ID = qorl3.ID AND qorl3.locale = "deDE"
             LEFT JOIN quest_offer_reward_locale qorl4 ON q.ID = qorl4.ID AND qorl4.locale = "zhCN"
             LEFT JOIN quest_offer_reward_locale qorl6 ON q.ID = qorl6.ID AND qorl6.locale = "esES"
             LEFT JOIN quest_offer_reward_locale qorl8 ON q.ID = qorl8.ID AND qorl8.locale = "ruRU"
+            LEFT JOIN quest_offer_reward_locale qorl1 ON q.ID = qorl1.ID AND qorl1.locale = "koKR"
+            LEFT JOIN quest_offer_reward_locale qorl5 ON q.ID = qorl5.ID AND qorl5.locale = "zhTW"
+            LEFT JOIN quest_offer_reward_locale qorl7 ON q.ID = qorl7.ID AND qorl7.locale = "esMX"
             LEFT JOIN quest_request_items qri ON q.ID = qri.ID
             LEFT JOIN quest_request_items_locale qril2 ON q.ID = qril2.ID AND qril2.locale = "frFR"
             LEFT JOIN quest_request_items_locale qril3 ON q.ID = qril3.ID AND qril3.locale = "deDE"
             LEFT JOIN quest_request_items_locale qril4 ON q.ID = qril4.ID AND qril4.locale = "zhCN"
             LEFT JOIN quest_request_items_locale qril6 ON q.ID = qril6.ID AND qril6.locale = "esES"
             LEFT JOIN quest_request_items_locale qril8 ON q.ID = qril8.ID AND qril8.locale = "ruRU"
+            LEFT JOIN quest_request_items_locale qril1 ON q.ID = qril1.ID AND qril1.locale = "koKR"
+            LEFT JOIN quest_request_items_locale qril5 ON q.ID = qril5.ID AND qril5.locale = "zhTW"
+            LEFT JOIN quest_request_items_locale qril7 ON q.ID = qril7.ID AND qril7.locale = "esMX"
             LEFT JOIN quest_template_addon qa ON q.ID = qa.ID
             LEFT JOIN game_event_seasonal_questrelation gesqr ON gesqr.questId = q.ID
             LEFT JOIN disables d ON d.entry = q.ID AND d.sourceType = 1

@@ -22,7 +22,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         DB::Aowow()->query('TRUNCATE ?_races');
         DB::Aowow()->query(
            'INSERT INTO ?_races
-            SELECT      `id`, 0, `flags`, 0, `factionId`, 0, 0, `baseLanguage`, IF(`side` = 2, 0, `side` + 1), `fileString`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`, `expansion`
+            SELECT      `id`, 0, `flags`, 0, `factionId`, 0, 0, `baseLanguage`, IF(`side` = 2, 0, `side` + 1), `fileString`, `name_loc0`, `name_loc1`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc5`, `name_loc6`, `name_loc7`, `name_loc8`, `expansion`
             FROM        dbc_chrraces'
         );
 

@@ -19,14 +19,14 @@ enum Locale : int
     case PT = 10;                                           // ptPT, ptBR   x       ?
     case IT = 11;                                           // itIT         x   x   x
 
-    private const MASK_ALL = 0b000101011101;                // technically supported locales
+    private const MASK_ALL = 0b000111111111;                // technically supported locales (every 3.3.5 client locale)
 
     public function domain() : string                       // our subdomain / locale in web context
     {
         return match ($this)
         {
             self::EN => 'en',
-            self::KR => 'kt',
+            self::KR => 'ko',
             self::FR => 'fr',
             self::DE => 'de',
             self::CN => 'cn',

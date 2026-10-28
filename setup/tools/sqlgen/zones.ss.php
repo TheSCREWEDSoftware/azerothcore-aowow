@@ -53,10 +53,13 @@ CLISetup::registerSetup("sql", new class extends SetupScript
                       m.parentX,
                       m.parentY,
                       IF(wma.id IS NULL OR m.areaType = 0 OR a.mapId IN (269, 560) OR a.areaTable, a.name_loc0, m.name_loc0),
+                      IF(wma.id IS NULL OR m.areaType = 0 OR a.mapId IN (269, 560) OR a.areaTable, a.name_loc1, m.name_loc1),
                       IF(wma.id IS NULL OR m.areaType = 0 OR a.mapId IN (269, 560) OR a.areaTable, a.name_loc2, m.name_loc2),
                       IF(wma.id IS NULL OR m.areaType = 0 OR a.mapId IN (269, 560) OR a.areaTable, a.name_loc3, m.name_loc3),
                       IF(wma.id IS NULL OR m.areaType = 0 OR a.mapId IN (269, 560) OR a.areaTable, a.name_loc4, m.name_loc4),
+                      IF(wma.id IS NULL OR m.areaType = 0 OR a.mapId IN (269, 560) OR a.areaTable, a.name_loc5, m.name_loc5),
                       IF(wma.id IS NULL OR m.areaType = 0 OR a.mapId IN (269, 560) OR a.areaTable, a.name_loc6, m.name_loc6),
+                      IF(wma.id IS NULL OR m.areaType = 0 OR a.mapId IN (269, 560) OR a.areaTable, a.name_loc7, m.name_loc7),
                       IF(wma.id IS NULL OR m.areaType = 0 OR a.mapId IN (269, 560) OR a.areaTable, a.name_loc8, m.name_loc8)
             FROM      dbc_areatable a
             JOIN      dbc_map m ON m.id = IF(a.id = 2159, 249, a.mapId) -- Zone: Onyxias Lair is linked to the wrong map

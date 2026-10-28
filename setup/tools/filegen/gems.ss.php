@@ -36,7 +36,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
         // id < 36'000 || ilevel < 70 ? BC : WOTLK
         $gems = DB::Aowow()->select(
            'SELECT    i.`id` AS "itemId",
-                      i.`name_loc0`, i.`name_loc2`, i.`name_loc3`, i.`name_loc4`, i.`name_loc6`, i.`name_loc8`,
+                      i.`name_loc0`, i.`name_loc1`, i.`name_loc2`, i.`name_loc3`, i.`name_loc4`, i.`name_loc5`, i.`name_loc6`, i.`name_loc7`, i.`name_loc8`,
                       IF (i.`id` < 36000 OR i.`itemLevel` < 70, ?d, ?d) AS "expansion",
                       i.`quality`,
                       ic.`name` AS "icon",

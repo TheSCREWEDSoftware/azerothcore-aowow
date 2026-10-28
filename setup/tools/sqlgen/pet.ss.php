@@ -33,7 +33,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
                          petTalentType,
                          0,                                 -- exotic
                          0,                                 -- expansion
-                         name_loc0, name_loc2, name_loc3, name_loc4, name_loc6, name_loc8,
+                         name_loc0, name_loc1, name_loc2, name_loc3, name_loc4, name_loc5, name_loc6, name_loc7, name_loc8,
                          ic.id,
                          skillLine1,
                          0, 0, 0, 0,                        -- spell[1-4]

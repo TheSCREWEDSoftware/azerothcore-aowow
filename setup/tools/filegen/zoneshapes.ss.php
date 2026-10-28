@@ -1157,7 +1157,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
             $ids = array_merge($ids, $areaIds);
 
         $ids   = array_unique(array_filter($ids, fn($x) => $x > 0));
-        $names = $ids ? DB::Aowow()->select('SELECT `id` AS ARRAY_KEY, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8` FROM ?_zones WHERE `id` IN (?a)', $ids) : [];
+        $names = $ids ? DB::Aowow()->select('SELECT `id` AS ARRAY_KEY, `name_loc0`, `name_loc1`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc5`, `name_loc6`, `name_loc7`, `name_loc8` FROM ?_zones WHERE `id` IN (?a)', $ids) : [];
 
         foreach (CLISetup::$locales as $loc)
         {

@@ -29,7 +29,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         // apply names & cap
         $moneyNames = DB::World()->select(
            'SELECT    it.`entry` AS ARRAY_KEY,
-                      it.`name` AS `name_loc0`, IFNULL(itl2.`Name`, "") AS `name_loc2`, IFNULL(itl3.`Name`, "") AS `name_loc3`, IFNULL(itl4.`Name`, "") AS `name_loc4`, IFNULL(itl6.`Name`, "") AS `name_loc6`, IFNULL(itl8.`Name`, "") AS `name_loc8`,
+                      it.`name` AS `name_loc0`, IFNULL(itl1.`Name`, "") AS `name_loc1`, IFNULL(itl2.`Name`, "") AS `name_loc2`, IFNULL(itl3.`Name`, "") AS `name_loc3`, IFNULL(itl4.`Name`, "") AS `name_loc4`, IFNULL(itl5.`Name`, "") AS `name_loc5`, IFNULL(itl6.`Name`, "") AS `name_loc6`, IFNULL(itl7.`Name`, "") AS `name_loc7`, IFNULL(itl8.`Name`, "") AS `name_loc8`,
                       it.`maxCount` AS `cap`
             FROM      item_template it
             LEFT JOIN item_template_locale itl2 ON it.entry = itl2.ID AND itl2.locale = "frFR"
@@ -37,6 +37,9 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             LEFT JOIN item_template_locale itl4 ON it.entry = itl4.ID AND itl4.locale = "zhCN"
             LEFT JOIN item_template_locale itl6 ON it.entry = itl6.ID AND itl6.locale = "esES"
             LEFT JOIN item_template_locale itl8 ON it.entry = itl8.ID AND itl8.locale = "ruRU"
+            LEFT JOIN item_template_locale itl1 ON it.entry = itl1.ID AND itl1.locale = "koKR"
+            LEFT JOIN item_template_locale itl5 ON it.entry = itl5.ID AND itl5.locale = "zhTW"
+            LEFT JOIN item_template_locale itl7 ON it.entry = itl7.ID AND itl7.locale = "esMX"
             WHERE     it.entry IN (?a)',
             $moneyItems
         );

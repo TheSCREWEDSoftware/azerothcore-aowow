@@ -94,7 +94,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
         {
             $talents = DB::Aowow()->select(
                 'SELECT  t.id AS "tId", t.*, IF(t.rank5, 5, IF(t.rank4, 4, IF(t.rank3, 3, IF(t.rank2, 2, 1)))) AS "maxRank",
-                         s.`name_loc0`, s.`name_loc2`, s.`name_loc3`, s.`name_loc4`, s.`name_loc6`, s.`name_loc8`,
+                         s.`name_loc0`, s.`name_loc1`, s.`name_loc2`, s.`name_loc3`, s.`name_loc4`, s.`name_loc5`, s.`name_loc6`, s.`name_loc7`, s.`name_loc8`,
                          LOWER(SUBSTRING_INDEX(si.`iconPath`, "\\\\", -1)) AS "iconString"
                 FROM     dbc_talent t, dbc_spell s, dbc_spellicon si
                 WHERE    si.`id` = s.`iconId` AND t.`tabId`= ?d AND s.`id` = t.`rank1`

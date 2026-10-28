@@ -71,7 +71,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
                       `equippedItemClass`, `equippedItemInventoryTypeMask`, `equippedItemSubClassMask`,
                       `skillLine1`,
                       IFNULL(i.`name`, ?) AS "iconString",
-                      `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8`
+                      `name_loc0`, `name_loc1`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc5`, `name_loc6`, `name_loc7`, `name_loc8`
             FROM      ?_spell s
             LEFT JOIN ?_icons i ON i.`id` = s.`iconId`
             WHERE     `effect1Id` = ?d AND

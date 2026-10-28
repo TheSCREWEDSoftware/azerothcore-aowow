@@ -27,8 +27,8 @@ CLISetup::registerSetup("sql", new class extends SetupScript
                       0 AS modelId,
                       0 AS humanoid,                        -- uses creaturedisplayinfoextra
                       "" AS iconString,
-                      ct.name, IFNULL(ctl2.`Name`, "")  AS n2, IFNULL(ctl3.`Name`, "")  AS n3, IFNULL(ctl4.`Name`, "")  AS n4, IFNULL(ctl6.`Name`, "")  AS n6, IFNULL(ctl8.`Name`, "")  AS n8,
-                      subname, IFNULL(ctl2.`Title`, "") AS t2, IFNULL(ctl3.`Title`, "") AS t3, IFNULL(ctl4.`Title`, "") AS t4, IFNULL(ctl6.`Title`, "") AS t6, IFNULL(ctl8.`Title`, "") AS t8,
+                      ct.name, IFNULL(ctl1.`Name`, "")  AS n1, IFNULL(ctl2.`Name`, "")  AS n2, IFNULL(ctl3.`Name`, "")  AS n3, IFNULL(ctl4.`Name`, "")  AS n4, IFNULL(ctl5.`Name`, "")  AS n5, IFNULL(ctl6.`Name`, "")  AS n6, IFNULL(ctl7.`Name`, "")  AS n7, IFNULL(ctl8.`Name`, "")  AS n8,
+                      subname, IFNULL(ctl1.`Title`, "") AS t1, IFNULL(ctl2.`Title`, "") AS t2, IFNULL(ctl3.`Title`, "") AS t3, IFNULL(ctl4.`Title`, "") AS t4, IFNULL(ctl5.`Title`, "") AS t5, IFNULL(ctl6.`Title`, "") AS t6, IFNULL(ctl7.`Title`, "") AS t7, IFNULL(ctl8.`Title`, "") AS t8,
                       minLevel, maxLevel,
                       exp,
                       faction,
@@ -80,6 +80,9 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             LEFT JOIN creature_template_locale ctl4 ON ct.entry = ctl4.entry AND ctl4.`locale` = "zhCN"
             LEFT JOIN creature_template_locale ctl6 ON ct.entry = ctl6.entry AND ctl6.`locale` = "esES"
             LEFT JOIN creature_template_locale ctl8 ON ct.entry = ctl8.entry AND ctl8.`locale` = "ruRU"
+            LEFT JOIN creature_template_locale ctl1 ON ct.entry = ctl1.entry AND ctl1.`locale` = "koKR"
+            LEFT JOIN creature_template_locale ctl5 ON ct.entry = ctl5.entry AND ctl5.`locale` = "zhTW"
+            LEFT JOIN creature_template_locale ctl7 ON ct.entry = ctl7.entry AND ctl7.`locale` = "esMX"
             LEFT JOIN (SELECT creditEntry FROM instance_encounters WHERE creditType = 0 GROUP BY creditEntry) ie ON ie.creditEntry = ct.entry
             LEFT JOIN creature_template_spell cts0 ON ct.entry = cts0.CreatureID AND cts0.Index = 0
             LEFT JOIN creature_template_spell cts1 ON ct.entry = cts1.CreatureID AND cts1.Index = 1

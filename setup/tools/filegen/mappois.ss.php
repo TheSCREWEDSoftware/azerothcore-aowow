@@ -131,7 +131,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
             return false;
         }
 
-        $zones = DB::Aowow()->select('SELECT `id` AS ARRAY_KEY, `id`, `mapId`, `parentArea`, `flags`, `faction`, `expansion`, `type`, `levelMin`, `levelMax`, `parentMapId`, `parentX`, `parentY`, `name_loc0`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc6`, `name_loc8` FROM ?_zones');
+        $zones = DB::Aowow()->select('SELECT `id` AS ARRAY_KEY, `id`, `mapId`, `parentArea`, `flags`, `faction`, `expansion`, `type`, `levelMin`, `levelMax`, `parentMapId`, `parentX`, `parentY`, `name_loc0`, `name_loc1`, `name_loc2`, `name_loc3`, `name_loc4`, `name_loc5`, `name_loc6`, `name_loc7`, `name_loc8` FROM ?_zones');
         if (!$zones)
         {
             CLI::write('[mappois] could not read ?_zones', CLI::LOG_ERROR);
@@ -149,8 +149,8 @@ CLISetup::registerSetup("build", new class extends SetupScript
 
         $npcs = DB::Aowow()->select(
            'SELECT s.`areaId`, s.`floor`, s.`posX`, s.`posY`, c.`id`, c.`npcflag`, c.`trainerType`, c.`trainerRequirement`, IFNULL(ft.`A`, 0) AS "A", IFNULL(ft.`H`, 0) AS "H",
-                   c.`name_loc0`, c.`name_loc2`, c.`name_loc3`, c.`name_loc4`, c.`name_loc6`, c.`name_loc8`,
-                   c.`subname_loc0`, c.`subname_loc2`, c.`subname_loc3`, c.`subname_loc4`, c.`subname_loc6`, c.`subname_loc8`
+                   c.`name_loc0`, c.`name_loc1`, c.`name_loc2`, c.`name_loc3`, c.`name_loc4`, c.`name_loc5`, c.`name_loc6`, c.`name_loc7`, c.`name_loc8`,
+                   c.`subname_loc0`, c.`subname_loc1`, c.`subname_loc2`, c.`subname_loc3`, c.`subname_loc4`, c.`subname_loc5`, c.`subname_loc6`, c.`subname_loc7`, c.`subname_loc8`
             FROM   ?_spawns s
             JOIN   ?_creature c ON c.`id` = s.`typeId`
             LEFT JOIN ?_factiontemplate ft ON ft.`id` = c.`faction`
@@ -160,7 +160,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
 
         $objects = DB::Aowow()->select(
            'SELECT s.`areaId`, s.`floor`, s.`posX`, s.`posY`, o.`id`, o.`type`,
-                   o.`name_loc0`, o.`name_loc2`, o.`name_loc3`, o.`name_loc4`, o.`name_loc6`, o.`name_loc8`
+                   o.`name_loc0`, o.`name_loc1`, o.`name_loc2`, o.`name_loc3`, o.`name_loc4`, o.`name_loc5`, o.`name_loc6`, o.`name_loc7`, o.`name_loc8`
             FROM   ?_spawns s
             JOIN   ?_objects o ON o.`id` = s.`typeId`
             WHERE  s.`type` = ?d AND s.`areaId` > 0 AND o.`type` IN (?a)',

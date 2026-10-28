@@ -35,7 +35,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
                       subclass,               subclass AS subClassBak,
                       SoundOverrideSubclass,
                       IFNULL(sg.id, 0) AS subSubClass,
-                      it.name,                IFNULL(itl2.Name, ""),  IFNULL(itl3.Name, ""),  IFNULL(itl4.Name, ""),  IFNULL(itl6.Name, ""),  IFNULL(itl8.Name, ""),
+                      it.name,                IFNULL(itl1.Name, ""),                IFNULL(itl2.Name, ""),  IFNULL(itl3.Name, ""),  IFNULL(itl4.Name, ""), IFNULL(itl5.Name, ""),  IFNULL(itl6.Name, ""), IFNULL(itl7.Name, ""),  IFNULL(itl8.Name, ""),
                       0 AS iconId,
                       displayid,
                       0 AS spellVisualId,
@@ -84,7 +84,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
                       spellid_4,              spelltrigger_4,         spellcharges_4,         spellppmRate_4,         spellcooldown_4,        spellcategory_4,        spellcategorycooldown_4,
                       spellid_5,              spelltrigger_5,         spellcharges_5,         spellppmRate_5,         spellcooldown_5,        spellcategory_5,        spellcategorycooldown_5,
                       bonding,
-                      it.description,         IFNULL(itl2.Description, ""), IFNULL(itl3.Description, ""), IFNULL(itl4.Description, ""), IFNULL(itl6.Description, ""), IFNULL(itl8.Description, ""),
+                      it.description,         IFNULL(itl1.Description, ""),         IFNULL(itl2.Description, ""), IFNULL(itl3.Description, ""), IFNULL(itl4.Description, ""), IFNULL(itl5.Description, ""), IFNULL(itl6.Description, ""), IFNULL(itl7.Description, ""), IFNULL(itl8.Description, ""),
                       PageText,
                       LanguageID,
                       startquest,
@@ -122,6 +122,9 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             LEFT JOIN item_template_locale itl4 ON it.entry = itl4.ID AND itl4.locale = "zhCN"
             LEFT JOIN item_template_locale itl6 ON it.entry = itl6.ID AND itl6.locale = "esES"
             LEFT JOIN item_template_locale itl8 ON it.entry = itl8.ID AND itl8.locale = "ruRU"
+            LEFT JOIN item_template_locale itl1 ON it.entry = itl1.ID AND itl1.locale = "koKR"
+            LEFT JOIN item_template_locale itl5 ON it.entry = itl5.ID AND itl5.locale = "zhTW"
+            LEFT JOIN item_template_locale itl7 ON it.entry = itl7.ID AND itl7.locale = "esMX"
             LEFT JOIN (SELECT spell_id, MIN(id) AS id FROM spell_group WHERE id IN (1, 2) GROUP BY spell_id) sg ON sg.spell_id = it.spellid_1 AND it.class = 0 AND it.subclass = 2
             LEFT JOIN game_event ge ON ge.holiday = it.HolidayId AND it.HolidayId > 0
           { WHERE     it.entry IN (?a) }
