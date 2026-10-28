@@ -108,7 +108,7 @@ class ClassPage extends GenericPage
         $clBaseName   = strpos($fileStr, 'classicon_') === 0 ? substr($fileStr, 10) : $fileStr;
         $clIconName   = 'class_' . $clBaseName;      // e.g. class_paladin  (matches /icons/small/*.jpg)
         $clIconText   = 'classicon_' . $clBaseName;  // e.g. classicon_paladin (display label)
-        $clIconId     = DB::Aowow()->SelectCell('SELECT `id` FROM ?_icons WHERE LOWER(`name`) = ?s', $clIconText);
+        $clIconId     = DB::Aowow()->SelectCell('SELECT `id` FROM ?_icons WHERE LOWER(`name`) = ?', $clIconText);
         $clIconUrl    = $clIconId ? '?icon=' . $clIconId : '?icons';
         $infobox[] = 'Icon'.Lang::main('colon').'[icon name='.$clIconName.' size=tiny][url='.$clIconUrl.']'.$clIconText.'[/url][/icon]';
 
