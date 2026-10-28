@@ -4161,7 +4161,8 @@ var LANG = {
                             [4, "Energie"],                         [5, "Fokus"],                           [6, "Gesundheit"],                      [8, "Mana"],
                             [9, "Wut"],                             [10, "Runen"],                          [11, "Runenmacht"],                     [14, "Zufriedenheit"],
                             [15, "Munition"],                       [16, "Pyrit"],                          [17, "Dampfdruck"],                     [18, "Hitze"],
-                            [19, "Schlamm"],                        [20, "Blutmacht"],                      [21, "Wrath"]
+                            [19, "Schlamm"],                        [20, "Blutmacht"],                      [21, "Wrath"],
+                            [22, "Blood Rune"],                     [23, "Unholy Rune"],                    [24, "Frost Rune"],                     [25, "Combo Points"]
                         ],
         spellfocus:     [
                             [1, "Amboss"],                          [2, "Webstuhl"],                        [3, "Schmiede"],                        [4, "Kochstelle"],                      [663, "Alchemielabor"],

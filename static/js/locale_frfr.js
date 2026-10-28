@@ -4132,7 +4132,8 @@ var LANG = {
                             [4, "Énergie"],                         [5, "Focus"],                           [6, "Vie"],                             [8, "Mana"],
                             [9, "Rage"],                            [10, "Runes"],                          [11, "Puissance runique"],              [14, "Satisfaction"],
                             [15, "Munitions"],                      [16, "Pyrite"],                         [17, "Pression vapeur"],                [18, "Chaleur"],
-                            [19, "Limon"],                          [20, "Puissance de sang"],              [21, "Courroux"]
+                            [19, "Limon"],                          [20, "Puissance de sang"],              [21, "Courroux"],
+                            [22, "Blood Rune"],                     [23, "Unholy Rune"],                    [24, "Frost Rune"],                     [25, "Combo Points"]
                         ],
         spellfocus:     [
                             [1, "Enclume"],                         [2, "Métier à tisser"],                 [3, "Forge"],                           [4, "Feu de cuisine"],                  [663, "Laboratoire d'alchimie"],

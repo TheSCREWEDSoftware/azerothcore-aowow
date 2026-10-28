@@ -2325,7 +2325,11 @@ class SpellListFilter extends Filter
             18 => -101,                                     // heat
             19 => -121,                                     // ooze
             20 => -141,                                     // blood power
-            21 => -142                                      // wrath
+            21 => -142,                                     // wrath
+            22 => 'runeBlood',                              // aowow: a rune of one colour, combo points (resource menu)
+            23 => 'runeUnholy',
+            24 => 'runeFrost',
+            25 => 'comboPoints'
         )
     );
 
@@ -2362,7 +2366,7 @@ class SpellListFilter extends Filter
         41  => [parent::CR_FLAG,      'stanceMask',       (1 << (22 - 1))                                                         ], // requiresmetamorphosis [yn]
         42  => [parent::CR_FLAG,      'attributes5',      SPELL_ATTR5_USABLE_WHILE_STUNNED                                        ], // usablewhenstunned [yn]
         44  => [parent::CR_CALLBACK,  'cbUsableInArena'                                                                           ], // usableinarenas [yn]
-        45  => [parent::CR_ENUM,      'powerType'                                                                                 ], // resourcetype [resourcetype]
+        45  => [parent::CR_CALLBACK,  'cbResourceType'                                                                            ], // resourcetype [resourcetype]
      // 46  => [parent::CR_NYI_PH,    null,               null,                                    null                           ], // disregardimmunity [yn]
         47  => [parent::CR_FLAG,      'attributes1',      SPELL_ATTR1_UNAFFECTED_BY_SCHOOL_IMMUNE                                 ], // disregardschoolimmunity [yn]
         48  => [parent::CR_CALLBACK,  'cbEquippedWeapon', 0x0004000C,                              false                          ], // reqrangedweapon [yn]
@@ -2553,6 +2557,23 @@ class SpellListFilter extends Filter
             ['AND', ['powerType', [POWER_RAGE, POWER_RUNIC_POWER]], ['powerCost', (10 * $crv), $crs]],
             ['AND', ['powerType', [POWER_RAGE, POWER_RUNIC_POWER], '!'], ['powerCost', $crv, $crs]]
         ];
+    }
+
+    // power type, or one rune colour (powerCostRunes: blood | unholy << 4 | frost << 8) or combo points
+    protected function cbResourceType(int $cr, int $crs, string $crv) : ?array
+    {
+        if (!isset($this->enums[$cr][$crs]))
+            return null;
+
+        $_ = $this->enums[$cr][$crs];
+        return match ($_)
+        {
+            'runeBlood'   => ['powerCostRunes', 0x00F, '&'],
+            'runeUnholy'  => ['powerCostRunes', 0x0F0, '&'],
+            'runeFrost'   => ['powerCostRunes', 0xF00, '&'],
+            'comboPoints' => ['attributes1', SPELL_ATTR1_REQ_COMBO_POINTS1 | SPELL_ATTR1_REQ_COMBO_POINTS2, '&'],
+            default       => ['powerType', $_]
+        };
     }
 
     protected function cbSource(int $cr, int $crs, string $crv) : ?array

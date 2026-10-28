@@ -319,18 +319,18 @@ var mn_appearances = [
     [13,"Off Hand","?item-appearances=offhand"],
     [14,"Ranged","?item-appearances=ranged"]
 ];
-var mn_resources_ph = [
-    [0,"Blood Rune",null],
-    [0,"Combo Points",null],
-    [0,"Energy",null],
-    [0,"Focus",null],
-    [0,"Frost Rune",null],
-    [0,"Happiness",null],
-    [0,"Health",null],
-    [0,"Mana",null],
-    [0,"Rage",null],
-    [0,"Runic Power",null],
-    [0,"Unholy Rune",null]
+var mn_resources_ph = [                                    // spells by the resource they use
+    [22,"Blood Rune","?spells&filter=cr=45;crs=22;crv=0"],
+    [25,"Combo Points","?spells&filter=cr=45;crs=25;crv=0"],
+    [4,"Energy","?spells&filter=cr=45;crs=4;crv=0"],
+    [5,"Focus","?spells&filter=cr=45;crs=5;crv=0"],
+    [24,"Frost Rune","?spells&filter=cr=45;crs=24;crv=0"],
+    [14,"Happiness","?spells&filter=cr=45;crs=14;crv=0"],
+    [6,"Health","?spells&filter=cr=45;crs=6;crv=0"],
+    [8,"Mana","?spells&filter=cr=45;crs=8;crv=0"],
+    [9,"Rage","?spells&filter=cr=45;crs=9;crv=0"],
+    [11,"Runic Power","?spells&filter=cr=45;crs=11;crv=0"],
+    [23,"Unholy Rune","?spells&filter=cr=45;crs=23;crv=0"]
 ];
 var mn_achievements_wh = [
     [0,"Character Achievements","?achievements",mn_achievements],
@@ -1255,7 +1255,7 @@ var mn_database = [
     [8,"Hunter Pets","?pets",mn_pets],
     [14,"Professions & Skills","?skills",mn_skills],
     [13,"Races","?races",mn_races],
-    [0,"Resources [PH]",null,mn_resources_ph],
+    [0,"Resources",null,mn_resources_ph],
     [1,"Spells","?spells",mn_spells],
     [10,"Titles","?titles",mn_titles],
     [, "World",,,{colBreak:true}],
@@ -4344,7 +4344,8 @@ var LANG = {
                             [4, "Energy"],                          [5, "Focus"],                           [6, "Health"],                          [8, "Mana"],
                             [9, "Rage"],                            [10, "Runes"],                          [11, "Runic Power"],                    [14, "Happiness"],
                             [15, "Ammo"],                           [16, "Pyrite"],                         [17, "Steam Pressure"],                 [18, "Heat"],
-                            [19, "Ooze"],                           [20, "Blood Power"],                    [21, "Wrath"]
+                            [19, "Ooze"],                           [20, "Blood Power"],                    [21, "Wrath"],
+                            [22, "Blood Rune"],                     [23, "Unholy Rune"],                    [24, "Frost Rune"],                     [25, "Combo Points"]
                         ],
         spellfocus:     [
                             [1, "Anvil"],                           [2, "Loom"],                            [3, "Forge"],                           [4, "Cooking Fire"],                    [663, "Alchemy Lab"],

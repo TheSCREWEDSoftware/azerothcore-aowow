@@ -4132,7 +4132,8 @@ var LANG = {
                             [4, "Energía"],                         [5, "Enfoque"],                         [6, "Salud"],                           [8, "Maná"],
                             [9, "Ira"],                             [10, "Runas"],                          [11, "Poder rúnico"],                   [14, "Felicidad"],
                             [15, "Munición"],                       [16, "Pirita"],                         [17, "Presión de vapor"],               [18, "Calor"],
-                            [19, "Moco"],                           [20, "Poder de sangre"],                [21, "Cólera"]
+                            [19, "Moco"],                           [20, "Poder de sangre"],                [21, "Cólera"],
+                            [22, "Blood Rune"],                     [23, "Unholy Rune"],                    [24, "Frost Rune"],                     [25, "Combo Points"]
                         ],
         spellfocus:     [
                             [1, "Yunque"],                          [2, "Telar"],                           [3, "Forja"],                           [4, "Lumbre"],                          [663, "Laboratorio de alquimia"],
