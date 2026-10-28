@@ -159,10 +159,12 @@ a.gp-prow.nofit { opacity: .55; }
 .rc-seg a:last-child { border-radius: 0 4px 4px 0; }
 .rc-seg a.on { background: #ffd100; border-color: #ffd100; color: #111; }
 .rc-seg a:hover:not(.on) { background: #222; color: #fff; }
-.rc-roles { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: #aaa; }
+.rc-roles { flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; font-size: 13px; color: #aaa; }
+.tool-raidcomp > .rc-roles { margin: 10px 0 0; padding: 8px; background: #141414; border: 1px solid #2a2a2a; border-radius: 6px; }
+.rc-role i { font-style: normal; color: #888; }
 .rc-role b { color: #fff; }
 .rc-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; }
-.rc-check { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #ccc; cursor: pointer; margin-right: 6px; }
+.rc-opt { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: #ccc; cursor: pointer; margin-right: 6px; }
 .tool-raidcomp a.tc-nav-btn { display: inline-block; padding: 5px 12px; font-size: 12px; background: #272727; border: 1px solid #484848; color: #c0c0c0; text-decoration: none; border-radius: 3px; white-space: nowrap; }
 .tool-raidcomp a.tc-nav-btn:hover { background: #3a3a3a; color: #fff; border-color: #777; }
 
@@ -189,11 +191,11 @@ a.rc-add span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
 .rc-seg a.rc-exp-w { color: #5ab8f0; } .rc-seg a.rc-exp-w.on { background: #5ab8f0; border-color: #5ab8f0; color: #111; }
 
 .rc-groups { display: grid; gap: 12px; }
-.rc-group { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; padding: 8px 10px 10px 4px; }
+.rc-group { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; padding: 8px 6px 10px 2px; }
 .rc-ghead { font-size: 13px; font-weight: bold; color: #e0e0e0; margin: 0 0 6px 28px; }
-.rc-line { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+.rc-line { display: flex; align-items: center; gap: 4px; margin-bottom: 5px; }
 .rc-num { flex: 0 0 18px; text-align: right; font-size: 12px; font-weight: bold; color: #666; }
-.rc-slot { flex: 1; min-width: 0; height: 46px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 5px; box-sizing: border-box; position: relative; }
+.rc-slot { flex: 1; min-width: 0; height: 46px; display: flex; align-items: center; gap: 6px; padding: 0 6px; border-radius: 5px; box-sizing: border-box; position: relative; }
 .rc-slot.empty { border: 1px dashed #3a3a3a; color: #555; font-size: 12px; }
 .rc-slot.full { background: #1b1b1b; border: 1px solid #333; cursor: grab; }
 .rc-slot.full:hover { border-color: #666; }
@@ -204,9 +206,18 @@ a.rc-add span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
 .rc-who i { font-style: normal; font-size: 11px; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rc-rolename { flex: none; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: .04em; padding: 2px 0; width: 6.4em; box-sizing: border-box; text-align: center; border-radius: 3px; color: #111; }
 .rc-rT { background: #6aa8ff; } .rc-rH { background: #5cf25c; } .rc-rM { background: #ff7a52; } .rc-rR { background: #c99cff; }
-a.rc-del { position: absolute; top: 1px; right: 4px; color: #666; text-decoration: none; font-size: 13px; line-height: 1; display: none; }
-.rc-slot.full:hover a.rc-del { display: block; }
-a.rc-del:hover { color: #f55; }
+a.rc-act { flex: 0 0 22px; height: 22px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 1px solid #333; border-radius: 4px; background: #1b1b1b; color: #999; text-decoration: none; }
+span.rc-act { flex: 0 0 22px; }
+a.rc-edit:hover { color: #ffd100; border-color: #ffd100; }
+a.rc-rm:hover { color: #f55; border-color: #f55; }
+input.rc-name { font-size: 13px; font-weight: bold; background: #0d0d0d; border: 1px solid #ffd100; color: #fff; border-radius: 3px; padding: 1px 4px; width: 100%; box-sizing: border-box; }
+.rc-gbuffs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0 24px; }
+a.rc-gbuff { position: relative; display: block; text-decoration: none; }
+a.rc-gbuff img { width: 22px; height: 22px; display: block; border: 1px solid #000; border-radius: 3px; box-shadow: 0 0 0 1px #555; }
+a.rc-gbuff b { position: absolute; right: -3px; bottom: -3px; font-size: 11px; color: #fff; text-shadow: 0 0 2px #000, 0 0 2px #000, 1px 1px 0 #000; }
+.rc-bench { margin-top: 10px; }
+a.rc-btoggle { display: inline-block; padding: 6px 14px; border: 1px solid #444; border-radius: 4px; background: #141414; color: #ccc; font-weight: bold; font-size: 13px; text-decoration: none; margin-bottom: 10px; }
+a.rc-btoggle:hover { border-color: #ffd100; color: #fff; }
 
 .rc-lists { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
 .rc-list { background: #111; border: 1px solid #2c2c2c; border-radius: 6px; overflow: hidden; }

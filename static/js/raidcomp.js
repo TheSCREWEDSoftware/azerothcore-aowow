@@ -39,6 +39,15 @@ var AoRaidComp = (function () {
     var CLASS_RGB = { 1: '199,156,110', 2: '245,140,186', 3: '171,212,115', 4: '255,245,105', 5: '255,255,255', 6: '196,31,59', 7: '0,112,222', 8: '105,204,240', 9: '148,130,201', 11: '255,125,10' };
     // palette layouts: r = rows with names, s = squares with spec icons
     var LAYOUTS = { r: 'Rows with names', s: 'Squares with Specs' };
+    // effects that only reach the caster's own group: name, spell, icon, [[class, spec key or '']]
+    var GROUP_ONLY = [
+        ['Vampiric Embrace', 15286, 'spell_shadow_unsummonbuilding',   [[5, 'shadow']]],
+        ['Mana Tide Totem',  16190, 'spell_frost_summonwaterelemental', [[7, 'resto']]],
+        ['Tranquility',      48447, 'spell_nature_tranquility',         [[11, '']]]
+    ];
+    var BENCH_AT = 40, BENCH = 10;                  // bench slots live at 40..49
+    var ICON_EDIT = '<svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M11.7 1.3a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4L5.4 13.6 1.5 14.5l.9-3.9zM3.6 11.2l-.4 1.6 1.6-.4 7.6-7.6-1.2-1.2z"/></svg>';
+    var ICON_DEL  = '<svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M3.3 2.3 8 7l4.7-4.7 1 1L9 8l4.7 4.7-1 1L8 9l-4.7 4.7-1-1L7 8 2.3 3.3z"/></svg>';
     var ROLE_NAME = { T: 'Tank', H: 'Healer', M: 'DPS (Melee)', R: 'DPS (Ranged)' };
     var SLOT_ROLE = { T: 'Tank', H: 'Healer', M: 'Melee', R: 'Ranged' };
     var ROLES = { T: 'Tanks', H: 'Healers', M: 'Melee DPS', R: 'Ranged DPS' };
@@ -187,7 +196,7 @@ var AoRaidComp = (function () {
         }
     };
 
-    var el, exp = 'w', size = 25, faction = 'a', layout = 'r', slots = [], names = {}, hash = '', renameMode = false;
+    var el, exp = 'w', size = 25, faction = 'a', layout = 'r', slots = [], names = {}, hash = '', askDelete = false, benchOpen = false;
 
     function esc(t) {
         return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
@@ -208,8 +217,9 @@ var AoRaidComp = (function () {
     // ── link ──
     function save() {
         var code = slots.slice(0, size).map(function (i) { return i == null ? '.' : i.toString(36); }).join('').replace(/\.+$/, '');
-        var nm = Object.keys(names).filter(function (k) { return names[k] && k < size; }).map(function (k) { return k + '=' + encodeURIComponent(names[k]); }).join('|');
-        hash = exp + size + (EXPANSIONS[exp].factions ? faction : '') + (layout == 's' ? 's' : '') + (code ? '-' + code : '') + (nm ? '~' + nm : '');
+        var bench = slots.slice(BENCH_AT, BENCH_AT + BENCH).map(function (i) { return i == null ? '.' : i.toString(36); }).join('').replace(/\.+$/, '');
+        var nm = Object.keys(names).filter(function (k) { return names[k] && (k < size || (k >= BENCH_AT && k < BENCH_AT + BENCH)); }).map(function (k) { return k + '=' + encodeURIComponent(names[k]); }).join('|');
+        hash = exp + size + (EXPANSIONS[exp].factions ? faction : '') + (layout == 's' ? 's' : '') + (code ? '-' + code : '') + (bench ? '+' + bench : '') + (nm ? '~' + nm : '');
         location.replace('#' + hash);
     }
 
@@ -217,7 +227,7 @@ var AoRaidComp = (function () {
         var h = location.hash.substr(1);
         if (h == hash) return false;
         hash = h;
-        var parts = h.split('~'), m = /^([vtw]?)(\d+)([ah]?)(s?)(?:-([0-9a-z.]*))?$/.exec(parts[0]);
+        var parts = h.split('~'), m = /^([vtw]?)(\d+)([ah]?)(s?)(?:-([0-9a-z.]*))?(?:\+([0-9a-z.]*))?$/.exec(parts[0]);
         exp = m && m[1] ? m[1] : 'w';
         size = m && EXPANSIONS[exp].sizes.indexOf(+m[2]) != -1 ? +m[2] : EXPANSIONS[exp].sizes[0];
         faction = m && m[3] ? m[3] : 'a';
@@ -226,6 +236,10 @@ var AoRaidComp = (function () {
         (m && m[5] || '').split('').forEach(function (c, i) {
             var n = c == '.' ? null : parseInt(c, 36);
             slots[i] = n != null && SPECS[n] && classOk(SPECS[n][0]) ? n : null;
+        });
+        (m && m[6] || '').substr(0, BENCH).split('').forEach(function (c, i) {
+            var n = c == '.' ? null : parseInt(c, 36);
+            slots[BENCH_AT + i] = n != null && SPECS[n] && classOk(SPECS[n][0]) ? n : null;
         });
         names = {};
         (parts[1] || '').split('|').forEach(function (p) {
@@ -254,11 +268,8 @@ var AoRaidComp = (function () {
         html += '<span class="rc-ltype"><span class="q0">Selector Type</span><span class="rc-seg rc-lay">' + Object.keys(LAYOUTS).map(function (k) {
             return '<a href="javascript:;" data-lay="' + k + '"' + (layout == k ? ' class="on"' : '') + '>' + LAYOUTS[k] + '</a>';
         }).join('') + '</span></span>';
-        html += '<span class="rc-roles">' + Object.keys(ROLES).map(function (r) {
-            return '<span class="rc-role">' + ROLES[r] + ' <b>' + mem.filter(function (s) { return s[4] == r; }).length + '</b></span>';
-        }).join('') + '<span class="rc-role">Players <b>' + mem.length + ' / ' + size + '</b></span></span>'
-            + '<span class="rc-actions"><label class="rc-check"><input type="checkbox" class="rc-rename"' + (renameMode ? ' checked' : '') + ' /> Double-click renames</label>'
-            + '<a href="javascript:;" class="tc-nav-btn rc-clear">Clear</a><a href="javascript:;" class="tc-nav-btn rc-copy">Copy Link</a></span></div>';
+        html += '<span class="rc-actions"><label class="rc-opt"><input type="checkbox" class="rc-ask"' + (askDelete ? ' checked' : '') + ' /> Ask before deleting</label>'
+            + '<a href="javascript:;" class="tc-nav-btn rc-clear">Clear</a><a href="javascript:;" class="tc-nav-btn rc-copy">Copy Link</a></span>' + summary(mem) + '</div>';
 
         // palette: a card per class (5 per row) with its three specs; hovering a spec shows its role
         html += '<div class="rc-palette rc-lay-' + layout + '" style="grid-template-columns: repeat(' + (exp == 'v' ? 4 : 5) + ', minmax(0, 1fr))">' + PALETTE.filter(classOk).map(function (c) {
@@ -276,13 +287,24 @@ var AoRaidComp = (function () {
         html += '<div class="rc-groups" style="grid-template-columns: repeat(' + perRow + ', minmax(0, 1fr))">';
         for (var g = 0; g < groups; g++) {
             html += '<div class="rc-group"><div class="rc-ghead">Group ' + (g + 1) + '</div>';
-            for (var k = 0; k < 5; k++) {
-                var idx = g * 5 + k, s = slots[idx] != null ? SPECS[slots[idx]] : null;
-                html += '<div class="rc-line"><span class="rc-num">' + (idx + 1) + '</span>' + (s
-                    ? '<div class="rc-slot full" draggable="true" data-slot="' + idx + '"><img src="' + classIcon(s[0], 'medium') + '" alt="" />'
-                      + '<span class="rc-who"><b class="c' + s[0] + '">' + esc(names[idx] || g_chr_classes[s[0]]) + '</b><i>' + esc(s[2]) + (names[idx] ? ' ' + esc(g_chr_classes[s[0]]) : '') + '</i></span>'
-                      + '<span class="rc-rolename rc-r' + s[4] + '">' + SLOT_ROLE[s[4]] + '</span><a href="javascript:;" class="rc-del" title="Remove">&times;</a></div>'
-                    : '<div class="rc-slot empty" data-slot="' + idx + '">Empty</div>') + '</div>';
+            for (var k = 0; k < 5; k++)
+                html += slotLine(g * 5 + k, g * 5 + k + 1);
+            html += groupOnly(g) + '</div>';
+        }
+        html += '</div>';
+
+        html += summary(mem);
+
+        // bench: two more sets of rows, folded away unless opened
+        var benched = slots.slice(BENCH_AT, BENCH_AT + BENCH).filter(function (i) { return i != null; }).length;
+        html += '<div class="rc-bench' + (benchOpen ? ' open' : '') + '"><a href="javascript:;" class="rc-btoggle">' + (benchOpen ? 'Hide bench' : 'Show bench') + (benched ? ' (' + benched + ')' : '') + '</a>';
+        if (benchOpen) {
+            html += '<div class="rc-groups" style="grid-template-columns: repeat(' + perRow + ', minmax(0, 1fr))">';
+            for (var b = 0; b < BENCH / 5; b++) {
+                html += '<div class="rc-group"><div class="rc-ghead">Bench</div>';
+                for (var k = 0; k < 5; k++)
+                    html += slotLine(BENCH_AT + b * 5 + k, b * 5 + k + 1);
+                html += '</div>';
             }
             html += '</div>';
         }
@@ -294,6 +316,66 @@ var AoRaidComp = (function () {
 
         el.innerHTML = html;
         bind(mem);
+    }
+
+    // role counts; the bench is added in brackets: Tanks 2 (+1), Players 20 / 25 (+3)
+    function summary(mem) {
+        var bench = slots.slice(BENCH_AT, BENCH_AT + BENCH).filter(function (i) { return i != null; }).map(function (i) { return SPECS[i]; });
+        var plus = function (n) { return bench.length ? ' <i>(+' + n + ')</i>' : ''; };
+        return '<div class="rc-roles">' + Object.keys(ROLES).map(function (r) {
+            var f = function (s) { return s[4] == r; };
+            return '<span class="rc-role">' + ROLES[r] + ' <b>' + mem.filter(f).length + '</b>' + plus(bench.filter(f).length) + '</span>';
+        }).join('') + '<span class="rc-role">Players <b>' + mem.length + ' / ' + size + '</b>' + plus(bench.length) + '</span></div>';
+    }
+
+    function slotLine(idx, num) {
+        var s = slots[idx] != null ? SPECS[slots[idx]] : null;
+        return '<div class="rc-line"><span class="rc-num">' + num + '</span>' + (s
+            ? '<div class="rc-slot full" draggable="true" data-slot="' + idx + '"><img src="' + classIcon(s[0], 'medium') + '" alt="" />'
+              + '<span class="rc-who"><b class="c' + s[0] + '">' + esc(names[idx] || g_chr_classes[s[0]]) + '</b><i>' + esc(s[2]) + (names[idx] ? ' ' + esc(g_chr_classes[s[0]]) : '') + '</i></span>'
+              + '<span class="rc-rolename rc-r' + s[4] + '">' + SLOT_ROLE[s[4]] + '</span></div>'
+              + '<a href="javascript:;" class="rc-act rc-edit" data-slot="' + idx + '" title="Rename">' + ICON_EDIT + '</a>'
+              + '<a href="javascript:;" class="rc-act rc-rm" data-slot="' + idx + '" title="Delete">' + ICON_DEL + '</a>'
+            : '<div class="rc-slot empty" data-slot="' + idx + '">Empty</div><span class="rc-act off"></span><span class="rc-act off"></span>') + '</div>';
+    }
+
+    // group-only effects present in group g, with how many of its members they reach
+    function groupOnly(g) {
+        var mem = slots.slice(g * 5, g * 5 + 5).filter(function (i) { return i != null; }).map(function (i) { return SPECS[i]; });
+        var out = GROUP_ONLY.filter(function (e) {
+            return e[3].some(function (src) { return classOk(src[0]) && mem.some(function (m) { return provides(m, src); }); });
+        }).map(function (e) {
+            return '<a href="' + g_host.replace(/\/?$/, '/') + '?spell=' + e[1] + '" class="rc-gbuff"><img src="' + g_staticUrl + '/images/wow/icons/small/' + e[2] + '.jpg" alt="" /><b>' + mem.length + '</b></a>';
+        });
+        return out.length ? '<div class="rc-gbuffs">' + out.join('') + '</div>' : '';
+    }
+
+    function remove(idx) {
+        $WH.Tooltip.hide();
+        var s = SPECS[slots[idx]];
+        if (askDelete && !confirm('Remove ' + (names[idx] || specLabel(s)) + '?'))
+            return;
+        slots[idx] = null; delete names[idx]; save(); render();
+    }
+
+    // rename right in the slot: Enter or leaving the field keeps it, Escape cancels
+    function rename(idx) {
+        $WH.Tooltip.hide();
+        var d = el.querySelector('.rc-slot[data-slot="' + idx + '"]'), b = d.querySelector('.rc-who b'), done = false;
+        var f = document.createElement('input');
+        f.type = 'text'; f.className = 'rc-name'; f.maxLength = 24; f.value = names[idx] || ''; f.placeholder = g_chr_classes[SPECS[slots[idx]][0]];
+        b.replaceWith(f);
+        d.draggable = false;
+        f.focus(); f.select();
+        var finish = function (keep) {
+            if (done) return;
+            done = true;
+            if (keep) { var n = f.value.trim().substr(0, 24); if (n) names[idx] = n; else delete names[idx]; save(); }
+            render();
+        };
+        f.onkeydown = function (e) { if (e.key == 'Enter') finish(true); else if (e.key == 'Escape') finish(false); e.stopPropagation(); };
+        f.onblur = function () { finish(true); };
+        f.onmousedown = f.onclick = f.ondblclick = function (e) { e.stopPropagation(); };
     }
 
     function list(title, defs, mem) {
@@ -346,7 +428,10 @@ var AoRaidComp = (function () {
                 save(); render();
             };
         });
-        el.querySelector('.rc-rename').onchange = function () { renameMode = this.checked; };
+        el.querySelector('.rc-ask').onchange = function () { askDelete = this.checked; try { localStorage.setItem('aowow_rc_ask', askDelete ? '1' : ''); } catch (e) {} };
+        el.querySelector('.rc-btoggle').onclick = function () { benchOpen = !benchOpen; try { localStorage.setItem('aowow_rc_bench', benchOpen ? '1' : ''); } catch (e) {} render(); };
+        $$('.rc-edit').forEach(function (a) { a.onclick = function () { rename(+a.getAttribute('data-slot')); }; });
+        $$('.rc-rm').forEach(function (a) { a.onclick = function () { remove(+a.getAttribute('data-slot')); }; });
         el.querySelector('.rc-clear').onclick = function () { slots = []; names = {}; save(); render(); };
         el.querySelector('.rc-copy').onclick = function () {
             var b = this;
@@ -366,7 +451,7 @@ var AoRaidComp = (function () {
             a.onmouseout = $WH.Tooltip.hide;
         });
 
-        // slots: drop a spec or another member (swap), double-click removes or renames
+        // slots: drop a spec or another member (swap)
         $$('.rc-slot').forEach(function (d) {
             var idx = +d.getAttribute('data-slot');
             d.ondragover = function (e) { e.preventDefault(); d.classList.add('over'); };
@@ -391,18 +476,6 @@ var AoRaidComp = (function () {
             d.ondragstart = function (e) { e.dataTransfer.setData('text/plain', 'm' + idx); e.dataTransfer.effectAllowed = 'move'; $WH.Tooltip.hide(); };
             d.onmouseover = function () { $WH.Tooltip.show(d, (names[idx] ? '<b>' + esc(names[idx]) + '</b><br />' : '') + specTip(s)); };
             d.onmouseout = $WH.Tooltip.hide;
-            d.ondblclick = function () {
-                $WH.Tooltip.hide();
-                if (renameMode) {
-                    var n = prompt('Name for this player (empty: the class name):', names[idx] || '');
-                    if (n === null) return;
-                    n = n.trim().substr(0, 24);
-                    if (n) names[idx] = n; else delete names[idx];
-                    save(); render();
-                }
-                else { slots[idx] = null; delete names[idx]; save(); render(); }
-            };
-            d.querySelector('.rc-del').onclick = function (e) { e.stopPropagation(); $WH.Tooltip.hide(); slots[idx] = null; delete names[idx]; save(); render(); };
         });
 
         // dropping a member back on the palette takes it out
@@ -428,6 +501,7 @@ var AoRaidComp = (function () {
     return {
         init: function (container) {
             el = container;
+            try { askDelete = !!localStorage.getItem('aowow_rc_ask'); benchOpen = !!localStorage.getItem('aowow_rc_bench'); } catch (e) {}
             load();
             render();
             if (!location.hash) save();
