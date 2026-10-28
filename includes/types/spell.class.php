@@ -898,10 +898,12 @@ class SpellList extends BaseType
                 $pl    = $PL    = !$this->interactive ? 'PL'    : sprintf(Util::$dfnString, 'LANG.level', 'PL');
 
                 // note the " !
-                return eval('return "'.$formula.'";');
+                try { return eval('return "'.$formula.'";'); }
+                catch (\ParseError $e) { return $formula; }      // a formula we cannot resolve stays as text
             }
             else
-                return eval('return '.$formula.';');
+                try { return eval('return '.$formula.';'); }
+                catch (\ParseError $e) { return $formula; }      // a formula we cannot resolve stays as text
         }
 
         // since this function may be called recursively, there are cases, where the already evaluated string is tried to be evaled again, throwing parse errors
@@ -921,7 +923,8 @@ class SpellList extends BaseType
         }
 
         // there should not be any letters without a leading $
-        return eval('return '.$formula.';');
+        try { return eval('return '.$formula.';'); }
+        catch (\ParseError $e) { return $formula; }      // a formula we cannot resolve stays as text
     }
 
     // description-, buff-parsing component
