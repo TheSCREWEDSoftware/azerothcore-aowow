@@ -1227,6 +1227,7 @@ var mn_guides = [
 var mn_tools = [
     [0,"天赋模拟器","?talent",mn_talentCalc],
     [4,"试衣间","?dressing-room"],
+    [15,"装备规划","?gear-planner"],
     [2,"猎人宠物模拟器","?petcalc",mn_petCalc],
     [10,"物品查找器","?item-finder"],
     [11,"团队配置","?raid-composition"],

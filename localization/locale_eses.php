@@ -120,6 +120,7 @@ $lang = array(
         'raidComp'      => "Composición de banda",
         'discordWebhook' => "Webhook de Discord",
         'questTracker'  => "Seguimiento de misiones",
+        'gearPlanner'   => "Planificador de equipo",
         'chooseClass'   => "Escoge una clase",
         'chooseFamily'  => "Escoge una familia de mascota",
 

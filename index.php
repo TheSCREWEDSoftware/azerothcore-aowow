@@ -46,6 +46,9 @@ switch ($pageCall)
     case 'events':
     case 'faction':
     case 'factions':
+    case 'gear-planner':                                    // tool: a character's gear, gems, enchants and stats
+        if ($pageCall == 'gear-planner')
+            $altClass = 'gearplanner';
     case 'gear-sets':                                       // armour sets of a class, worn
     case 'guide':
     case 'guides':

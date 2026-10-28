@@ -1359,7 +1359,7 @@ var mn_guides = [
 var mn_tools = [
     [0,"Talent Calculator","?talent",mn_talentCalc],
     [4,"Dressing Room","?dressing-room"],
-    [0,"Gear Planner [PH]",null],
+    [15,"Gear Planner","?gear-planner"],
     [10,"Item Finder","?item-finder"],
     [2,"Hunter Pet Calculator","?petcalc",mn_petCalc],
     [14,"Quest Completion Tracker","?quest-tracker"],

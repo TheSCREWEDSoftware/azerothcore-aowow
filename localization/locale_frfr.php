@@ -120,6 +120,7 @@ $lang = array(
         'raidComp'      => "Composition de raid",
         'discordWebhook' => "Webhook Discord",
         'questTracker'  => "Suivi des quêtes",
+        'gearPlanner'   => "Planificateur d'équipement",
         'chooseClass'   => "Choisissez une classe",
         'chooseFamily'  => "Choisissez un familier",
 

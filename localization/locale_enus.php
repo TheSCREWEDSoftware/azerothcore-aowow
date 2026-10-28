@@ -121,6 +121,7 @@ $lang = array(
         'raidComp'      => "Raid Composition",
         'discordWebhook' => "Discord Webhook",
         'questTracker'  => "Quest Completion Tracker",
+        'gearPlanner'   => "Gear Planner",
         'chooseClass'   => "Choose a class",
         'chooseFamily'  => "Choose a pet family",
 

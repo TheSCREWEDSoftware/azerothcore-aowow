@@ -1181,6 +1181,7 @@ var mn_guides = [
 var mn_tools = [
     [0,"Расчёт талантов","?talent",mn_talentCalc],
     [4,"Примерочная","?dressing-room"],
+    [15,"Планировщик экипировки","?gear-planner"],
     [2,"Расчёт умений питомцев","?petcalc",mn_petCalc],
     [10,"Поиск предметов","?item-finder"],
     [11,"Состав рейда","?raid-composition"],

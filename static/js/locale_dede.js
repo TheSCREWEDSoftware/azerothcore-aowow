@@ -1181,6 +1181,7 @@ var mn_guides = [
 var mn_tools = [
     [0,"Talentrechner","?talent",mn_talentCalc],
     [4,"Umkleidekabine","?dressing-room"],
+    [15,"Ausrüstungsplaner","?gear-planner"],
     [2,"Begleiterrechner","?petcalc",mn_petCalc],
     [10,"Gegenstandsfinder","?item-finder"],
     [11,"Schlachtzugszusammenstellung","?raid-composition"],

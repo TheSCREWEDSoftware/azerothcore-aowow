@@ -121,6 +121,7 @@ $lang = array(
         'raidComp'      => "团队配置",
         'discordWebhook' => "Discord Webhook",
         'questTracker'  => "任务完成追踪",
+        'gearPlanner'   => "装备规划",
         'chooseClass'   => "选择一个职业",
         'chooseFamily'  => "选择一个宠物家族",
 

@@ -120,6 +120,7 @@ $lang = array(
         'raidComp'      => "Schlachtzugszusammenstellung",
         'discordWebhook' => "Discord-Webhook",
         'questTracker'  => "Quest-Tracker",
+        'gearPlanner'   => "Ausrüstungsplaner",
         'chooseClass'   => "Wählt eine Klasse",
         'chooseFamily'  => "Wählt eine Tierart",
 
