@@ -22,10 +22,10 @@ var AoRaidComp = (function () {
         [9,  'aff',     'Affliction',    1, 'R'], [9,  'demo',    'Demonology',    2, 'R'], [9,  'destro', 'Destruction',   3, 'R'],
         [11, 'balance', 'Balance',       1, 'R'], [11, 'cat',     'Feral (Cat)',   2, 'M'], [11, 'bear',   'Feral (Bear)',  2, 'T'], [11, 'resto', 'Restoration', 3, 'H']
     ];
-    var ROLE_NAME = { T: 'Tank', H: 'Healer', M: 'Melee', R: 'Ranged' };
-    var ROLES = { T: 'Tanks', H: 'Healers', M: 'Melee', R: 'Ranged' };
-    // palette columns by spec: tanks and melee damage under Melee, healers and ranged damage under Ranged
-    var PALETTE = [['Melee', [1, 2, 4, 6, 7, 11], 'MT'], ['Ranged', [2, 3, 5, 7, 8, 9, 11], 'RH']];
+    var ROLE_NAME = { T: 'Tank', H: 'Healer', M: 'DPS (Melee)', R: 'DPS (Ranged)' };
+    var ROLES = { T: 'Tanks', H: 'Healers', M: 'Melee DPS', R: 'Ranged DPS' };
+    // palette: one row per class, in class order
+    var PALETTE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11];
 
     var EXPANSIONS = {
         v: { name: 'Classic',                   sizes: [40, 20], factions: true },
@@ -238,15 +238,13 @@ var AoRaidComp = (function () {
             + '<span class="rc-actions"><label class="rc-check"><input type="checkbox" class="rc-rename"' + (renameMode ? ' checked' : '') + ' /> Double-click renames</label>'
             + '<a href="javascript:;" class="tc-nav-btn rc-clear">Clear</a><a href="javascript:;" class="tc-nav-btn rc-copy">Copy Link</a></span></div>';
 
-        // palette: Melee | Ranged | Hybrid, each class with its specs
-        html += '<div class="rc-palette">' + PALETTE.map(function (col) {
-            return '<div class="rc-pcol"><div class="rc-phead">' + col[0] + '</div>' + col[1].filter(classOk).map(function (c) {
-                return '<div class="rc-pclass"><span class="rc-pname c' + c + '"><img src="' + classIcon(c) + '" alt="" />' + esc(g_chr_classes[c]) + '</span><span class="rc-pspecs">'
-                    + SPECS.map(function (s, i) { return s[0] == c && col[2].indexOf(s[4]) != -1 ? i : -1; }).filter(function (i) { return i >= 0; }).map(function (i) {
-                        var s = SPECS[i];
-                        return '<a href="javascript:;" class="rc-add" draggable="true" data-spec="' + i + '"><img src="' + specIcon(s) + '" alt="" /><span>' + esc(s[2]) + '</span></a>';
-                    }).join('') + '</span></div>';
-            }).join('') + '</div>';
+        // palette: each class with its specs; hovering a spec shows its role
+        html += '<div class="rc-palette">' + PALETTE.filter(classOk).map(function (c) {
+            return '<div class="rc-pclass"><span class="rc-pname c' + c + '"><img src="' + classIcon(c) + '" alt="" />' + esc(g_chr_classes[c]) + '</span><span class="rc-pspecs">'
+                + SPECS.map(function (s, i) { return s[0] == c ? i : -1; }).filter(function (i) { return i >= 0; }).map(function (i) {
+                    var s = SPECS[i];
+                    return '<a href="javascript:;" class="rc-add" draggable="true" data-spec="' + i + '"><img src="' + specIcon(s) + '" alt="" /><span>' + esc(s[2]) + '</span></a>';
+                }).join('') + '</span></div>';
         }).join('') + '</div>';
 
         // groups: up to 5 per row; 8 groups as two rows of 4
@@ -256,7 +254,7 @@ var AoRaidComp = (function () {
             html += '<div class="rc-group"><div class="rc-ghead">Group ' + (g + 1) + '</div>';
             for (var k = 0; k < 5; k++) {
                 var idx = g * 5 + k, s = slots[idx] != null ? SPECS[slots[idx]] : null;
-                html += '<div class="rc-line"><span class="rc-num">' + (k + 1) + '</span>' + (s
+                html += '<div class="rc-line"><span class="rc-num">' + (idx + 1) + '</span>' + (s
                     ? '<div class="rc-slot full" draggable="true" data-slot="' + idx + '"><img src="' + classIcon(s[0], 'medium') + '" alt="" />'
                       + '<span class="rc-who"><b class="c' + s[0] + '">' + esc(names[idx] || g_chr_classes[s[0]]) + '</b><i>' + esc(s[2]) + (names[idx] ? ' ' + esc(g_chr_classes[s[0]]) : '') + '</i></span>'
                       + '<span class="rc-rolename rc-r' + s[4] + '">' + ROLE_NAME[s[4]] + '</span><a href="javascript:;" class="rc-del" title="Remove">&times;</a></div>'
