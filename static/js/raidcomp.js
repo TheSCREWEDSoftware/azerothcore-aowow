@@ -23,6 +23,7 @@ var AoRaidComp = (function () {
         [11, 'balance', 'Balance',       1, 'R'], [11, 'cat',     'Feral (Cat)',   2, 'M'], [11, 'bear',   'Feral (Bear)',  2, 'T'], [11, 'resto', 'Restoration', 3, 'H']
     ];
     var ROLE_NAME = { T: 'Tank', H: 'Healer', M: 'DPS (Melee)', R: 'DPS (Ranged)' };
+    var SLOT_ROLE = { T: 'Tank', H: 'Healer', M: 'Melee', R: 'Ranged' };
     var ROLES = { T: 'Tanks', H: 'Healers', M: 'Melee DPS', R: 'Ranged DPS' };
     // palette: one row per class, in class order
     var PALETTE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 11];
@@ -257,7 +258,7 @@ var AoRaidComp = (function () {
                 html += '<div class="rc-line"><span class="rc-num">' + (idx + 1) + '</span>' + (s
                     ? '<div class="rc-slot full" draggable="true" data-slot="' + idx + '"><img src="' + classIcon(s[0], 'medium') + '" alt="" />'
                       + '<span class="rc-who"><b class="c' + s[0] + '">' + esc(names[idx] || g_chr_classes[s[0]]) + '</b><i>' + esc(s[2]) + (names[idx] ? ' ' + esc(g_chr_classes[s[0]]) : '') + '</i></span>'
-                      + '<span class="rc-rolename rc-r' + s[4] + '">' + ROLE_NAME[s[4]] + '</span><a href="javascript:;" class="rc-del" title="Remove">&times;</a></div>'
+                      + '<span class="rc-rolename rc-r' + s[4] + '">' + SLOT_ROLE[s[4]] + '</span><a href="javascript:;" class="rc-del" title="Remove">&times;</a></div>'
                     : '<div class="rc-slot empty" data-slot="' + idx + '">Empty</div>') + '</div>';
             }
             html += '</div>';
@@ -288,13 +289,17 @@ var AoRaidComp = (function () {
 
     // what a spec brings, for its tooltip
     function specTip(s) {
-        var D = DATA[exp], out = [];
+        // yellow section header, then "<count>x <buff>" lines in white
+        var D = DATA[exp], out = '';
         [['Buffs', D.buffs], ['Debuffs', D.debuffs]].forEach(function (L) {
-            L[1].forEach(function (d) {
-                d[1].forEach(function (p) { if (provides(s, p)) out.push('<span class="q2">' + esc(p[2]) + '</span> <span class="q0">(' + esc(d[0]) + ')</span>'); });
-            });
+            var lines = L[1].map(function (d) {
+                var n = d[1].filter(function (p) { return provides(s, p); }).length;
+                return n ? '<span class="q1">' + n + 'x ' + esc(d[0]) + '</span>' : '';
+            }).filter(Boolean);
+            if (lines.length)
+                out += '<br /><span class="q">' + L[0] + '</span><br />' + lines.join('<br />');
         });
-        return '<b class="c' + s[0] + '">' + esc(specLabel(s)) + '</b><br /><span class="q0">' + ROLE_NAME[s[4]] + '</span>' + (out.length ? '<br />' + out.join('<br />') : '<br /><span class="q0">No raid buffs or debuffs</span>');
+        return '<b class="c' + s[0] + '">' + esc(specLabel(s)) + '</b><br /><span class="q0">' + ROLE_NAME[s[4]] + '</span>' + (out || '<br /><span class="q0">No raid buffs or debuffs</span>');
     }
 
     function place(i, spec) { slots[i] = spec; save(); render(); }
