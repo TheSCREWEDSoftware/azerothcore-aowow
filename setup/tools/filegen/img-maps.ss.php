@@ -104,12 +104,16 @@ CLISetup::registerSetup("build", new class extends SetupScript
         if (!$getO['skip-zones'])
             $mask |= self::M_MAPS;
 
-        // unless manually prompted drop spawnmap generation if 90% of spawns have core generated area info
-        $npcPct = DB::World()->selectCell('SELECT SUM(IF(`zoneId` > 0, 1, 0)) / COUNT(*) FROM creature')   ?? 0;
-        $goPct  = DB::World()->selectCell('SELECT SUM(IF(`zoneId` > 0, 1, 0)) / COUNT(*) FROM gameobject') ?? 0;
+        // unless manually prompted, also build the spawn masks when the core has not put most spawns in a zone (creature / gameobject zoneId)
+        //   without them a spawn near a zone border lands on whichever zone map is checked first (e.g. Hogger on Westfall instead of Elwynn Forest)
+        if (!$getO['spawnmaps'] && !$getO['subzones'] && !$getO['skip-zones'])
+        {
+            $npcPct = DB::World()->selectCell('SELECT SUM(IF(`zoneId` > 0, 1, 0)) / COUNT(*) FROM creature')   ?? 0;
+            $goPct  = DB::World()->selectCell('SELECT SUM(IF(`zoneId` > 0, 1, 0)) / COUNT(*) FROM gameobject') ?? 0;
 
-        if (!($mask & self::M_SPAWNS) && $npcPct > 0.9 && $goPct > 0.9)
-            $this->modeMask &= ~self::M_SPAWNS;
+            if ($npcPct <= 0.9 || $goPct <= 0.9)
+                $mask |= self::M_SPAWNS;
+        }
 
         $this->modeMask = $mask ?: $this->modeMask;
 
