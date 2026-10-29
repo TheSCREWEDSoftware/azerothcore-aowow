@@ -375,15 +375,21 @@ class QuestPage extends GenericPage
         if (count($chain) > 1)
             $this->series[] = [array_reverse($chain), null];
 
+        // an "OR id = 0" branch matches nothing but stops MySQL from using the indexes, so leave it out when there is no such quest
+        $prevQ   = $this->subject->getField('prevQuestId');
+        $nextQ   = $this->subject->getField('nextQuestId');
+        $reqCnd  = ['AND', ['nextQuestId', $this->typeId], ['exclusiveGroup', 0, '<']];
+        $openCnd = ['AND', ['prevQuestId', $this->typeId], ['id', $this->subject->getField('nextQuestIdChain'), '!']];
+
         $extraLists = array(
             // Requires all of these quests (Quests that you must follow to get this quest)
-            ['reqQ',       array('OR', ['AND', ['nextQuestId', $this->typeId], ['exclusiveGroup', 0, '<']], ['AND', ['id', $this->subject->getField('prevQuestId')], ['nextQuestIdChain', $this->typeId, '!']]), false],
+            ['reqQ',       $prevQ > 0 ? array('OR', $reqCnd, ['AND', ['id', $prevQ], ['nextQuestIdChain', $this->typeId, '!']]) : array($reqCnd), false],
 
             // Requires one of these quests (Requires one of the quests to choose from)
             ['reqOneQ',    array('AND', ['exclusiveGroup', 0, '>'], ['nextQuestId', $this->typeId]), false],
 
             // Opens Quests (Quests that become available only after complete this quest (optionally only one))
-            ['opensQ',     array('OR', ['AND', ['prevQuestId', $this->typeId], ['id', $this->subject->getField('nextQuestIdChain'), '!']], ['id', $this->subject->getField('nextQuestId')]), true],
+            ['opensQ',     $nextQ > 0 ? array('OR', $openCnd, ['id', $nextQ]) : array($openCnd), true],
 
             // Closes Quests (Quests that become inaccessible after completing this quest)
             ['closesQ',    array(['exclusiveGroup', 0, '>'], ['exclusiveGroup', $this->subject->getField('exclusiveGroup')], ['id', $this->typeId, '!']), true],
@@ -1000,7 +1006,8 @@ class QuestPage extends GenericPage
         /**************/
 
         // tab: see also
-        $seeAlso = new QuestList(array(['name_loc'.Lang::getLocale()->value, '%'.Util::htmlEscape($this->subject->getField('name', true)).'%'], ['id', $this->typeId, '!']));
+        // quests named the same (or starting with the same name): a prefix search can use the name index, '%name%' read the whole quest table
+        $seeAlso = new QuestList(array(['name_loc'.Lang::getLocale()->value, Util::htmlEscape($this->subject->getField('name', true)).'%'], ['id', $this->typeId, '!']));
         if (!$seeAlso->error)
         {
             $this->extendGlobalData($seeAlso->getJSGlobals());

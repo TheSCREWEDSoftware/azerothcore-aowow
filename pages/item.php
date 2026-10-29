@@ -590,7 +590,7 @@ class ItemPage extends genericPage
         }
 
         // tab: can be contained in (except keys)
-        else if ($_bagFamily != 0x0100)
+        else if ($_bagFamily && $_bagFamily != 0x0100)      // bagFamily 0: fits in any bag, nothing to list (the query matched nothing anyway)
         {
             $contains = new ItemList(array(['bagFamily', $_bagFamily, '&'], ['slots', 0, '>'], Cfg::get('SQL_LIMIT_NONE')));
             if (!$contains->error)
