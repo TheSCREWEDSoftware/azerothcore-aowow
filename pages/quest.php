@@ -148,7 +148,7 @@ class QuestPage extends GenericPage
             $_[] = Lang::quest('monthly');
 
         if ($t = $this->subject->getField('type'))
-            $_[] = Lang::quest('questInfo', $t);
+            $_[] = $this->subject->getTypeLabels()[$this->typeId] ?? Lang::quest('questInfo', $t);
 
         if ($_)
             $infobox[] = Lang::game('type').Lang::main('colon').implode(' ', $_);

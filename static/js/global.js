@@ -11886,7 +11886,7 @@ Listview.templates = {
 
                         if (quest.daily) {
                             if (quest.type) {
-                                $WH.ae(d, $WH.ct($WH.sprintf(LANG.lvquest_daily, g_quest_types[quest.type])));
+                                $WH.ae(d, $WH.ct($WH.sprintf(LANG.lvquest_daily, (quest.typelabel || g_quest_types[quest.type]))));
                             }
                             else {
                                 $WH.ae(d, $WH.ct(LANG.daily));
@@ -11894,14 +11894,14 @@ Listview.templates = {
                         }
                         else if (quest.weekly) {
                             if (quest.type) {
-                                $WH.ae(d, $WH.ct($WH.sprintf(LANG.lvquest_weekly, g_quest_types[quest.type])));
+                                $WH.ae(d, $WH.ct($WH.sprintf(LANG.lvquest_weekly, (quest.typelabel || g_quest_types[quest.type]))));
                             }
                             else {
                                 $WH.ae(d, $WH.ct(LANG.weekly));
                             }
                         }
                         else if (quest.type) {
-                            $WH.ae(d, $WH.ct(g_quest_types[quest.type]));
+                            $WH.ae(d, $WH.ct((quest.typelabel || g_quest_types[quest.type])));
                         }
 
                         $WH.ae(td, d);
@@ -11913,7 +11913,7 @@ Listview.templates = {
                     var buff = '';
 
                     if (quest.type) {
-                        buff += ' ' + g_quest_types[quest.type];
+                        buff += ' ' + (quest.typelabel || g_quest_types[quest.type]);
                     }
 
                     if (quest.daily) {

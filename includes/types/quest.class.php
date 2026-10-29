@@ -199,9 +199,71 @@ class QuestList extends BaseType
         return $data;
     }
 
+    private ?array $typeLabels = null;
+
+    // instance quests named after where they happen: Dungeon, Dungeon (Normal / Heroic) for TBC and Wrath, Raid (10 / 25 / 40 / 10/25)
+    //   the instance is the quest's zone, or else the instance its creature / object objectives spawn in
+    //   only for quests flagged group, dungeon, heroic or raid; returns questId => label for those that change
+    public function getTypeLabels() : array
+    {
+        if ($this->typeLabels !== null)
+            return $this->typeLabels;
+
+        $this->typeLabels = [];
+        $types = [1, 62, 81, 85, 88, 89];
+        $ids   = [];
+        foreach ($this->templates as $id => $tpl)
+            if (in_array($tpl['type'], $types))
+                $ids[] = $id;
+
+        if (!$ids)
+            return $this->typeLabels;
+
+        $instTypes = [2, 3, 5, 7, 8];                           // ?_zones.type: dungeon, raid, dungeon with heroic mode, 10/25 raid, 10/25 raid with heroic mode
+        $zoneOf    = [];
+        foreach ($ids as $id)
+            if (($z = $this->templates[$id]['zoneOrSort']) > 0)
+                $zoneOf[$id] = $z;
+
+        $zones = DB::Aowow()->select('SELECT `id` AS ARRAY_KEY, `type`, `maxPlayer` FROM ?_zones WHERE `type` IN (?a)', $instTypes) ?: [];
+        $zoneOf = array_filter($zoneOf, fn($z) => isset($zones[$z]));
+
+        if ($rest = array_values(array_diff($ids, array_keys($zoneOf))))
+        {
+            $objectives = [];
+            foreach ($rest as $id)
+                for ($i = 1; $i <= 4; $i++)
+                    if ($o = $this->templates[$id]['reqNpcOrGo'.$i])
+                        $objectives[$o > 0 ? Type::NPC : Type::OBJECT][abs($o)][] = $id;
+
+            foreach ($objectives as $type => $byId)
+                foreach (DB::Aowow()->select('SELECT `typeId`, `areaId` FROM ?_spawns WHERE `type` = ?d AND `typeId` IN (?a) AND `areaId` IN (?a) GROUP BY `typeId`, `areaId`', $type, array_keys($byId), array_keys($zones)) ?: [] as $s)
+                    foreach ($byId[$s['typeId']] as $id)
+                        $zoneOf[$id] ??= (int)$s['areaId'];
+        }
+
+        foreach ($zoneOf as $id => $z)
+        {
+            $qType = $this->templates[$id]['type'];
+            $label = match ((int)$zones[$z]['type'])
+            {
+                2       => Lang::quest('questInfo', 81),
+                5       => sprintf('%s (%s)', Lang::quest('questInfo', 81), Lang::quest('questInfo', $qType == 85 ? 85 : 0)),
+                3       => sprintf('%s (%d)', Lang::quest('questInfo', 62), $zones[$z]['maxPlayer']),
+                default => $qType == 88 || $qType == 89 ? Lang::quest('questInfo', $qType) : sprintf('%s (%s)', Lang::quest('questInfo', 62), $qType == 85 ? Lang::quest('questInfo', 85) : '10/25')
+            };
+
+            if ($label != Lang::quest('questInfo', $qType))
+                $this->typeLabels[$id] = $label;
+        }
+
+        return $this->typeLabels;
+    }
+
     public function getListviewData($extraFactionId = 0)    // i should formulate a propper parameter..
     {
         $data = [];
+        $typeLabels = $this->getTypeLabels();
 
         foreach ($this->iterate() as $__)
         {
@@ -234,6 +296,9 @@ class QuestList extends BaseType
 
             if ($_ = $this->curTpl['type'])
                 $data[$this->id]['type'] = $_;
+
+            if (isset($typeLabels[$this->id]))
+                $data[$this->id]['typelabel'] = $typeLabels[$this->id];
 
             if ($_ = $this->curTpl['reqClassMask'])
                 $data[$this->id]['reqclass'] = $_;
