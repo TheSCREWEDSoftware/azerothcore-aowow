@@ -4636,6 +4636,13 @@ function ProfilerInventory(_parent) {
             }
         }
 
+        // aowow: our own 3D viewer, unless the config asks for the old Flash viewer (profiler_viewer = 1)
+        if (typeof g_profilerViewer == 'undefined' || g_profilerViewer != 1) {
+            _updateModel3D(slotId, equipList, !_mvInited || refresh);
+            _mvInited = true;
+            return;
+        }
+
         if (!_mvInited || refresh) {
             var flashVars = {
                 model: g_file_races[_profile.race] + g_file_genders[_profile.gender],
@@ -4687,6 +4694,53 @@ function ProfilerInventory(_parent) {
                     _swfModel.attachList(equipList);
             }
         }
+    }
+
+    // aowow: the character drawn by static/js/modelviewer (AoStage + AoChar); slotId -1 = everything
+    var _stage3D = null, _model3D = null, _items3D = {}, _job3D = null;
+    function _updateModel3D(slotId, equipList, rebuild) {
+        if (typeof AoViewer == 'undefined')
+            return;
+
+        var items = rebuild ? {} : _items3D;
+        if (slotId != -1) {                                 // drop what this slot wore before
+            var invTypes = _data[slotId].itemslots || [];
+            for (var i = 0; i < invTypes.length; ++i)
+                if (AoChar && AoChar.INV && AoChar.INV[invTypes[i]])
+                    delete items[AoChar.INV[invTypes[i]]];
+        }
+
+        AoViewer.ready().then(function () {
+            for (var i = 0; i + 1 < equipList.length; i += 2) {
+                var s = AoChar.INV[equipList[i]];
+                if (s && equipList[i + 1])
+                    items[s] = { display: +equipList[i + 1] };
+            }
+            _items3D = items;
+
+            if (!_stage3D) {
+                $WH.ee(_swfModel);
+                _swfModel.className = 'profiler-model3d';
+                _stage3D = new AoStage(_swfModel);
+                _stage3D.start();
+            }
+
+            if (_model3D && !rebuild) {
+                _model3D.character.setItems(items);
+                return;
+            }
+
+            var look = { race: _profile.race, sex: _profile.gender, skin: _profile.skincolor, face: _profile.facetype,
+                         hairStyle: _profile.hairstyle, hairColor: _profile.haircolor, facial: _profile.features };
+            var job = _job3D = AoChar.load(AoViewer.base(), look, items).then(function (m) {
+                if (job !== _job3D)
+                    return;
+                _model3D = m;
+                _stage3D.setModel(m);
+            });
+        }).catch(function (e) {
+            if (window.console) console.warn('profiler 3d', e);
+        });
     }
 
     function _toggleDisplay(slotId) {

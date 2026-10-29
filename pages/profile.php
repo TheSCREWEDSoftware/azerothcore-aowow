@@ -150,6 +150,7 @@ class ProfilePage extends GenericPage
 
         // + .titles ?
         $this->addScript([SC_JS_FILE, '?data=enchants.gems.glyphs.itemsets.pets.pet-talents.quick-excludes.realms.statistics.weight-presets.achievements']);
+        $this->addScript([SC_JS_STRING, 'var g_profilerViewer = '.(int)Cfg::get('PROFILER_VIEWER').';']);   // 0: own 3D viewer, 1: old Flash viewer
 
         // as demanded by the raid activity tracker
         $bossIds = array(
