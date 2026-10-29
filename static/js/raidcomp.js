@@ -519,7 +519,7 @@ var AoRaidComp = (function () {
             if (!d.classList.contains('full')) return;
             var s = SPECS[slots[idx]];
             d.ondragstart = function (e) { e.dataTransfer.setData('text/plain', 'm' + idx); e.dataTransfer.effectAllowed = 'move'; $WH.Tooltip.hide(); };
-            d.onmouseover = function () { $WH.Tooltip.show(d, (names[idx] ? '<b>' + esc(names[idx]) + '</b><br />' : '') + specTip(s)); };
+            d.onmouseover = function () { $WH.Tooltip.show(d, (names[idx] ? '<b class="c' + s[0] + '" style="font-size: 14px">' + esc(names[idx]) + '</b><br />' : '') + specTip(s)); };
             d.onmouseout = $WH.Tooltip.hide;
         });
 

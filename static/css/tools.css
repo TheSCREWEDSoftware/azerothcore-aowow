@@ -200,7 +200,7 @@ a.rc-add span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; 
 .rc-slot.full { background: #1b1b1b; border: 1px solid #333; cursor: grab; }
 .rc-slot.full:hover { border-color: #666; }
 .rc-slot.over { border-color: #ffd100 !important; background: #2a2400 !important; }
-.rc-slot img { width: 28px; height: 28px; border-radius: 4px; flex: none; box-shadow: 0 0 0 1px #000; }
+.rc-slot img { width: 28px; height: 28px; flex: none; border: 1px solid #000; border-radius: 3px; box-shadow: 0 0 0 1px #555; }
 .rc-who { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
 .rc-who b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rc-who i { font-style: normal; font-size: 11px; color: #999; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
