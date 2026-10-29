@@ -20,7 +20,8 @@ if (!CLI)
  * Output:
  *   static/js/zone-pois/<locale>/<mapZoneId>.json : [{t: type, x, y, n: name, ...}, ..]   (fetched on demand)
  *   datasets/map-info                              : var g_map_info = {exp: {zoneId: 1|2}, terr: {zoneId: 0..5}, par: {..}, rt: [zoneId, ..]}
- *   static/js/zone-routes/<mapZoneId>.json         : [{t: boat|zep|gun, r: [A, H], l: [[x, y, x, y, ..], ..]}, ..]  transport paths in travel order
+ *   static/js/zone-routes/<mapZoneId>.json         : [{t: boat|zep|gun, r: [A, H], l: [[x, y, x, y, ..], ..], s: [[x, y, wait], ..]}, ..]
+ *                                                    transport paths in travel order, with the stops (wait in seconds)
  */
 CLISetup::registerSetup("build", new class extends SetupScript
 {
@@ -716,6 +717,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
             $list[] = reset($list);                         // the path loops
 
             $lines = [];                                    // mapZoneId => [[x, y, ..], ..]
+            $stops = [];                                    // mapZoneId => ['x,y' => [x, y, wait (s)]]: where it waits
             $open  = [];                                    // mapZoneId => index of the line the last node went to
             $prev  = null;
             foreach ($list as $n)
@@ -755,6 +757,8 @@ CLISetup::registerSetup("build", new class extends SetupScript
                             $open[$mz] = count($lines[$mz]) - 1;
                         }
                         $lines[$mz][$open[$mz]][] = [$x, $y];
+                        if ($n['delay'] > 0)
+                            $stops[$mz][round($x, 2).','.round($y, 2)] = [round($x, 2), round($y, 2), (int)$n['delay']];
                     }
                 }
 
@@ -776,7 +780,7 @@ CLISetup::registerSetup("build", new class extends SetupScript
                     $keep[] = $flat;
                 }
                 if ($keep)
-                    $out[$mz][] = ['t' => $kind, 'r' => $r, 'l' => $keep] + $info;
+                    $out[$mz][] = ['t' => $kind, 'r' => $r, 'l' => $keep] + (empty($stops[$mz]) ? [] : ['s' => array_values($stops[$mz])]) + $info;
             }
         }
 
