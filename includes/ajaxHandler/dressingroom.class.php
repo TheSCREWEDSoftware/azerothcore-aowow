@@ -6,13 +6,15 @@ if (!defined('AOWOW_REVISION'))
 // data for the dressing room (static/js/modelviewer/dressingroom.js)
 //   ?dressing-room=search&slot=1,5,20&q=helm   wearable items for a slot, by name
 //        optional: &quality=3,4 &src=<SRC_*> (how it is obtained) &from=<npc, object or zone name> &limit=10-100
-//        without slot: every item that shows on a character
+//        without slot: every item that can be worn
 //   ?dressing-room=items&ids=30987,30991        items by id (shared links, outfits)
 //   ?dressing-room=set&id=627                   the pieces of an item set
 class AjaxDressingroom extends AjaxHandler
 {
     // inventory types that show on a character
-    public const VISIBLE_SLOTS = [1, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 25, 26];
+    public const VISIBLE_SLOTS  = [1, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 25, 26];
+    // every paper doll slot: the above plus neck, fingers, trinkets, ammo and relics
+    public const WEARABLE_SLOTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 20, 21, 22, 23, 24, 25, 26, 28];
 
     protected $_get = array(
         'q'    => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkTextLine'       ],
@@ -53,7 +55,7 @@ class AjaxDressingroom extends AjaxHandler
             FROM   ?_items i
             LEFT   JOIN ?_icons ic ON ic.`id` = i.`iconId`
             WHERE  i.`id` IN (?a) AND i.`slot` IN (?a) AND i.`displayId` > 0',
-            $ids, self::VISIBLE_SLOTS
+            $ids, self::WEARABLE_SLOTS
         );
 
         return array_map([self::class, 'castRow'], $rows);
@@ -74,7 +76,7 @@ class AjaxDressingroom extends AjaxHandler
 
     protected function search() : string
     {
-        $slots = $this->_get['slot'] ? array_values(array_intersect($this->_get['slot'], self::VISIBLE_SLOTS)) : self::VISIBLE_SLOTS;
+        $slots = $this->_get['slot'] ? array_values(array_intersect($this->_get['slot'], self::WEARABLE_SLOTS)) : self::WEARABLE_SLOTS;
         $q     = trim((string)$this->_get['q']);
         $from  = trim((string)$this->_get['from']);
         $qual  = array_values(array_filter($this->_get['quality'] ?: [], fn($x) => $x <= 7));
@@ -105,7 +107,7 @@ class AjaxDressingroom extends AjaxHandler
             ORDER  BY i.`quality` DESC, i.`itemLevel` DESC, i.`id` DESC
             LIMIT  ?d',
             Type::ITEM, Type::NPC, Type::OBJECT,
-            $slots, [ITEM_CLASS_WEAPON, ITEM_CLASS_ARMOR], CUSTOM_EXCLUDE_FOR_LISTVIEW,
+            $slots, [ITEM_CLASS_WEAPON, ITEM_CLASS_ARMOR, ITEM_CLASS_AMMUNITION], CUSTOM_EXCLUDE_FOR_LISTVIEW,
             $like, $like,
             $qual ?: DBSIMPLE_SKIP,
             $src >= 1 && $src <= 24 ? 1 : DBSIMPLE_SKIP,

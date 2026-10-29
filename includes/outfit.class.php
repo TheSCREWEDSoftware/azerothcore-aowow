@@ -15,6 +15,10 @@ class Outfit
         switch ($invType)
         {
             case 1:  return 'head';
+            case 2:  return 'neck';
+            case 11: return 'finger1';
+            case 12: return 'trinket1';
+            case 24: return 'ammo';
             case 3:  return 'shoulder';
             case 4:  return 'shirt';
             case 5:
@@ -62,6 +66,8 @@ class Outfit
         foreach ($rows as $it)
         {
             $g = self::slotGroup($it['slot']);
+            if (($g == 'finger1' || $g == 'trinket1') && isset($taken[$g]))      // second ring / trinket
+                $g = substr($g, 0, -1).'2';
             if ($g == 'mainhand' && $it['slot'] == 13 && isset($taken['mainhand']) && !isset($taken['offhand']))
                 $g = 'offhand';
             if ($g == 'offhand' && isset($taken['mainhand']) && $taken['mainhand']['slot'] == 17)
