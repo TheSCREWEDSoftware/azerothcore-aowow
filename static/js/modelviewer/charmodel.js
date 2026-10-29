@@ -132,7 +132,9 @@ var AoChar = (function () {
                     if (g[2]) groups[13] = 1 + g[2];
                     break;
                 case 'tabard': groups[12] = 1 + (g[0] || 1); break;
-                case 'back':   groups[15] = 1 + (g[0] || 0); break;
+                case 'back':                                // a cape without its texture would be drawn black: leave it off
+                    groups[15] = it.item.cape && !self.capeMissing ? 1 + (g[0] || 0) : 0;
+                    break;
                 case 'waist':  if (g[0]) groups[18] = 1 + g[0]; break;
                 case 'head':
                     var vis = (it.item.helmVis || [0, 0])[m.sex], row = self.helmvis && self.helmvis[vis];
@@ -143,9 +145,10 @@ var AoChar = (function () {
                     break;
             }
         });
-        if (hide.f1) groups[1] = 0;
-        if (hide.f2) groups[2] = 0;
-        if (hide.f3) groups[3] = 0;
+        // a helm hiding facial hair: the bare variant (X01), which is also the jaw / cheeks of the face itself
+        if (hide.f1) groups[1] = 1;
+        if (hide.f2) groups[2] = 1;
+        if (hide.f3) groups[3] = 1;
         if (hide.ears) groups[7] = 1;
         var hairId = hide.hair || !hair ? 1 : hair;          // bald, or hair hidden by a helm: the bare scalp (geoset 1)
 
@@ -248,6 +251,11 @@ var AoChar = (function () {
                 copyTo(self.hairTex, r[0]);
                 copyTo(self.furTex, r[1] || r[0]);
                 if (r[2]) copyTo(self.capeTex, r[2]);
+                var missing = !!(self.itemData.back && self.itemData.back.item && self.itemData.back.item.cape && !r[2]);
+                if (missing != !!self.capeMissing) {        // cape texture did not load: take the cape off again
+                    self.capeMissing = missing;
+                    self.model.setGeosets(self.geosetFn());
+                }
             });
         });
     };
