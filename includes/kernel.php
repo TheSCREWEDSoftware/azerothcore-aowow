@@ -84,6 +84,9 @@ spl_autoload_register(function ($class) {
         case 'Discord':
             require_once 'includes/discord.class.php';
             break;
+        case 'QuestCompletion':
+            require_once 'includes/questcompletion.class.php';
+            break;
     }
 });
 
