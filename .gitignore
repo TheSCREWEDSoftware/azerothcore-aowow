@@ -1,11 +1,11 @@
 # Git
 *.orig
 
-# cache
+# cache (everything setup and the site write there; keep the placeholder)
+/cache/*
+!/cache/template/
 /cache/template/*
-/cache/alphaMaps/*
-/cache/setup/*
-/cache/mv/
+!/cache/template/index.html
 /static/modelviewer/thumbs/
 /static/uploads/outfits/
 
@@ -25,6 +25,11 @@
 /static/widgets/searchbox.js
 /static/widgets/searchbox/searchbox.html
 /static/download/searchplugins/aowow.xml
+# map data made by setup (--build=mappois, zoneshapes) from the game client and world db
+/static/js/zone-pois/
+/static/js/zone-nb/
+/static/js/zone-routes/
+/static/js/zone-shapes/
 /config/config.php
 /datasets/*
 !/datasets/zones
