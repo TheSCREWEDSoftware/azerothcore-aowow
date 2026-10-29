@@ -395,23 +395,43 @@ var AoDressing = (function () {
                 }).map(function (s) { return '<option value="' + s[2].join(',') + '">' + slotGroup(s) + '</option>'; }).join('') + '</select>' +
                 '<select class="dr-find-src">' + SOURCES.map(function (s) { return '<option value="' + s[0] + '">' + s[1] + '</option>'; }).join('') + '</select>' +
                 '<input class="dr-find-from" type="search" placeholder="Dropped by / found in&hellip;" autocomplete="off">' +
-                '<select class="dr-find-limit"><option>10</option><option selected>25</option><option>50</option><option>100</option></select>' +
             '</div>' +
             '<div class="dr-find-qual">' + QUALITIES.map(function (q) {
                 return '<label class="q' + q[0] + '"><input type="checkbox" value="' + q[0] + '"' + (q[0] >= 2 && q[0] <= 5 ? ' checked' : '') + '> ' + q[1] + '</label>';
             }).join('') + '</div>' +
+            '<div class="dr-find-more">' +
+                '<label><input type="checkbox" class="dr-find-avail" checked> Hide items not available to players</label>' +
+                '<label><input type="checkbox" class="dr-find-exist"> Only show qualities that exist</label>' +
+                '<span class="dr-find-sortbox">Sort <select class="dr-find-sort"><option value="id">ID &uarr;</option><option value="-id">ID &darr;</option><option value="name">Name A&ndash;Z</option><option value="-name">Name Z&ndash;A</option></select>' +
+                ' Show <select class="dr-find-limit"><option>10</option><option selected>25</option><option>50</option><option>100</option></select></span>' +
+            '</div>' +
             '<div class="dr-find-list"><div class="q0 dr-hint">Loading&hellip;</div></div>';
 
         var timer = 0, seq = 0, list = box.querySelector('.dr-find-list');
+        var qseq = 0;
+        function showQualities(filters) {                   // hide quality boxes nothing matches (when asked to)
+            var labels = box.querySelectorAll('.dr-find-qual label'), my = ++qseq;
+            if (!box.querySelector('.dr-find-exist').checked) {
+                labels.forEach(function (l) { l.style.display = ''; });
+                return;
+            }
+            getJSON('?dressing-room=qualities' + filters).then(function (have) {
+                if (my != qseq) return;
+                labels.forEach(function (l) { l.style.display = have.indexOf(+l.querySelector('input').value) >= 0 ? '' : 'none'; });
+            });
+        }
         function run() {
             var my = ++seq;
             var quals = [].map.call(box.querySelectorAll('.dr-find-qual input:checked'), function (c) { return c.value; });
-            var url = '?dressing-room=search&q=' + encodeURIComponent(box.querySelector('.dr-find-q').value.trim()) +
+            var filters = '&q=' + encodeURIComponent(box.querySelector('.dr-find-q').value.trim()) +
                       '&slot=' + box.querySelector('.dr-find-slot').value +
-                      '&quality=' + quals.join(',') +
                       '&src=' + box.querySelector('.dr-find-src').value +
                       '&from=' + encodeURIComponent(box.querySelector('.dr-find-from').value.trim()) +
+                      '&avail=' + (box.querySelector('.dr-find-avail').checked ? 1 : 0);
+            var url = '?dressing-room=search' + filters + '&quality=' + quals.join(',') +
+                      '&sort=' + box.querySelector('.dr-find-sort').value +
                       '&limit=' + box.querySelector('.dr-find-limit').value;
+            showQualities(filters);
             list.innerHTML = '<div class="q0 dr-hint">Searching&hellip;</div>';
             getJSON(url).then(function (rows) {
                 if (my != seq) return;
@@ -420,9 +440,11 @@ var AoDressing = (function () {
                     var slot = slotFor(it.slot, {}), def = slotDef(slot);
                     var where = it.from && it.zone ? it.from + ' (' + it.zone + ')' : (it.from || it.zone);
                     var worn = SLOTS.some(function (s) { return self.items[s[0]] && self.items[s[0]].id == it.id; });
-                    var a = el('a', 'dr-find-row' + (worn ? ' worn' : ''),
+                    var a = el('a', 'dr-find-row' + (worn ? ' worn' : '') + (it.na ? ' na' : ''),
+                        '<span class="dr-find-id">' + it.id + '</span>' +
                         '<ins style="background-image:url(' + icon(it.icon, 'small') + ')"></ins>' +
                         '<span class="dr-find-main"><span class="dr-find-name q' + it.quality + '">' + esc(it.name) + '</span>' +
+                        (it.na ? '<span class="dr-find-na" title="This item is not available to players.">Not available to players</span>' : '') +
                         '<small class="q0">' + (def ? slotGroup(def) : '') + ' &middot; ' + it.level + (it.source.length ? ' &middot; ' + esc(it.source.join(', ')) : '') + (where ? ' &middot; ' + esc(where) : '') + '</small></span>');
                     a.href = host() + '?item=' + it.id;                 // hover: the item tooltip
                     a.onclick = function (e) {
@@ -441,7 +463,7 @@ var AoDressing = (function () {
         }
         var later = function () { clearTimeout(timer); timer = setTimeout(run, 250); };
         box.querySelectorAll('input[type=search]').forEach(function (i) { i.oninput = later; });
-        box.querySelectorAll('select, .dr-find-qual input').forEach(function (i) { i.onchange = run; });
+        box.querySelectorAll('select, .dr-find-qual input, .dr-find-more input').forEach(function (i) { i.onchange = run; });
         box.querySelector('.dr-find-slot').addEventListener('change', function () {       // picked another slot by hand
             if (self.target && slotDef(self.target)[2].join(',') != this.value) self.pick(null);
         });
