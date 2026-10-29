@@ -34,7 +34,7 @@ class QuestCompletion
 
     public static function canLink() : bool
     {
-        return User::$id && Cfg::get('ACC_AUTH_MODE') == AUTH_MODE_SELF && DB::isConnectable(DB_AUTH);
+        return User::$id && Cfg::get('ACC_GAME_LINK') && Cfg::get('ACC_AUTH_MODE') == AUTH_MODE_SELF && DB::isConnectable(DB_AUTH);
     }
 
     // check the game login once and remember the account; returns '' or an error message
