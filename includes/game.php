@@ -354,45 +354,77 @@ class Game
         return $result;
     }
 
+    private static ?array $zoneRects = null;
+
+    // world position -> position on each zone / dungeon map that shows it, best first (multi floor maps, then closest to the map center)
+    //   the map rectangles are read once and matched here: setup calls this for every spawn and waypoint (several 100k times)
     public static function worldPosToZonePos(int $mapId, float $posX, float $posY, int $areaId = 0, int $floor = -1) : array
     {
-        if (!$mapId < 0)
+        if ($mapId < 0)
             return [];
 
-        $query =
-           'SELECT
-                x.`id`,
-                x.`areaId`,
-                IF(x.`defaultDungeonMapId` < 0, x.`floor` + 1, x.`floor`) AS `floor`,
-                IF(dm.`id` IS NOT NULL OR x.`defaultDungeonMapId` < 0, 1, 0) AS `multifloor`,
-                ROUND((x.`maxY` - ?d) * 100 / (x.`maxY` - x.`minY`), 1) AS `posX`,
-                ROUND((x.`maxX` - ?d) * 100 / (x.`maxX` - x.`minX`), 1) AS `posY`,
-                SQRT(POWER(ABS((x.`maxY` - ?d) * 100 / (x.`maxY` - x.`minY`) - 50), 2) +
-                     POWER(ABS((x.`maxX` - ?d) * 100 / (x.`maxX` - x.`minX`) - 50), 2)) AS `dist`
-            FROM
-                (SELECT 0 AS `id`, `areaId`,     `mapId`, `right` AS `minY`, `left` AS `maxY`, `top` AS `maxX`, `bottom` AS `minX`, 0 AS `floor`, 0 AS `worldMapAreaId`, `defaultDungeonMapId` FROM ?_worldmaparea wma UNION
-                 SELECT   dm.`id`, `areaId`, wma.`mapId`,            `minY`,           `maxY`,          `maxX`,             `minX`,      `floor`,      `worldMapAreaId`, `defaultDungeonMapId` FROM ?_worldmaparea wma
-                 JOIN   ?_dungeonmap dm ON dm.`mapId` = wma.`mapId` WHERE wma.`mapId` NOT IN (0, 1, 530, 571) OR wma.`areaId` = 4395) x
-            LEFT JOIN
-                ?_dungeonmap dm ON dm.`mapId` = x.`mapId` AND dm.`worldMapAreaId` = x.`worldMapAreaId` AND dm.`floor` <> x.`floor` AND dm.`worldMapAreaId` > 0
-            WHERE
-                x.`mapId` = ?d AND IF(?d, x.`areaId` = ?d, x.`areaId` <> 0){ AND x.`floor` = ?d - IF(x.`defaultDungeonMapId` < 0, 1, 0)}
-            GROUP BY
-                x.`id`, x.`areaId`
-            HAVING
-                (`posX` BETWEEN 0.1 AND 99.9 AND `posY` BETWEEN 0.1 AND 99.9)
-            ORDER BY
-                `multifloor` DESC, `dist` ASC';
+        if (self::$zoneRects === null)
+        {
+            $rows = DB::Aowow()->select(
+               'SELECT   x.`id`, x.`areaId`, x.`mapId`, x.`minY`, x.`maxY`, x.`maxX`, x.`minX`, x.`floor`, x.`defaultDungeonMapId`, MAX(dm.`id` IS NOT NULL) AS `hasDm`
+                FROM     (SELECT 0 AS `id`, `areaId`,     `mapId`, `right` AS `minY`, `left` AS `maxY`, `top` AS `maxX`, `bottom` AS `minX`, 0 AS `floor`, 0 AS `worldMapAreaId`, `defaultDungeonMapId` FROM ?_worldmaparea wma UNION
+                          SELECT   dm.`id`, `areaId`, wma.`mapId`,            `minY`,           `maxY`,          `maxX`,             `minX`,      `floor`,      `worldMapAreaId`, `defaultDungeonMapId` FROM ?_worldmaparea wma
+                          JOIN   ?_dungeonmap dm ON dm.`mapId` = wma.`mapId` WHERE wma.`mapId` NOT IN (0, 1, 530, 571) OR wma.`areaId` = 4395) x
+                LEFT JOIN ?_dungeonmap dm ON dm.`mapId` = x.`mapId` AND dm.`worldMapAreaId` = x.`worldMapAreaId` AND dm.`floor` <> x.`floor` AND dm.`worldMapAreaId` > 0
+                GROUP BY x.`id`, x.`areaId`'
+            );
+            if (!is_array($rows))
+            {
+                trigger_error('Game::worldPosToZonePos - dbc query failed', E_USER_ERROR);
+                return [];
+            }
+
+            self::$zoneRects = [];
+            foreach ($rows as $r)
+                self::$zoneRects[(int)$r['mapId']][] = $r;
+        }
+
+        $match = function (int $areaId, int $floor) use ($mapId, $posX, $posY) : array
+        {
+            $points = [];
+            foreach (self::$zoneRects[$mapId] ?? [] as $r)
+            {
+                if ($areaId ? $r['areaId'] != $areaId : !$r['areaId'])
+                    continue;
+
+                $dDM = $r['defaultDungeonMapId'] < 0 ? 1 : 0;
+                if ($floor >= 0 && $r['floor'] != $floor - $dDM)
+                    continue;
+
+                if ($r['maxY'] == $r['minY'] || $r['maxX'] == $r['minX'])
+                    continue;
+
+                $x = ($r['maxY'] - $posY) * 100 / ($r['maxY'] - $r['minY']);
+                $y = ($r['maxX'] - $posX) * 100 / ($r['maxX'] - $r['minX']);
+                $rx = round($x, 1);
+                $ry = round($y, 1);
+                if ($rx < 0.1 || $rx > 99.9 || $ry < 0.1 || $ry > 99.9)
+                    continue;
+
+                $points[] = array(
+                    'id'         => (int)$r['id'],
+                    'areaId'     => (int)$r['areaId'],
+                    'floor'      => $dDM ? $r['floor'] + 1 : (int)$r['floor'],
+                    'multifloor' => ($r['hasDm'] || $dDM) ? 1 : 0,
+                    'posX'       => $rx,
+                    'posY'       => $ry,
+                    'dist'       => sqrt(($x - 50) ** 2 + ($y - 50) ** 2)
+                );
+            }
+
+            usort($points, fn($a, $b) => ($b['multifloor'] <=> $a['multifloor']) ?: ($a['dist'] <=> $b['dist']) ?: ($b['floor'] <=> $a['floor']));   // ties (floors sharing one map frame): upper floor first, as before
+            return $points;
+        };
 
         // dist BETWEEN 0 (center) AND 70.7 (corner)
-        $points = DB::Aowow()->select($query, $posY, $posX, $posY, $posX, $mapId, $areaId, $areaId, $floor < 0 ? DBSIMPLE_SKIP : $floor);
+        $points = $match($areaId, $floor);
         if (!$points)                                       // retry: pre-instance subareas belong to the instance-maps but are displayed on the outside. There also cases where the zone reaches outside it's own map.
-            $points = DB::Aowow()->select($query, $posY, $posX, $posY, $posX, $mapId, 0, 0, DBSIMPLE_SKIP);
-        if (!is_array($points))
-        {
-            trigger_error('Game::worldPosToZonePos - dbc query failed', E_USER_ERROR);
-            return [];
-        }
+            $points = $match(0, -1);
 
         return $points;
     }
