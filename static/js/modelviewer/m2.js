@@ -166,8 +166,8 @@ var AoM2 = (function () {
             map: tex || null,
             color: tex ? 0xffffff : 0x808080,
             side: (renderFlags & 0x04) ? THREE.DoubleSide : THREE.FrontSide,
-            depthTest: !(renderFlags & 0x10),
-            depthWrite: !(renderFlags & 0x20)
+            depthTest: !(renderFlags & 0x08),               // M2 material flags: 0x08 no depth test, 0x10 no depth write
+            depthWrite: !(renderFlags & 0x10)
         };
         if (blend == 1) {
             p.alphaTest = 0.5;
