@@ -71,3 +71,24 @@ RewriteEngine on
     RewriteCond %{QUERY_STRING} .
     RewriteRule ^[a-z-]+(?:=[^/]*)?(?:/[^/]*)?$ index.php?%{QUERY_STRING} [L]
 </IfModule>
+
+# compress text responses: pages, scripts, styles and json data
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript application/javascript application/x-javascript application/json image/svg+xml
+</IfModule>
+
+# files under static/ change rarely and most links carry their change time (?123456), so browsers may keep them
+#   (only static/: the ?data= and tool endpoints are scripts made per request)
+<IfModule mod_expires.c>
+    <If "%{REQUEST_URI} =~ m#/static/#">
+        ExpiresActive On
+        ExpiresByType text/css                  "access plus 7 days"
+        ExpiresByType text/javascript           "access plus 7 days"
+        ExpiresByType application/javascript    "access plus 7 days"
+        ExpiresByType application/json          "access plus 7 days"
+        ExpiresByType image/jpeg                "access plus 30 days"
+        ExpiresByType image/png                 "access plus 30 days"
+        ExpiresByType image/gif                 "access plus 30 days"
+        ExpiresByType application/octet-stream  "access plus 30 days"
+    </If>
+</IfModule>
