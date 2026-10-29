@@ -4611,6 +4611,10 @@ span.icontiny::before, a.icontiny::before, .icontinyl::before {
     background: url(../images/Icon/tiny/border/default.gif) no-repeat;
     pointer-events: none;
 }
+/* quest start / end markers are not item or spell icons: no icon frame */
+span.icontiny[style*="quest_"]::before, a.icontiny[style*="quest_"]::before, .icontinyl[style*="quest_"]::before {
+    display: none;
+}
 
 /* loot group column: one colour per group (16, then repeats) */
 .lv-group { display:inline-block; min-width:22px; padding:1px 6px; border-radius:3px; font-weight:bold; line-height:16px; color:#fff; background:var(--lg); box-shadow:inset 0 0 0 1px rgba(255,255,255,.18); }
