@@ -316,7 +316,9 @@ CREATE TABLE `aowow_achievementcriteria` (
   `groupFlags` tinyint unsigned NOT NULL,
   `timeLimit` smallint unsigned NOT NULL,
   `order` smallint unsigned NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `idx_type_value1` (`type`, `value1`),
+  KEY `idx_refAchievement` (`refAchievementId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -581,7 +583,15 @@ CREATE TABLE `aowow_creature` (
   KEY `difficultyEntry3` (`difficultyEntry3`),
   KEY `idx_loot` (`lootId`),
   KEY `idx_pickpocketloot` (`pickpocketLootId`),
-  KEY `idx_skinloot` (`skinLootId`)
+  KEY `idx_skinloot` (`skinLootId`),
+  KEY `idx_spell1` (`spell1`),
+  KEY `idx_spell2` (`spell2`),
+  KEY `idx_spell3` (`spell3`),
+  KEY `idx_spell4` (`spell4`),
+  KEY `idx_spell5` (`spell5`),
+  KEY `idx_spell6` (`spell6`),
+  KEY `idx_spell7` (`spell7`),
+  KEY `idx_spell8` (`spell8`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1627,7 +1637,13 @@ CREATE TABLE `aowow_items` (
   KEY `items_index` (`class`),
   KEY `idx_model` (`displayId`),
   KEY `idx_faction` (`requiredFaction`),
-  KEY `iconId` (`iconId`)
+  KEY `iconId` (`iconId`),
+  KEY `idx_modelstr` (`model`),
+  KEY `idx_spellId1` (`spellId1`),
+  KEY `idx_spellId2` (`spellId2`),
+  KEY `idx_spellId3` (`spellId3`),
+  KEY `idx_spellId4` (`spellId4`),
+  KEY `idx_spellId5` (`spellId5`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1876,7 +1892,11 @@ CREATE TABLE `aowow_objects` (
   `miscInfo` varchar(128) NOT NULL,
   `ScriptOrAI` varchar(64) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `idx_name` (`name_loc0`)
+  KEY `idx_name` (`name_loc0`),
+  KEY `idx_onUseSpell` (`onUseSpell`),
+  KEY `idx_onSuccessSpell` (`onSuccessSpell`),
+  KEY `idx_auraSpell` (`auraSpell`),
+  KEY `idx_triggeredSpell` (`triggeredSpell`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -2482,7 +2502,48 @@ CREATE TABLE `aowow_quests` (
   `objectiveText4_loc7` text DEFAULT NULL,
   `objectiveText4_loc8` text DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `nextQuestIdChain` (`nextQuestIdChain`)
+  KEY `nextQuestIdChain` (`nextQuestIdChain`),
+  KEY `idx_nextQuestId` (`nextQuestId`),
+  KEY `idx_prevQuestId` (`prevQuestId`),
+  KEY `idx_exclusiveGroup` (`exclusiveGroup`),
+  KEY `idx_breadcrumb` (`breadcrumbForQuestId`),
+  KEY `idx_zoneOrSort` (`zoneOrSort`),
+  KEY `idx_sourceSpellId` (`sourceSpellId`),
+  KEY `idx_rewardSpell` (`rewardSpell`),
+  KEY `idx_sourceItemId` (`sourceItemId`),
+  KEY `idx_reqSourceItemId1` (`reqSourceItemId1`),
+  KEY `idx_reqSourceItemId2` (`reqSourceItemId2`),
+  KEY `idx_reqSourceItemId3` (`reqSourceItemId3`),
+  KEY `idx_reqSourceItemId4` (`reqSourceItemId4`),
+  KEY `idx_reqItemId1` (`reqItemId1`),
+  KEY `idx_reqItemId2` (`reqItemId2`),
+  KEY `idx_reqItemId3` (`reqItemId3`),
+  KEY `idx_reqItemId4` (`reqItemId4`),
+  KEY `idx_reqItemId5` (`reqItemId5`),
+  KEY `idx_reqItemId6` (`reqItemId6`),
+  KEY `idx_rewardChoiceItemId1` (`rewardChoiceItemId1`),
+  KEY `idx_rewardChoiceItemId2` (`rewardChoiceItemId2`),
+  KEY `idx_rewardChoiceItemId3` (`rewardChoiceItemId3`),
+  KEY `idx_rewardChoiceItemId4` (`rewardChoiceItemId4`),
+  KEY `idx_rewardChoiceItemId5` (`rewardChoiceItemId5`),
+  KEY `idx_rewardChoiceItemId6` (`rewardChoiceItemId6`),
+  KEY `idx_rewardItemId1` (`rewardItemId1`),
+  KEY `idx_rewardItemId2` (`rewardItemId2`),
+  KEY `idx_rewardItemId3` (`rewardItemId3`),
+  KEY `idx_rewardItemId4` (`rewardItemId4`),
+  KEY `idx_reqNpcOrGo1` (`reqNpcOrGo1`),
+  KEY `idx_reqNpcOrGo2` (`reqNpcOrGo2`),
+  KEY `idx_reqNpcOrGo3` (`reqNpcOrGo3`),
+  KEY `idx_reqNpcOrGo4` (`reqNpcOrGo4`),
+  KEY `idx_name0` (`name_loc0`(64)),
+  KEY `idx_name1` (`name_loc1`(64)),
+  KEY `idx_name2` (`name_loc2`(64)),
+  KEY `idx_name3` (`name_loc3`(64)),
+  KEY `idx_name4` (`name_loc4`(64)),
+  KEY `idx_name5` (`name_loc5`(64)),
+  KEY `idx_name6` (`name_loc6`(64)),
+  KEY `idx_name7` (`name_loc7`(64)),
+  KEY `idx_name8` (`name_loc8`(64))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -2499,7 +2560,8 @@ CREATE TABLE `aowow_quests_startend` (
   `questId` mediumint unsigned NOT NULL,
   `method` tinyint unsigned NOT NULL COMMENT '&0x1: starts; &0x2:ends',
   `eventId` smallint unsigned NOT NULL DEFAULT 0,
-  PRIMARY KEY (`type`,`typeId`,`questId`)
+  PRIMARY KEY (`type`,`typeId`,`questId`),
+  KEY `idx_questId` (`questId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -3112,7 +3174,25 @@ CREATE TABLE `aowow_spell` (
   KEY `spell` (`id`) USING BTREE,
   KEY `effects` (`effect1Id`,`effect2Id`,`effect3Id`),
   KEY `items` (`effect1CreateItemId`,`effect2CreateItemId`,`effect3CreateItemId`),
-  KEY `iconId` (`iconId`)
+  KEY `iconId` (`iconId`),
+  KEY `idx_createItem2` (`effect2CreateItemId`),
+  KEY `idx_createItem3` (`effect3CreateItemId`),
+  KEY `idx_reagent1` (`reagent1`),
+  KEY `idx_reagent2` (`reagent2`),
+  KEY `idx_reagent3` (`reagent3`),
+  KEY `idx_reagent4` (`reagent4`),
+  KEY `idx_reagent5` (`reagent5`),
+  KEY `idx_reagent6` (`reagent6`),
+  KEY `idx_reagent7` (`reagent7`),
+  KEY `idx_reagent8` (`reagent8`),
+  KEY `idx_trigger1` (`effect1TriggerSpell`),
+  KEY `idx_trigger2` (`effect2TriggerSpell`),
+  KEY `idx_trigger3` (`effect3TriggerSpell`),
+  KEY `idx_misc1` (`effect1MiscValue`),
+  KEY `idx_misc2` (`effect2MiscValue`),
+  KEY `idx_misc3` (`effect3MiscValue`),
+  KEY `idx_family` (`spellFamilyId`),
+  KEY `idx_spellcategory` (`category`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
