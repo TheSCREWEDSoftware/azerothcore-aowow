@@ -871,6 +871,27 @@ class CLISetup
     /* file handling */
     /*****************/
 
+    // write many rows with few statements: one INSERT / REPLACE per batch instead of one per row (far fewer round trips)
+    //   $verb: 'INSERT', 'INSERT IGNORE' or 'REPLACE'; $cols: column names or null for all columns in table order
+    public static function insertRows(string $verb, string $table, ?array $cols, array $rows) : void
+    {
+        if (!$rows)
+            return;
+
+        $rows  = array_map('array_values', array_values($rows));
+        $size  = max(1, strlen(serialize($rows[0])));
+        $chunk = max(1, min(500, intdiv(4 << 20, $size)));     // ~4 MB per statement, well below max_allowed_packet
+
+        foreach (array_chunk($rows, $chunk) as $part)
+        {
+            $sql = $verb.' INTO '.$table.($cols ? ' (?#)' : '').' VALUES '.implode(', ', array_fill(0, count($part), '(?a)'));
+            if ($cols)
+                DB::Aowow()->query($sql, $cols, ...$part);
+            else
+                DB::Aowow()->query($sql, ...$part);
+        }
+    }
+
     public static function writeFile(string $file, string $content) : bool
     {
         if (Util::writeFile($file, $content))

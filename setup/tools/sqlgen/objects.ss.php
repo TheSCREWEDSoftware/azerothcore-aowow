@@ -76,8 +76,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         {
             CLI::write(' * batch #' . ++$i . ' (' . count($objects) . ')', CLI::LOG_BLANK, true, true);
 
-            foreach ($objects as $object)
-                DB::Aowow()->query('INSERT INTO ?_objects VALUES (?a)', array_values($object));
+            CLISetup::insertRows('INSERT', '?_objects', null, $objects);
         }
 
         // apply typeCat and reqSkill depending on locks

@@ -139,16 +139,27 @@ CLISetup::registerSetup("sql", new class extends SetupScript
 
                 $set = array_merge($spawn, $point);
                 if (!$isWP)                                 // REPLACE: because there is bogus data where one path may be assigned to multiple npcs
-                {
                     unset($set['map']);
-                    DB::Aowow()->query('REPLACE INTO ?_spawns (?#) VALUES (?a)', array_keys($set), array_values($set));
-                }
                 else
-                {
                     unset($set['map'], $set['guid']);
-                    DB::Aowow()->query('REPLACE INTO ?_creature_waypoints (?#) VALUES (?a)', array_keys($set), array_values($set));
+
+                // written in batches of the same columns
+                $tbl = $isWP ? '?_creature_waypoints' : '?_spawns';
+                $key = $tbl.':'.implode(',', array_keys($set));
+                $buffer[$key][] = array_values($set);
+                if (count($buffer[$key]) >= 500)
+                {
+                    CLISetup::insertRows('REPLACE', $tbl, array_keys($set), $buffer[$key]);
+                    $buffer[$key] = [];
                 }
             }
+
+            foreach ($buffer ?? [] as $key => $rows)
+            {
+                [$tbl, $cols] = explode(':', $key, 2);
+                CLISetup::insertRows('REPLACE', $tbl, explode(',', $cols), $rows);
+            }
+            $buffer = [];
         }
 
 

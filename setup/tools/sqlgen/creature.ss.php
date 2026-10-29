@@ -113,8 +113,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         {
             CLI::write(' * batch #' . ++$i . ' (' . count($npcs) . ')', CLI::LOG_BLANK, true, true);
 
-            foreach ($npcs as $npc)
-                DB::Aowow()->query('INSERT INTO ?_creature VALUES (?a)', array_values($npc));
+            CLISetup::insertRows('INSERT', '?_creature', null, $npcs);
         }
 
         // apply "textureString", "modelId" and "iconSring"

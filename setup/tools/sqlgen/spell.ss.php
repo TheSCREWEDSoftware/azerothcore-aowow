@@ -218,12 +218,10 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         $done  = 0;
         while ($spells = DB::World()->select($ssQuery, CUSTOM_SERVERSIDE, $n++ * CLISetup::$SQL_BATCH, CLISetup::$SQL_BATCH))
         {
-            foreach ($spells as $spell)                     // spell_dbc allows NULL in columns aowow_spell does not
-            {
-                DB::Aowow()->query('INSERT INTO ?_spell VALUES (?a)', array_map(fn($v) => $v ?? 0, array_values($spell)));
-                if (++$done % 250 == 0)
-                    CLI::write('[spell] - serverside spells: '.$done.' / '.$total, CLI::LOG_BLANK, true, true);
-            }
+            // spell_dbc allows NULL in columns aowow_spell does not
+            CLISetup::insertRows('INSERT', '?_spell', null, array_map(fn($s) => array_map(fn($v) => $v ?? 0, array_values($s)), $spells));
+            $done += count($spells);
+            CLI::write('[spell] - serverside spells: '.$done.' / '.$total, CLI::LOG_BLANK, true, true);
         }
         CLI::write('[spell] - '.$done.' serverside spells copied');
 
@@ -241,12 +239,10 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         $done  = 0;
         while ($spells = DB::Aowow()->select($baseQry, $n++ * CLISetup::$SQL_BATCH, CLISetup::$SQL_BATCH))
         {
-            foreach ($spells as $spell)                     // a spell the world db also lists as serverside: the client's version wins (names, icons, text)
-            {
-                DB::Aowow()->query('REPLACE INTO ?_spell VALUES (?a)', array_values($spell));
-                if (++$done % 250 == 0)
-                    CLI::write('[spell] - spell.dbc: '.$done.' / '.$total.' ('.round($done * 100 / max(1, $total)).'%)', CLI::LOG_BLANK, true, true);
-            }
+            // a spell the world db also lists as serverside: the client's version wins (names, icons, text)
+            CLISetup::insertRows('REPLACE', '?_spell', null, $spells);
+            $done += count($spells);
+            CLI::write('[spell] - spell.dbc: '.$done.' / '.$total.' ('.round($done * 100 / max(1, $total)).'%)', CLI::LOG_BLANK, true, true);
         }
         CLI::write('[spell] - '.$done.' spells merged from spell.dbc');
 

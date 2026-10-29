@@ -136,8 +136,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         {
             CLI::write(' * batch #' . ++$i . ' (' . count($items) . ')', CLI::LOG_BLANK, true, true);
 
-            foreach ($items as $item)
-                DB::Aowow()->query('INSERT IGNORE INTO ?_items VALUES (?a)', array_values($item));
+            CLISetup::insertRows('INSERT IGNORE', '?_items', null, $items);
         }
 
         // merge with gemProperties
