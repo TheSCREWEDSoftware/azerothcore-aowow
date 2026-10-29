@@ -6,6 +6,8 @@ if (!defined('AOWOW_REVISION'))
 // data for the dressing room (static/js/modelviewer/dressingroom.js)
 //   ?dressing-room=search&slot=1,5,20&q=helm   wearable items for a slot, by name
 //        optional: &quality=3,4 &src=<SRC_*> (how it is obtained) &from=<npc, object or zone name> &limit=10-100
+//                  &avail=1 (only items available to players) &sort=id|-id|name|-name (default id)
+//   ?dressing-room=qualities&<same filters>     the item qualities found for those filters
 //        without slot: every item that can be worn
 //   ?dressing-room=items&ids=30987,30991        items by id (shared links, outfits)
 //   ?dressing-room=set&id=627                   the pieces of an item set
@@ -24,7 +26,9 @@ class AjaxDressingroom extends AjaxHandler
         'quality' => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkIdListUnsigned'],
         'src'     => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkInt'           ],
         'from'    => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkTextLine'       ],
-        'limit'   => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkInt'           ]
+        'limit'   => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkInt'           ],
+        'avail'   => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkInt'           ],
+        'sort'    => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkTextLine'       ]
     );
 
     public function __construct(array $params)
@@ -36,7 +40,8 @@ class AjaxDressingroom extends AjaxHandler
 
         switch ($this->params[0])
         {
-            case 'search': $this->handler = 'search';   break;
+            case 'search':    $this->handler = 'search';    break;
+            case 'qualities': $this->handler = 'qualities'; break;
             case 'items':  $this->handler = 'byId';     break;
             case 'set':    $this->handler = 'itemset';  break;
         }
@@ -74,25 +79,24 @@ class AjaxDressingroom extends AjaxHandler
         );
     }
 
-    protected function search() : string
+    // the filters shared by search and qualities
+    private function filtered(string $cols, bool $withQuality, string $tail, ...$tailArgs) : array
     {
         $slots = $this->_get['slot'] ? array_values(array_intersect($this->_get['slot'], self::WEARABLE_SLOTS)) : self::WEARABLE_SLOTS;
+        if (!$slots)
+            return [];
+
         $q     = trim((string)$this->_get['q']);
         $from  = trim((string)$this->_get['from']);
-        $qual  = array_values(array_filter($this->_get['quality'] ?: [], fn($x) => $x <= 7));
+        $qual  = $withQuality ? array_values(array_filter($this->_get['quality'] ?: [], fn($x) => $x <= 7)) : [];
         $src   = (int)$this->_get['src'];
-        $limit = max(10, min(100, (int)$this->_get['limit'] ?: 60));
-        if (!$slots)
-            return '[]';
-
         $esc   = fn($s) => '%'.strtr($s, ['\\' => '\\\\', '%' => '\\%', '_' => '\\_']).'%';
         $loc   = Lang::getLocale()->value;
         $like  = $q    !== '' ? $esc($q)    : DBSIMPLE_SKIP;
         $fLike = $from !== '' ? $esc($from) : DBSIMPLE_SKIP;
-        $rows  = DB::Aowow()->select(
-           'SELECT i.`id`, IF(i.`name_loc'.$loc.'` <> "", i.`name_loc'.$loc.'`, i.`name_loc0`) AS "name", i.`quality`, i.`displayId`, i.`slot`, i.`itemLevel` AS "level", ic.`name` AS "icon",
-                   src.`src1`, src.`src2`, src.`src3`, src.`src4`, src.`src5`, src.`src10`, src.`src12`,
-                   IFNULL(c.`name_loc0`, o.`name_loc0`) AS "fromName", z.`name_loc0` AS "zoneName"
+
+        return DB::Aowow()->select(
+           'SELECT '.str_replace('%LOC%', $loc, $cols).'
             FROM   ?_items i
             LEFT   JOIN ?_icons ic   ON ic.`id` = i.`iconId`
             LEFT   JOIN ?_source src ON src.`type` = ?d AND src.`typeId` = i.`id`
@@ -104,15 +108,32 @@ class AjaxDressingroom extends AjaxHandler
             { AND i.`quality` IN (?a) }
             { AND src.`src'.$src.'` IS NOT NULL AND ?d }
             { AND (c.`name_loc0` LIKE ? OR o.`name_loc0` LIKE ? OR z.`name_loc0` LIKE ?) }
-            ORDER  BY i.`quality` DESC, i.`itemLevel` DESC, i.`id` DESC
-            LIMIT  ?d',
+            '.$tail,
             Type::ITEM, Type::NPC, Type::OBJECT,
-            $slots, [ITEM_CLASS_WEAPON, ITEM_CLASS_ARMOR, ITEM_CLASS_AMMUNITION], CUSTOM_EXCLUDE_FOR_LISTVIEW,
+            $slots, [ITEM_CLASS_WEAPON, ITEM_CLASS_ARMOR, ITEM_CLASS_AMMUNITION],
+            CUSTOM_EXCLUDE_FOR_LISTVIEW | ($this->_get['avail'] ? CUSTOM_UNAVAILABLE : 0),
             $like, $like,
             $qual ?: DBSIMPLE_SKIP,
             $src >= 1 && $src <= 24 ? 1 : DBSIMPLE_SKIP,
             $fLike, $fLike, $fLike,
-            $limit
+            ...$tailArgs
+        );
+    }
+
+    protected function search() : string
+    {
+        $limit = max(10, min(100, (int)$this->_get['limit'] ?: 60));
+        $order = match ((string)$this->_get['sort']) {
+            '-id'   => 'i.`id` DESC',
+            'name'  => '`name` ASC, i.`id` ASC',
+            '-name' => '`name` DESC, i.`id` ASC',
+            default => 'i.`id` ASC'
+        };
+        $rows  = $this->filtered(
+           'i.`id`, IF(i.`name_loc%LOC%` <> "", i.`name_loc%LOC%`, i.`name_loc0`) AS "name", i.`quality`, i.`displayId`, i.`slot`, i.`itemLevel` AS "level", ic.`name` AS "icon", i.`cuFlags`,
+            src.`src1`, src.`src2`, src.`src3`, src.`src4`, src.`src5`, src.`src10`, src.`src12`,
+            IFNULL(c.`name_loc0`, o.`name_loc0`) AS "fromName", z.`name_loc0` AS "zoneName"',
+            true, 'ORDER BY '.$order.' LIMIT ?d', $limit
         );
 
         // how it is obtained: the source types found, and the npc / object and zone of the main source
@@ -122,8 +143,16 @@ class AjaxDressingroom extends AjaxHandler
             $row['source'] = array_values(array_filter(array_map(fn($k) => $r['src'.$k] !== null ? $names[$k] : null, array_keys($names))));
             $row['from']   = $r['fromName'] ?: '';
             $row['zone']   = $r['zoneName'] ?: '';
+            $row['na']     = ($r['cuFlags'] & CUSTOM_UNAVAILABLE) ? 1 : 0;      // not available to players
             return $row;
         }, $rows));
+    }
+
+    // the qualities that exist for the other filters
+    protected function qualities() : string
+    {
+        $rows = $this->filtered('DISTINCT i.`quality`', false, '');
+        return Util::toJSON(array_map(fn($r) => (int)$r['quality'], $rows));
     }
 
     protected function byId() : string
