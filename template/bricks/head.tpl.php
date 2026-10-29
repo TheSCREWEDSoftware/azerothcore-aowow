@@ -50,6 +50,7 @@ if ($this->gFavorites):
 endif;
 ?>
     </script>
+<?=QuestCompletion::headTags(); ?>
 
 <?php
 if (Cfg::get('ANALYTICS_USER')):

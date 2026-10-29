@@ -1,0 +1,14 @@
+/* quest completion dots (static/js/questcompletion.js) */
+.qc-dots { display: inline-flex; flex-wrap: wrap; gap: 2px; vertical-align: middle; }
+.qc-dot { display: inline-block; position: relative; width: 14px; height: 14px; border-radius: 50%; background: #0b0b0b; box-shadow: inset 0 0 0 1px #333; vertical-align: middle; cursor: default; }
+.qc-dot::after { content: ''; position: absolute; }
+.qc-s1 { background: #1d5fa8; box-shadow: none; }                          /* in progress: half filled */
+.qc-s1::after { left: 3px; top: 3px; width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(90deg, #8cc7ff 50%, transparent 50%); }
+.qc-s2 { background: #d9a400; box-shadow: none; }                          /* ready to turn in */
+.qc-s2::after { content: '?'; left: 0; top: 0; width: 14px; line-height: 14px; text-align: center; font: bold 11px/14px Arial, sans-serif; color: #111; }
+.qc-s3 { background: #49b35a; box-shadow: none; }                          /* completed: check mark */
+.qc-s3::after { left: 5px; top: 2px; width: 3px; height: 7px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.qc-s4 { background: #b33a3a; box-shadow: none; }                          /* failed: cross */
+.qc-s4::after { left: 3px; top: 6px; width: 8px; height: 2px; background: #fff; transform: rotate(45deg); box-shadow: 0 0 0 0 #fff; }
+.qc-s4::before { content: ''; position: absolute; left: 3px; top: 6px; width: 8px; height: 2px; background: #fff; transform: rotate(-45deg); }
+.qc-st0 { color: #777; } .qc-st1 { color: #8cc7ff; } .qc-st2 { color: #ffd100; } .qc-st3 { color: #5cf25c; } .qc-st4 { color: #ff5555; }
