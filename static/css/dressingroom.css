@@ -207,10 +207,9 @@ a.dr-find-row ins { flex: none; width: 22px; height: 22px; background-size: cove
 .dr-find-any { margin-left: auto; }
 .dr-find-off { color: #ff7a7a !important; }
 
-/* ammo: the small slot after the ranged one, an arrow pointing at the bow (as in game) */
-.dr-bottom { align-items: flex-end; }
-.dr-slot[data-slot=ammo] { width: 30px; height: 30px; margin-left: 20px; }
-.dr-slot[data-slot=ammo] .dr-icon { width: 30px; height: 30px; border-width: 1px; }
+/* ammo: after the ranged slot, an arrow pointing at the bow (as in game) */
+.dr-bottom { align-items: center; }
+.dr-slot[data-slot=ammo] { margin-left: 20px; }
 .dr-slot[data-slot=ammo]::before,
 .dr-slot[data-slot=ammo]::after { content: ""; position: absolute; top: 50%; pointer-events: none; }
 .dr-slot[data-slot=ammo]::before {                           /* the shaft */
@@ -228,9 +227,7 @@ a.dr-find-row ins { flex: none; width: 22px; height: 22px; background-size: cove
     border-left: 0;
     border-right: 7px solid #c9c9c9;
 }
-@media (max-width: 480px) {
-    .dr-slot[data-slot=ammo], .dr-slot[data-slot=ammo] .dr-icon { width: 26px; height: 26px; }
-}
+
 
 .dr-find-more { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 2px 0 6px; font-size: 12px; color: var(--th-text, #cfd3d8); }
 .dr-find-more label { cursor: pointer; white-space: nowrap; }
