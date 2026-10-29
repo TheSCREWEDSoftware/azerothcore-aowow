@@ -7,33 +7,45 @@
  * Uses the model viewer core: AoStage / AoViewer (viewer.js), AoChar (charmodel.js), AoM2 (m2.js)
  */
 var AoDressing = (function () {
-    // paper doll: key, label, inventory types it takes, side, empty slot icon
+    // paper doll, laid out like the in-game character pane: key, label, inventory types it takes,
+    // side (L / R columns, B the weapon row below), empty slot icon, shows on the model
     var SLOTS = [
-        ['head',     'Head',      [1],              'L', 'inventoryslot_head'],
-        ['shoulder', 'Shoulder',  [3],              'L', 'inventoryslot_shoulder'],
-        ['back',     'Back',      [16],             'L', 'inventoryslot_chest'],
-        ['chest',    'Chest',     [5, 20],          'L', 'inventoryslot_chest'],
-        ['shirt',    'Shirt',     [4],              'L', 'inventoryslot_shirt'],
-        ['tabard',   'Tabard',    [19],             'L', 'inventoryslot_tabard'],
-        ['wrist',    'Wrist',     [9],              'L', 'inventoryslot_wrists'],
-        ['hands',    'Hands',     [10],             'R', 'inventoryslot_hands'],
-        ['waist',    'Waist',     [6],              'R', 'inventoryslot_waist'],
-        ['legs',     'Legs',      [7],              'R', 'inventoryslot_legs'],
-        ['feet',     'Feet',      [8],              'R', 'inventoryslot_feet'],
-        ['mainhand', 'Main Hand', [13, 17, 21],     'R', 'inventoryslot_mainhand'],
-        ['offhand',  'Off Hand',  [14, 22, 23, 13], 'R', 'inventoryslot_offhand'],
-        ['ranged',   'Ranged',    [15, 25, 26],     'R', 'inventoryslot_ranged']
+        ['head',     'Head',      [1],              'L', 'inventoryslot_head',     1],
+        ['neck',     'Neck',      [2],              'L', 'inventoryslot_neck',     0],
+        ['shoulder', 'Shoulder',  [3],              'L', 'inventoryslot_shoulder', 1],
+        ['back',     'Back',      [16],             'L', 'inventoryslot_chest',    1],
+        ['chest',    'Chest',     [5, 20],          'L', 'inventoryslot_chest',    1],
+        ['shirt',    'Shirt',     [4],              'L', 'inventoryslot_shirt',    1],
+        ['tabard',   'Tabard',    [19],             'L', 'inventoryslot_tabard',   1],
+        ['wrist',    'Wrist',     [9],              'L', 'inventoryslot_wrists',   1],
+        ['hands',    'Hands',     [10],             'R', 'inventoryslot_hands',    1],
+        ['waist',    'Waist',     [6],              'R', 'inventoryslot_waist',    1],
+        ['legs',     'Legs',      [7],              'R', 'inventoryslot_legs',     1],
+        ['feet',     'Feet',      [8],              'R', 'inventoryslot_feet',     1],
+        ['finger1',  'Finger 1',  [11],             'R', 'inventoryslot_finger',   0],
+        ['finger2',  'Finger 2',  [11],             'R', 'inventoryslot_finger',   0],
+        ['trinket1', 'Trinket 1', [12],             'R', 'inventoryslot_trinket',  0],
+        ['trinket2', 'Trinket 2', [12],             'R', 'inventoryslot_trinket',  0],
+        ['mainhand', 'Main Hand', [13, 17, 21],     'B', 'inventoryslot_mainhand', 1],
+        ['offhand',  'Off Hand',  [14, 22, 23, 13], 'B', 'inventoryslot_offhand',  1],
+        ['ranged',   'Ranged',    [15, 25, 26, 28], 'B', 'inventoryslot_ranged',   1],
+        ['ammo',     'Ammo',      [24],             'B', 'inv_ammo_arrow_01',      0]
     ];
+    function slotDef(key) { return SLOTS.filter(function (s) { return s[0] == key; })[0]; }
+    function slotGroup(def) { return def[1].replace(/ \d$/, ''); }      // Finger 1 / Finger 2 -> Finger
+
     var LOOK = [['skin', 'Skin Color'], ['face', 'Face'], ['hairStyle', 'Hair Style'], ['hairColor', 'Hair Color'], ['facial', 'Features']];
 
-    function slotFor(invType, taken) {                      // first paper doll slot for an inventory type
+    function slotFor(invType, taken) {                      // first free paper doll slot for an inventory type
         taken = taken || {};
         if (invType == 17 && taken.offhand) return null;                       // two-hander: both hands free
         if (invType == 13 && taken.mainhand && !taken.offhand) invType = 22;   // second one-hander
         if ([14, 22, 23].indexOf(invType) >= 0 && taken.mainhand && taken.mainhand.slot == 17) return null;
-        for (var i = 0; i < SLOTS.length; i++)
-            if (SLOTS[i][2].indexOf(invType) >= 0) return SLOTS[i][0];
-        return null;
+        var fits = SLOTS.filter(function (s) { return s[2].indexOf(invType) >= 0; });
+        if (!fits.length) return null;
+        for (var i = 0; i < fits.length; i++)                // rings, trinkets: the second one if the first is taken
+            if (!taken[fits[i][0]]) return fits[i][0];
+        return fits[0][0];
     }
 
     function esc(s) {                                       // safe in text and in quoted attributes
@@ -78,7 +90,7 @@ var AoDressing = (function () {
 
     function itemsMap(items) {                              // {slot: row} -> {slot: {display}} for AoChar
         var m = {};
-        for (var k in items) if (items[k]) m[k] = { display: items[k].displayId };
+        SLOTS.forEach(function (s) { if (s[5] && items[s[0]]) m[s[0]] = { display: items[s[0]].displayId }; });
         return m;
     }
 
@@ -125,17 +137,19 @@ var AoDressing = (function () {
     DressingRoom.prototype.build = function () {
         var self = this, r = this.root;
         r.innerHTML =
-            '<div class="dr-doll">' +
-                '<div class="dr-slots dr-left"></div>' +
-                '<div class="dr-center">' +
+            '<div class="dr-main">' +
+            '<div class="dr-pane">' +
+                '<div class="dr-doll">' +
+                    '<div class="dr-slots dr-left"></div>' +
                     '<div class="dr-stage mv-stage"><div class="mv-msg">Loading&hellip;</div></div>' +
-                    '<div class="dr-bar">' +
-                        '<select class="dr-race" title="Race"></select>' +
-                        '<select class="dr-sex" title="Body"><option value="0">Body 1</option><option value="1">Body 2</option></select>' +
-                        '<label class="dr-anim-l">Animation <select class="dr-anim"></select></label>' +
-                    '</div>' +
+                    '<div class="dr-slots dr-right"></div>' +
+                    '<div class="dr-slots dr-bottom"></div>' +
                 '</div>' +
-                '<div class="dr-slots dr-right"></div>' +
+                '<div class="dr-bar">' +
+                    '<select class="dr-race" title="Race"></select>' +
+                    '<select class="dr-sex" title="Body"><option value="0">Body 1</option><option value="1">Body 2</option></select>' +
+                    '<label class="dr-anim-l">Animation <select class="dr-anim"></select></label>' +
+                '</div>' +
             '</div>' +
             '<div class="dr-side">' +
                 '<div class="dr-tabs"><a data-tab="look" class="selected">Character</a><a data-tab="find">Find Items</a><a data-tab="outfit">Outfit</a><a data-tab="help">Help</a></div>' +
@@ -143,24 +157,26 @@ var AoDressing = (function () {
                 '<div class="dr-tab dr-tab-find" style="display:none"></div>' +
                 '<div class="dr-tab dr-tab-outfit" style="display:none"></div>' +
                 '<div class="dr-tab dr-tab-help" style="display:none">' +
-                    '<p><b>Items:</b> click a slot to search for anything that can be worn there; the &times; takes it off again. Find Items searches every slot at once, by quality and by how or where an item is obtained.</p>' +
+                    '<p><b>Items:</b> click a slot around the model to search Find Items for that slot; right-click a slot (or its &times;) takes the item off again. Find Items also searches every slot at once, by quality and by how or where an item is obtained.</p>' +
                     '<p><b>Character:</b> pick the race and body below the model, then skin, face and hair on the Character tab.</p>' +
                     '<p><b>Model:</b> drag to rotate, right-drag to pan, scroll to zoom; Background changes the backdrop.</p>' +
                     '<p><b>Share:</b> the address of this page always holds the current outfit &ndash; copy it from the Outfit tab.</p>' +
                     '<p><b>Save:</b> signed in, you can save outfits; they show up under Database &rsaquo; Outfits and on the pages of their items.</p>' +
                 '</div>' +
+            '</div>' +
             '</div>';
 
         var $ = function (s) { return r.querySelector(s); };
         this.$ = $;
 
         SLOTS.forEach(function (s) {
-            var b = el('div', 'dr-slot', '<a class="dr-icon" href="javascript:;"><img src="' + icon(s[4]) + '" alt=""></a>' +
-                '<div class="dr-label"><span class="q0">' + s[1] + '</span></div><a class="dr-x" href="javascript:;" title="Remove">&times;</a>');
+            var b = el('div', 'dr-slot', '<a class="dr-icon" href="javascript:;"><img src="' + icon(s[4]) + '" alt=""></a><a class="dr-x" href="javascript:;" title="Remove">&times;</a>');
             b.setAttribute('data-slot', s[0]);
-            b.querySelector('.dr-icon').onclick = function () { self.pick(s[0], b); };
+            b.title = s[1];
+            b.querySelector('.dr-icon').onclick = function (e) { e.preventDefault(); self.pick(s[0]); };
+            b.querySelector('.dr-icon').oncontextmenu = function (e) { e.preventDefault(); self.setItem(s[0], null); };
             b.querySelector('.dr-x').onclick = function () { self.setItem(s[0], null); };
-            (s[3] == 'L' ? $('.dr-left') : $('.dr-right')).appendChild(b);
+            $({ L: '.dr-left', R: '.dr-right', B: '.dr-bottom' }[s[3]]).appendChild(b);
         });
 
         var race = $('.dr-race');
@@ -174,19 +190,18 @@ var AoDressing = (function () {
         $('.dr-anim').onchange = function () { if (self.model) self.model.play(+this.value); };
 
         r.querySelectorAll('.dr-tabs a').forEach(function (a) {
-            a.onclick = function () {
-                r.querySelectorAll('.dr-tabs a').forEach(function (x) { x.classList.toggle('selected', x === a); });
-                r.querySelectorAll('.dr-tab').forEach(function (t) { t.style.display = t.classList.contains('dr-tab-' + a.getAttribute('data-tab')) ? '' : 'none'; });
-            };
+            a.onclick = function () { self.tab(a.getAttribute('data-tab')); };
         });
 
         this.buildOutfitTab();
         this.buildFindTab();
+        document.addEventListener('keydown', function (e) { if (e.key == 'Escape') self.pick(null); });
+    };
 
-        document.addEventListener('mousedown', function (e) {
-            if (self.picker && !self.picker.contains(e.target) && !e.target.closest('.dr-icon')) self.closePicker();
-        });
-        document.addEventListener('keydown', function (e) { if (e.key == 'Escape') self.closePicker(); });
+    DressingRoom.prototype.tab = function (name) {
+        var r = this.root;
+        r.querySelectorAll('.dr-tabs a').forEach(function (x) { x.classList.toggle('selected', x.getAttribute('data-tab') == name); });
+        r.querySelectorAll('.dr-tab').forEach(function (t) { t.style.display = t.classList.contains('dr-tab-' + name) ? '' : 'none'; });
     };
 
     DressingRoom.prototype.start = function () {
@@ -267,14 +282,15 @@ var AoDressing = (function () {
     DressingRoom.prototype.drawSlots = function () {
         var self = this;
         SLOTS.forEach(function (s) {
-            var b = self.root.querySelector('.dr-slot[data-slot=' + s[0] + ']'), it = self.items[s[0]];
+            var b = self.root.querySelector('.dr-slot[data-slot=' + s[0] + ']'), it = self.items[s[0]], a = b.querySelector('.dr-icon');
             b.classList.toggle('dr-filled', !!it);
+            b.classList.toggle('dr-picking', self.target == s[0]);
             b.querySelector('img').src = icon(it ? it.icon : s[4]);
-            b.querySelector('.dr-icon').className = 'dr-icon' + (it ? ' q' + it.quality : '');
-            b.querySelector('.dr-label').innerHTML = it
-                ? '<a class="q' + it.quality + '" href="' + host() + '?item=' + it.id + '">' + esc(it.name) + '</a><small class="q0">' + s[1] + '</small>'
-                : '<span class="q0">' + s[1] + '</span>';
+            a.className = 'dr-icon' + (it ? ' q' + it.quality : (s[4].indexOf('inventoryslot_') ? ' dr-faded' : ''));
+            a.href = it ? host() + '?item=' + it.id : 'javascript:;';     // filled: hover shows the item tooltip
+            b.title = it ? '' : s[1];
         });
+        if (this.drawTarget) this.drawTarget();
     };
 
     // ---------------------------------------------------------------- skin, face, hair
@@ -350,51 +366,18 @@ var AoDressing = (function () {
         try { localStorage.setItem('aowow_mv_char', JSON.stringify({ race: this.race, sex: this.sex })); } catch (e) {}
     };
 
-    // ---------------------------------------------------------------- item search
-    DressingRoom.prototype.closePicker = function () {
-        if (this.picker) this.picker.remove();
-        this.picker = null;
-    };
-
-    DressingRoom.prototype.pick = function (slot, anchor) {
-        var self = this, def = SLOTS.filter(function (s) { return s[0] == slot; })[0];
-        this.closePicker();
-        var p = this.picker = el('div', 'dr-picker',
-            '<input type="text" placeholder="Search ' + def[1].toLowerCase() + ' items&hellip;" autocomplete="off">' +
-            '<div class="dr-results"><div class="q0 dr-hint">Loading&hellip;</div></div>' +
-            (this.items[slot] ? '<a class="dr-remove" href="javascript:;">Remove ' + esc(this.items[slot].name) + '</a>' : ''));
-        anchor.appendChild(p);
-        var input = p.querySelector('input'), list = p.querySelector('.dr-results'), timer = 0, seq = 0, active = -1;
-        if (p.querySelector('.dr-remove'))
-            p.querySelector('.dr-remove').onclick = function () { self.setItem(slot, null); self.closePicker(); };
-
-        function run() {
-            var my = ++seq, q = input.value.trim();
-            getJSON('?dressing-room=search&slot=' + def[2].join(',') + '&q=' + encodeURIComponent(q)).then(function (rows) {
-                if (my != seq || !self.picker) return;
-                active = -1;
-                list.innerHTML = rows.length ? '' : '<div class="q0 dr-hint">Nothing found.</div>';
-                rows.forEach(function (it) {
-                    var a = el('a', 'dr-res', '<ins style="background-image:url(' + icon(it.icon, 'small') + ')"></ins><span class="q' + it.quality + '">' + esc(it.name) + '</span><small class="q0">' + it.level + '</small>');
-                    a.href = 'javascript:;';
-                    a.onclick = function () { self.setItem(slot, it); self.closePicker(); };
-                    list.appendChild(a);
-                });
-            });
+    // ---------------------------------------------------------------- a slot click: find items for that slot
+    DressingRoom.prototype.pick = function (slot) {
+        this.target = slot || null;
+        var box = this.$('.dr-tab-find');
+        if (slot) {
+            box.querySelector('.dr-find-slot').value = slotDef(slot)[2].join(',');
+            this.tab('find');
+            this.runFind();
+            var q = box.querySelector('.dr-find-q');
+            setTimeout(function () { q.focus(); }, 0);
         }
-        input.oninput = function () { clearTimeout(timer); timer = setTimeout(run, 250); };
-        input.onkeydown = function (e) {
-            var rows = list.querySelectorAll('.dr-res');
-            if (e.key == 'ArrowDown' || e.key == 'ArrowUp') {
-                e.preventDefault();
-                active = Math.max(0, Math.min(rows.length - 1, active + (e.key == 'ArrowDown' ? 1 : -1)));
-                rows.forEach(function (x, i) { x.classList.toggle('active', i == active); });
-                if (rows[active]) rows[active].scrollIntoView({ block: 'nearest' });
-            }
-            else if (e.key == 'Enter' && rows[Math.max(active, 0)]) rows[Math.max(active, 0)].click();
-        };
-        run();
-        setTimeout(function () { input.focus(); }, 0);
+        this.drawSlots();
     };
 
     // ---------------------------------------------------------------- find items: every slot, filtered by quality and source
@@ -404,9 +387,12 @@ var AoDressing = (function () {
     DressingRoom.prototype.buildFindTab = function () {
         var self = this, box = this.$('.dr-tab-find');
         box.innerHTML =
+            '<div class="dr-find-target"></div>' +
             '<input class="dr-find-q" type="search" placeholder="Item name&hellip;" autocomplete="off">' +
             '<div class="dr-find-opts">' +
-                '<select class="dr-find-slot"><option value="">Any slot</option>' + SLOTS.map(function (s) { return '<option value="' + s[2].join(',') + '">' + s[1] + '</option>'; }).join('') + '</select>' +
+                '<select class="dr-find-slot"><option value="">Any slot</option>' + SLOTS.filter(function (s, i) {
+                    return !SLOTS.slice(0, i).some(function (o) { return slotGroup(o) == slotGroup(s); });
+                }).map(function (s) { return '<option value="' + s[2].join(',') + '">' + slotGroup(s) + '</option>'; }).join('') + '</select>' +
                 '<select class="dr-find-src">' + SOURCES.map(function (s) { return '<option value="' + s[0] + '">' + s[1] + '</option>'; }).join('') + '</select>' +
                 '<input class="dr-find-from" type="search" placeholder="Dropped by / found in&hellip;" autocomplete="off">' +
                 '<select class="dr-find-limit"><option>10</option><option selected>25</option><option>50</option><option>100</option></select>' +
@@ -431,20 +417,23 @@ var AoDressing = (function () {
                 if (my != seq) return;
                 list.innerHTML = rows.length ? '' : '<div class="q0 dr-hint">Nothing found.</div>';
                 rows.forEach(function (it) {
-                    var slot = slotFor(it.slot, {}), def = SLOTS.filter(function (s) { return s[0] == slot; })[0];
+                    var slot = slotFor(it.slot, {}), def = slotDef(slot);
                     var where = it.from && it.zone ? it.from + ' (' + it.zone + ')' : (it.from || it.zone);
-                    var a = el('a', 'dr-find-row' + (slot && self.items[slot] && self.items[slot].id == it.id ? ' worn' : ''),
+                    var worn = SLOTS.some(function (s) { return self.items[s[0]] && self.items[s[0]].id == it.id; });
+                    var a = el('a', 'dr-find-row' + (worn ? ' worn' : ''),
                         '<ins style="background-image:url(' + icon(it.icon, 'small') + ')"></ins>' +
                         '<span class="dr-find-main"><span class="dr-find-name q' + it.quality + '">' + esc(it.name) + '</span>' +
-                        '<small class="q0">' + (def ? def[1] : '') + ' &middot; ' + it.level + (it.source.length ? ' &middot; ' + esc(it.source.join(', ')) : '') + (where ? ' &middot; ' + esc(where) : '') + '</small></span>');
+                        '<small class="q0">' + (def ? slotGroup(def) : '') + ' &middot; ' + it.level + (it.source.length ? ' &middot; ' + esc(it.source.join(', ')) : '') + (where ? ' &middot; ' + esc(where) : '') + '</small></span>');
                     a.href = host() + '?item=' + it.id;                 // hover: the item tooltip
                     a.onclick = function (e) {
                         e.preventDefault();
-                        var s = slotFor(it.slot, self.items) || slot;
+                        var t = self.target && slotDef(self.target);
+                        var s = t && t[2].indexOf(it.slot) >= 0 ? self.target : (slotFor(it.slot, self.items) || slot);
                         if (!s) return;
                         self.setItem(s, it);
-                        list.querySelectorAll('.dr-find-row').forEach(function (x) { x.classList.remove('worn'); });
-                        a.classList.add('worn');
+                        list.querySelectorAll('.dr-find-row').forEach(function (x) {
+                            x.classList.toggle('worn', SLOTS.some(function (q) { return self.items[q[0]] && x.href.match(/item=(\d+)/)[1] == self.items[q[0]].id; }));
+                        });
                     };
                     list.appendChild(a);
                 });
@@ -453,6 +442,30 @@ var AoDressing = (function () {
         var later = function () { clearTimeout(timer); timer = setTimeout(run, 250); };
         box.querySelectorAll('input[type=search]').forEach(function (i) { i.oninput = later; });
         box.querySelectorAll('select, .dr-find-qual input').forEach(function (i) { i.onchange = run; });
+        box.querySelector('.dr-find-slot').addEventListener('change', function () {       // picked another slot by hand
+            if (self.target && slotDef(self.target)[2].join(',') != this.value) self.pick(null);
+        });
+        box.querySelector('.dr-find-q').onkeydown = function (e) {
+            if (e.key == 'Enter') { var f = list.querySelector('.dr-find-row'); if (f) f.click(); }
+        };
+
+        // the slot a click on the paper doll asked for
+        var bar = box.querySelector('.dr-find-target');
+        this.drawTarget = function () {
+            var t = self.target && slotDef(self.target), it = t && self.items[t[0]];
+            bar.style.display = t ? '' : 'none';
+            if (!t) return;
+            bar.innerHTML = 'Choosing for <b>' + t[1] + '</b>' +
+                (it ? ' &middot; worn: <a class="q' + it.quality + '" href="' + host() + '?item=' + it.id + '">' + esc(it.name) + '</a> <a class="dr-find-off" href="javascript:;">Take off</a>' : '') +
+                '<a class="dr-find-any" href="javascript:;">All slots</a>';
+            if (it) bar.querySelector('.dr-find-off').onclick = function () { self.setItem(t[0], null); };
+            bar.querySelector('.dr-find-any').onclick = function () {
+                box.querySelector('.dr-find-slot').value = '';
+                self.pick(null);
+                run();
+            };
+        };
+        this.drawTarget();
         this.runFind = run;
         run();
     };
@@ -585,7 +598,7 @@ var AoDressing = (function () {
             var items = {}, taken = {};
             o.items.forEach(function (it) {
                 var s = slotFor(it.slot, taken);
-                if (s && !taken[s]) { taken[s] = it; items[s] = { display: it.displayId }; }
+                if (s && !taken[s]) { taken[s] = it; if (slotDef(s)[5]) items[s] = { display: it.displayId }; }
             });
             var look = { race: o.race, sex: o.gender };
             LOOK.forEach(function (l, i) { look[l[0]] = o.look[i]; });
