@@ -124,6 +124,7 @@ CLISetup::registerUtility(new class extends UtilityScript
             $scriptRef = &$this->generators[$cmd];
 
             CLI::write('[build] gathering data for '.$cmd);
+            $t0 = microtime(true);
 
             if ($scriptRef->fulfillRequirements())
                 $success = $scriptRef->generate();
@@ -135,13 +136,27 @@ CLISetup::registerUtility(new class extends UtilityScript
 
             CLISetup::stepDone('build', $cmd, $scriptRef, $success);
 
-            CLI::write('[build] subscript \''.$cmd.'\' returned '.($success ? 'successfully' : 'with errors'), $success ? CLI::LOG_OK : CLI::LOG_ERROR);
+            $timing[$cmd] = microtime(true) - $t0;
+            CLI::write('[build] subscript \''.$cmd.'\' returned '.($success ? 'successfully' : 'with errors').' ('.self::duration($timing[$cmd]).')', $success ? CLI::LOG_OK : CLI::LOG_ERROR);
             CLI::write();
 
             set_time_limit($this->defaultExecTime);         // reset to default for the next script
         }
 
+        // where the time went, slowest first
+        if (count($timing ?? []) > 1)
+        {
+            arsort($timing);
+            CLI::write('[build] time per step: '.implode(', ', array_map(fn($c, $t) => $c.' '.self::duration($t), array_keys($timing), $timing)).' (total '.self::duration(array_sum($timing)).')', CLI::LOG_INFO);
+            CLI::write();
+        }
+
         return $allOk;
+    }
+
+    private static function duration(float $s) : string
+    {
+        return $s >= 60 ? sprintf('%dm %02ds', $s / 60, $s % 60) : sprintf('%.1fs', $s);
     }
 
     public function writeCLIHelp() : bool
