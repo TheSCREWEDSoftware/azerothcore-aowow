@@ -129,8 +129,7 @@ CLISetup::registerSetup("sql", new class extends SetupScript
         {
             CLI::write(' * batch #' . ++$i . ' (' . count($quests) . ')', CLI::LOG_BLANK, true, true);
 
-            foreach ($quests as $quest)
-                DB::Aowow()->query('INSERT INTO ?_quests VALUES (?a)', array_values($quest));
+            CLISetup::insertRows('INSERT', '?_quests', null, $quests);
         }
 
         /*
@@ -152,22 +151,30 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             $ids ?: DBSIMPLE_SKIP
         );
 
-        // unpack Rep-rewards
+        // unpack Rep-rewards, all five in one pass over the table (it is big: every pass reads all localized texts)
+        //   index 1-9 of QuestFactionReward.dbc row 1 (positive) or 2 (negative); 10 becomes 0, anything else stays
+        $repSet = [];
         for ($i = 1; $i < 6; $i++)
-            DB::Aowow()->query(
-               'UPDATE    ?_quests q
-                LEFT JOIN dbc_questfactionreward rep ON rep.id = IF(rewardFactionValue?d > 0, 1, 2)
-                SET       rewardFactionValue?d = (CASE ABS(rewardFactionValue?d)
-                              WHEN 0 THEN rep.Field1 WHEN 1 THEN rep.Field2 WHEN 2 THEN rep.Field3 WHEN 3 THEN rep.Field4 WHEN 4 THEN rep.Field5
-                              WHEN 5 THEN rep.Field6 WHEN 6 THEN rep.Field7 WHEN 7 THEN rep.Field8 WHEN 8 THEN rep.Field9 WHEN 9 THEN rep.Field10
-                              ELSE 0 END)
-                WHERE     ABS(rewardFactionValue?d) BETWEEN 1 AND 10 { AND q.id IN (?a) }',
-                $i, $i, $i, $i,
-                $ids ?: DBSIMPLE_SKIP
-            );
+        {
+            $v = '`rewardFactionValue'.$i.'`';
+            $cases = '';
+            for ($k = 1; $k < 10; $k++)
+                $cases .= ' WHEN '.$k.' THEN IF('.$v.' > 0, p.Field'.($k + 1).', n.Field'.($k + 1).')';
+            $repSet[] = $v.' = CASE ABS('.$v.')'.$cases.' WHEN 10 THEN 0 ELSE '.$v.' END';
+        }
+        DB::Aowow()->query(
+           'UPDATE ?_quests q, dbc_questfactionreward p, dbc_questfactionreward n
+            SET    '.implode(', ', $repSet).'
+            WHERE  p.id = 1 AND n.id = 2 { AND q.id IN (?a) }',
+            $ids ?: DBSIMPLE_SKIP
+        );
 
-        foreach (Game::$questSortFix as $child => $parent)
-            DB::Aowow()->query('UPDATE ?_quests SET zoneOrSort = ?d WHERE zoneOrSortBak = ?d', $parent, $child);
+        // quest sorts moved under their parent: one pass
+        if (Game::$questSortFix)
+            DB::Aowow()->query(
+                'UPDATE ?_quests SET zoneOrSort = CASE zoneOrSortBak'.implode('', array_map(fn($c, $p) => ' WHEN '.(int)$c.' THEN '.(int)$p, array_keys(Game::$questSortFix), Game::$questSortFix)).' END WHERE zoneOrSortBak IN (?a)',
+                array_keys(Game::$questSortFix)
+            );
 
          // move quests linked to holidays into appropirate quests-sorts. create dummy sorts as needed
         $eventSet = DB::World()->selectCol('SELECT holiday AS ARRAY_KEY, eventEntry FROM game_event WHERE holiday <> 0');
@@ -178,9 +185,17 @@ CLISetup::registerSetup("sql", new class extends SetupScript
             423 => -376                                     // Love is in the Air
         );
 
+        // one pass for all holidays
+        $byEvent = [];
         foreach ($holidaySorts as $hId => $sort)
             if (!empty($eventSet[$hId]))
-                DB::Aowow()->query('UPDATE ?_quests SET zoneOrSort = ?d WHERE eventId = ?d{ AND id IN (?a)}', $sort, $eventSet[$hId], $ids ?: DBSIMPLE_SKIP);
+                $byEvent[(int)$eventSet[$hId]] = $sort;
+
+        if ($byEvent)
+            DB::Aowow()->query(
+                'UPDATE ?_quests SET zoneOrSort = CASE eventId'.implode('', array_map(fn($e, $s) => ' WHEN '.$e.' THEN '.(int)$s, array_keys($byEvent), $byEvent)).' END WHERE eventId IN (?a){ AND id IN (?a)}',
+                array_keys($byEvent), $ids ?: DBSIMPLE_SKIP
+            );
 
         // 'special' special cases
         // fishing quests to stranglethorn extravaganza
