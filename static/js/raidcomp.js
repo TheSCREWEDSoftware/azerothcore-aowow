@@ -70,6 +70,7 @@ var AoRaidComp = (function () {
     ];
     var BENCH_AT = 40, BENCH = 25;                  // bench slots live at 40..64
     var ICON_EDIT = '<svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M11.7 1.3a1 1 0 0 1 1.4 0l1.6 1.6a1 1 0 0 1 0 1.4L5.4 13.6 1.5 14.5l.9-3.9zM3.6 11.2l-.4 1.6 1.6-.4 7.6-7.6-1.2-1.2z"/></svg>';
+    var ICON_PAW  = '<svg viewBox="0 0 16 16" width="11" height="11"><path fill="currentColor" d="M8 8.5c2.2 0 4.5 2.6 4.5 4.3 0 1.4-1.6 1.7-2.4 1.2C9.5 13.6 8.8 13.3 8 13.3s-1.5.3-2.1.7c-.8.5-2.4.2-2.4-1.2C3.5 11.1 5.8 8.5 8 8.5zM3 4.8c.9-.3 2 .5 2.3 1.7.3 1.2-.1 2.3-1 2.6-.9.3-2-.5-2.3-1.7-.3-1.2.1-2.3 1-2.6zm10 0c.9.3 1.3 1.4 1 2.6-.3 1.2-1.4 2-2.3 1.7-.9-.3-1.3-1.4-1-2.6.3-1.2 1.4-2 2.3-1.7zM6 1c1 0 1.8 1.1 1.8 2.5S7 6 6 6s-1.8-1.1-1.8-2.5S5 1 6 1zm4 0c1 0 1.8 1.1 1.8 2.5S11 6 10 6s-1.8-1.1-1.8-2.5S9 1 10 1z"/></svg>';
     var ICON_DEL  = '<svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M3.3 2.3 8 7l4.7-4.7 1 1L9 8l4.7 4.7-1 1L8 9l-4.7 4.7-1-1L7 8 2.3 3.3z"/></svg>';
     var ROLE_NAME = { T: 'Tank', H: 'Healer', M: 'DPS (Melee)', R: 'DPS (Ranged)' };
     var SLOT_ROLE = { T: 'Tank', H: 'Healer', M: 'Melee', R: 'Ranged' };
@@ -84,48 +85,195 @@ var AoRaidComp = (function () {
     };
 
     // name, [[class, spec key or '' (any spec), ability], ..] per expansion
+    // spell, icon and kind (t talent, p pet) per ability name, for the Spells tab and tooltips
+    var SPELL_INFO = {
+        "Abomination's Might": [53138, 'ability_warrior_intensifyrage', 't'],
+        'Acid Spit': [55754, 'spell_nature_acid_01', 'p'],
+        'Ancestral Healing': [16240, 'spell_nature_undyingstrength', 't'],
+        'Anti-Magic Zone': [51052, 'spell_deathknight_antimagiczone', 't'],
+        'Arcane Brilliance': [43002, 'spell_holy_arcaneintellect', ''],
+        'Arcane Empowerment': [31583, 'spell_nature_starfall', 't'],
+        'Aura Mastery': [31821, 'spell_holy_auramastery', 't'],
+        'Battle Shout': [47436, 'ability_warrior_battleshout', ''],
+        'Blessing of Kings': [20217, 'spell_magic_magearmor', ''],
+        'Blessing of Sanctuary': [20911, 'spell_nature_lightningshield', 't'],
+        'Blood Frenzy': [29859, 'ability_warrior_bloodfrenzy', 't'],
+        'Blood Pact': [47982, 'spell_shadow_bloodboil', 'p'],
+        'Bloodlust': [2825, 'spell_nature_bloodlust', ''],
+        'Commanding Shout': [47440, 'ability_warrior_rallyingcry', ''],
+        'Curse of Weakness': [50511, 'spell_shadow_curseofmannoroth', ''],
+        'Curse of the Elements': [47865, 'spell_shadow_chilltouch', ''],
+        'Demonic Pact': [47240, 'spell_shadow_demonicpact', 't'],
+        'Demoralizing Roar': [48560, 'ability_druid_demoralizingroar', ''],
+        'Demoralizing Shout': [47437, 'ability_warrior_warcry', ''],
+        'Divine Guardian': [53530, 'spell_holy_powerwordbarrier', 't'],
+        'Divine Hymn': [64843, 'spell_holy_divinehymn', ''],
+        'Divine Sacrifice': [64205, 'spell_holy_powerwordbarrier', 't'],
+        'Earth and Moon': [48511, 'ability_druid_earthandsky', 't'],
+        'Ebon Plaguebringer': [51161, 'ability_creature_cursed_03', 't'],
+        'Elemental Oath': [51470, 'spell_shaman_elementaloath', 't'],
+        'Enduring Winter': [44561, 'spell_frost_summonwaterelemental_2', 't'],
+        'Expose Armor': [8647, 'ability_warrior_riposte', ''],
+        'Faerie Fire': [770, 'spell_nature_faeriefire', ''],
+        'Fel Intelligence': [57567, 'spell_shadow_brainwash', 'p'],
+        'Ferocious Inspiration': [34460, 'ability_hunter_ferociousinspiration', 't'],
+        'Flametongue Totem': [58656, 'spell_nature_guardianward', ''],
+        'Focus Magic': [54646, 'spell_arcane_studentofmagic', 't'],
+        'Gift of the Wild': [48470, 'spell_nature_giftofthewild', ''],
+        'Greater Blessing of Might': [48934, 'spell_holy_greaterblessingofkings', ''],
+        'Greater Blessing of Wisdom': [48938, 'spell_holy_greaterblessingofwisdom', ''],
+        'Guardian Spirit': [47788, 'spell_holy_guardianspirit', 't'],
+        'Hand of Protection': [10278, 'spell_holy_sealofprotection', ''],
+        'Hand of Sacrifice': [6940, 'spell_holy_sealofsacrifice', ''],
+        'Healing Stream Totem': [58757, 'inv_spear_04', ''],
+        'Heart of the Crusader': [20337, 'spell_holy_holysmite', 't'],
+        'Heroism': [32182, 'ability_shaman_heroism', ''],
+        'Horn of Winter': [57623, 'inv_misc_horn_02', ''],
+        'Hunting Party': [53292, 'ability_hunter_huntingparty', 't'],
+        'Hymn of Hope': [64901, 'spell_holy_symbolofhope', ''],
+        'Hysteria': [49016, 'spell_deathknight_bladedarmor', 't'],
+        'Improved Devotion Aura': [20140, 'spell_holy_devotionaura', 't'],
+        'Improved Faerie Fire': [33602, 'spell_nature_faeriefire', 't'],
+        'Improved Icy Talons': [55610, 'spell_deathknight_icytalons', 't'],
+        'Improved Icy Touch': [51456, 'spell_deathknight_icetouch', 't'],
+        'Improved Leader of the Pack': [34300, 'spell_nature_unyeildingstamina', 't'],
+        'Improved Moonkin Form': [48396, 'ability_druid_improvedmoonkinform', 't'],
+        'Improved Scorch': [12873, 'spell_fire_soulburn', 't'],
+        'Improved Shadow Bolt': [17803, 'spell_shadow_shadowbolt', 't'],
+        'Improved Soul Leech': [54118, 'ability_warlock_improvedsoulleech', 't'],
+        'Improved Thunder Clap': [12666, 'ability_thunderclap', 't'],
+        'Improved Windfury Totem': [29193, 'spell_nature_windfury', 't'],
+        'Infected Wounds': [48485, 'ability_druid_infectedwound', 't'],
+        'Innervate': [29166, 'spell_nature_lightning', ''],
+        'Insect Swarm': [48468, 'spell_nature_insectswarm', 't'],
+        'Inspiration': [15363, 'spell_holy_layonhands', 't'],
+        'Judgement of Light': [20271, 'spell_holy_righteousfury', ''],
+        'Judgement of Wisdom': [53408, 'ability_paladin_judgementblue', ''],
+        'Judgements of the Just': [53696, 'ability_paladin_judgementsofthejust', 't'],
+        'Judgements of the Wise': [31878, 'ability_paladin_judgementofthewise', 't'],
+        'Lay on Hands': [48788, 'spell_holy_layonhands', ''],
+        'Leader of the Pack': [17007, 'spell_nature_unyeildingstamina', 't'],
+        'Mana Spring Totem': [58774, 'spell_nature_manaregentotem', ''],
+        'Mana Tide Totem': [16190, 'spell_frost_summonwaterelemental', 't'],
+        'Mangle': [33917, 'ability_druid_mangle2', 't'],
+        'Mass Dispel': [32375, 'spell_arcane_massdispel', ''],
+        'Master Poisoner': [58410, 'ability_creature_poison_06', 't'],
+        'Misdirection': [34477, 'ability_hunter_misdirection', ''],
+        'Misery': [33193, 'spell_shadow_misery', 't'],
+        'Moonkin Form': [24858, 'spell_nature_forceofnature', 't'],
+        'Pain Suppression': [33206, 'spell_holy_painsupression', 't'],
+        'Power Infusion': [10060, 'spell_holy_powerinfusion', 't'],
+        'Prayer of Fortitude': [48162, 'spell_holy_prayeroffortitude', ''],
+        'Prayer of Spirit': [48074, 'spell_holy_prayerofspirit', ''],
+        'Raise Ally': [61999, 'spell_shadow_deadofnight', ''],
+        'Rampage': [29801, 'ability_warrior_rampage', 't'],
+        'Rapture': [47537, 'spell_holy_rapture', 't'],
+        'Rebirth': [48477, 'spell_nature_reincarnation', ''],
+        'Renewed Hope': [57472, 'spell_holy_holyprotection', 't'],
+        'Revitalize': [48545, 'ability_druid_replenish', 't'],
+        'Ritual of Summoning': [698, 'spell_shadow_twilight', ''],
+        'Sanctified Retribution': [31869, 'spell_holy_mindvision', 't'],
+        'Savage Combat': [58413, 'ability_creature_disease_03', 't'],
+        'Scorpid Sting': [3043, 'ability_hunter_criticalshot', ''],
+        'Shattering Throw': [64382, 'ability_warrior_shatteringthrow', ''],
+        'Soulstone Resurrection': [47883, 'spell_shadow_soulgem', ''],
+        'Sting': [56631, 'spell_nature_slowpoison', 'p'],
+        'Strength of Earth Totem': [58643, 'spell_nature_earthbindtotem', ''],
+        'Sunder Armor': [7386, 'ability_warrior_sunder', ''],
+        'Swift Retribution': [53648, 'ability_paladin_swiftretribution', 't'],
+        'Thunder Clap': [47502, 'spell_nature_thunderclap', ''],
+        'Totem of Wrath': [57722, 'spell_fire_totemofwrath', 't'],
+        'Trauma': [46855, 'ability_warrior_bloodnova', 't'],
+        'Tree of Life': [33891, 'ability_druid_treeoflife', 't'],
+        'Tricks of the Trade': [57934, 'ability_rogue_tricksofthetrade', ''],
+        'Trueshot Aura': [19506, 'ability_trueshot', 't'],
+        'Unleashed Rage': [30809, 'spell_nature_unleashedrage', 't'],
+        'Vampiric Embrace': [15286, 'spell_shadow_unsummonbuilding', 't'],
+        'Vampiric Touch': [48160, 'spell_holy_stoicism', 't'],
+        'Vindication': [26016, 'spell_holy_vindication', 't'],
+        'Windfury Totem': [8512, 'spell_nature_windfury', ''],
+        "Winter's Chill": [28593, 'spell_frost_chillingblast', 't'],
+        'Wrath of Air Totem': [3738, 'spell_nature_slowingtotem', '']
+    };
     var DATA = {
         w: {
-            buffs: [
-                ['Bloodlust / Heroism',        [[7, '', 'Bloodlust / Heroism']]],
-                ['Replenishment',              [[3, 'sv', 'Hunting Party'], [2, 'ret', 'Judgements of the Wise'], [5, 'shadow', 'Vampiric Touch'], [9, 'destro', 'Improved Soul Leech'], [8, 'frost', 'Enduring Winter']]],
-                ['+10% All stats',             [[2, '', 'Blessing of Kings']]],
-                ['All stats',                  [[11, '', 'Mark of the Wild']]],
-                ['Stamina',                    [[5, '', 'Power Word: Fortitude'], [9, '', 'Blood Pact (Imp)']]],
-                ['Health',                     [[1, '', 'Commanding Shout']]],
-                ['Intellect',                  [[8, '', 'Arcane Intellect'], [9, '', 'Fel Intelligence (Felhunter)']]],
-                ['Spirit',                     [[5, 'disc', 'Divine Spirit'], [9, '', 'Fel Intelligence (Felhunter)']]],
-                ['Strength & Agility',         [[6, '', 'Horn of Winter'], [7, '', 'Strength of Earth Totem']]],
-                ['Attack power',               [[1, '', 'Battle Shout'], [2, '', 'Blessing of Might']]],
-                ['+10% Attack power',          [[6, 'blood', "Abomination's Might"], [3, 'mm', 'Trueshot Aura'], [7, 'enh', 'Unleashed Rage']]],
-                ['+20% Melee haste',           [[6, 'frost', 'Improved Icy Talons'], [7, '', 'Windfury Totem']]],
-                ['+5% Spell haste',            [[7, '', 'Wrath of Air Totem']]],
-                ['+3% Haste',                  [[11, 'balance', 'Improved Moonkin Form'], [2, 'ret', 'Swift Retribution']]],
-                ['+5% Melee & ranged crit',    [[11, 'feral', 'Leader of the Pack'], [1, 'fury', 'Rampage']]],
-                ['+5% Spell crit',             [[11, 'balance', 'Moonkin Aura'], [7, 'ele', 'Elemental Oath']]],
-                ['Spell power',                [[7, 'ele', 'Totem of Wrath'], [7, '', 'Flametongue Totem'], [9, 'demo', 'Demonic Pact']]],
-                ['+3% Damage',                 [[3, 'bm', 'Ferocious Inspiration'], [2, 'ret', 'Sanctified Retribution'], [8, 'arcane', 'Arcane Empowerment']]],
-                ['Mana per 5 sec.',            [[2, '', 'Blessing of Wisdom'], [7, '', 'Mana Spring Totem']]],
-                ['Armor',                      [[2, '', 'Devotion Aura'], [7, '', 'Stoneskin Totem']]],
-                ['+6% Healing received',       [[2, 'prot', 'Improved Devotion Aura'], [11, 'resto', 'Tree of Life']]],
-                ['-3% Damage taken',           [[2, 'prot', 'Blessing of Sanctuary'], [5, 'disc', 'Renewed Hope']]],
-                ['Resistances',                [[2, '', 'Resistance Auras'], [7, '', 'Resistance Totems'], [3, '', 'Aspect of the Wild'], [5, '', 'Shadow Protection']]]
-            ],
-            debuffs: [
-                ['-20% Armor',                 [[1, '', 'Sunder Armor'], [4, '', 'Expose Armor']]],
-                ['-5% Armor',                  [[11, '', 'Faerie Fire'], [9, '', 'Curse of Weakness'], [3, '', 'Sting (Wasp)']]],
-                ['+4% Physical damage taken',  [[1, 'arms', 'Blood Frenzy'], [4, 'combat', 'Savage Combat']]],
-                ['+30% Bleed damage taken',    [[11, 'feral', 'Mangle'], [1, 'arms', 'Trauma']]],
-                ['+3% Crit taken',             [[2, 'ret', 'Heart of the Crusader'], [4, 'assa', 'Master Poisoner'], [7, 'ele', 'Totem of Wrath']]],
-                ['+13% Spell damage taken',    [[6, 'unholy', 'Ebon Plaguebringer'], [11, 'balance', 'Earth and Moon'], [9, '', 'Curse of the Elements']]],
-                ['+3% Spell hit taken',        [[11, 'balance', 'Improved Faerie Fire'], [5, 'shadow', 'Misery']]],
-                ['+5% Spell crit taken',       [[8, 'fire', 'Improved Scorch'], [8, 'frost', "Winter's Chill"], [9, 'destro', 'Improved Shadow Bolt']]],
-                ['-20% Attack speed',          [[1, '', 'Thunder Clap'], [6, '', 'Frost Fever'], [2, 'prot', 'Judgements of the Just'], [11, 'feral', 'Infected Wounds']]],
-                ['-Attack power',              [[1, '', 'Demoralizing Shout'], [11, 'feral', 'Demoralizing Roar'], [9, '', 'Curse of Weakness'], [2, 'prot', 'Vindication']]],
-                ['-3% Hit',                    [[11, 'balance', 'Insect Swarm'], [3, '', 'Scorpid Sting']]],
-                ['-50% Healing received',      [[1, 'arms', 'Mortal Strike'], [1, 'fury', 'Furious Attacks'], [4, '', 'Wound Poison'], [3, 'mm', 'Aimed Shot']]],
-                ['Mana on hit',                [[2, '', 'Judgement of Wisdom']]],
-                ['Health on hit',              [[2, '', 'Judgement of Light']]]
+            sections: [
+                ['Buffs', [
+                    ['Bloodlust / Heroism',        [[7, '', 'Bloodlust'], [7, '', 'Heroism']]],
+                    ['Blessing of Kings',          [[2, '', 'Blessing of Kings']]],
+                    ['Spell Power',                [[7, '', 'Flametongue Totem'], [7, 'ele', 'Totem of Wrath'], [9, 'demo', 'Demonic Pact']]],
+                    ['+3% Haste',                  [[11, 'balance', 'Improved Moonkin Form'], [2, 'ret', 'Swift Retribution']]],
+                    ['+5% Spell Haste',            [[7, '', 'Wrath of Air Totem']]],
+                    ['+5% Spell Crit',             [[11, 'balance', 'Moonkin Form'], [7, 'ele', 'Elemental Oath']]],
+                    ['Attack Power',               [[1, '', 'Battle Shout'], [2, '', 'Greater Blessing of Might']]],
+                    ['Gift of the Wild',           [[11, '', 'Gift of the Wild']]],
+                    ['+5% Physical Crit',          [[11, 'feral', 'Leader of the Pack'], [1, 'fury', 'Rampage']]],
+                    ['+20% Melee Haste',           [[6, 'frost', 'Improved Icy Talons'], [7, '', 'Windfury Totem'], [7, 'enh', 'Improved Windfury Totem']]],
+                    ['Health',                     [[1, '', 'Commanding Shout'], [9, '', 'Blood Pact']]],
+                    ['Strength and Agility',       [[6, '', 'Horn of Winter'], [7, '', 'Strength of Earth Totem']]],
+                    ['+10% Attack Power',          [[6, 'blood', "Abomination's Might"], [3, 'mm', 'Trueshot Aura'], [7, 'enh', 'Unleashed Rage']]],
+                    ['+3% Damage',                 [[2, 'ret', 'Sanctified Retribution'], [3, 'bm', 'Ferocious Inspiration'], [8, 'arcane', 'Arcane Empowerment']]],
+                    ['Spirit',                     [[5, '', 'Prayer of Spirit'], [9, '', 'Fel Intelligence']]],
+                    ['Healing',                    [[11, 'resto', 'Tree of Life'], [2, 'prot', 'Improved Devotion Aura']]],
+                    ['Intellect',                  [[8, '', 'Arcane Brilliance'], [9, '', 'Fel Intelligence']]],
+                    ['Stamina',                    [[5, '', 'Prayer of Fortitude']]]
+                ]],
+                ['External Buffs', [
+                    ['Power Infusion',             [[5, 'disc', 'Power Infusion']]],
+                    ['Hysteria',              [[6, 'blood', 'Hysteria']]],
+                    ['Focus Magic',                [[8, 'arcane', 'Focus Magic']]],
+                    ['Tricks of the Trade',        [[4, '', 'Tricks of the Trade']]]
+                ]],
+                ['Damage Reduction', [
+                    ['10% Damage Reduction',       [[5, 'disc', 'Inspiration'], [7, 'resto', 'Ancestral Healing']]],
+                    ['Reduced Damage Taken',       [[2, 'prot', 'Blessing of Sanctuary'], [5, 'disc', 'Renewed Hope']]],
+                    ['Divine Guardian',            [[2, 'prot', 'Divine Guardian']]]
+                ]],
+                ['Debuffs', [
+                    ['5% Armor Reduction',         [[11, '', 'Faerie Fire'], [9, '', 'Curse of Weakness'], [3, '', 'Sting']]],
+                    ['20% Attack Speed Reduction', [[1, '', 'Thunder Clap'], [1, 'prot', 'Improved Thunder Clap'], [6, 'frost', 'Improved Icy Touch'], [2, 'prot', 'Judgements of the Just'], [11, 'feral', 'Infected Wounds']]],
+                    ['Attack Power Reduction',     [[1, '', 'Demoralizing Shout'], [11, 'feral', 'Demoralizing Roar'], [9, '', 'Curse of Weakness'], [2, 'prot', 'Vindication']]],
+                    ['+30% Bleed Damage',          [[11, 'feral', 'Mangle'], [1, 'arms', 'Trauma']]],
+                    ['3% Physical Hit Reduction',  [[11, 'balance', 'Insect Swarm'], [3, '', 'Scorpid Sting']]],
+                    ['+5% Spell Crit',             [[8, 'fire', 'Improved Scorch'], [8, 'frost', "Winter's Chill"], [9, 'destro', 'Improved Shadow Bolt']]],
+                    ['+4% Physical Damage',        [[1, 'arms', 'Blood Frenzy'], [4, 'combat', 'Savage Combat']]],
+                    ['+13% Spell Damage',          [[9, '', 'Curse of the Elements'], [11, 'balance', 'Earth and Moon'], [6, 'unholy', 'Ebon Plaguebringer']]],
+                    ['20% Armor Reduction',        [[1, '', 'Sunder Armor'], [4, '', 'Expose Armor'], [3, '', 'Acid Spit']]],
+                    ['+3% Crit',                   [[2, 'ret', 'Heart of the Crusader'], [4, 'assa', 'Master Poisoner'], [7, 'ele', 'Totem of Wrath']]],
+                    ['+3% Spell Hit',              [[5, 'shadow', 'Misery'], [11, 'balance', 'Improved Faerie Fire']]]
+                ]],
+                ['Mana Regeneration', [
+                    ['Mana Tide Totem',            [[7, 'resto', 'Mana Tide Totem']]],
+                    ['Replenishment',              [[3, 'sv', 'Hunting Party'], [2, 'ret', 'Judgements of the Wise'], [5, 'shadow', 'Vampiric Touch'], [9, 'destro', 'Improved Soul Leech'], [8, 'frost', 'Enduring Winter']]],
+                    ['Revitalize',                 [[11, 'resto', 'Revitalize']]],
+                    ['Judgement of Wisdom',        [[2, '', 'Judgement of Wisdom']]],
+                    ['Innervate',                  [[11, '', 'Innervate']]],
+                    ['Rapture',                    [[5, 'disc', 'Rapture']]],
+                    ['Mana Regen',                 [[7, '', 'Mana Spring Totem'], [2, '', 'Greater Blessing of Wisdom']]],
+                    ['Hymn of Hope',               [[5, '', 'Hymn of Hope']]]
+                ]],
+                ['Health Regeneration', [
+                    ['Vampiric Embrace',           [[5, 'shadow', 'Vampiric Embrace']]],
+                    ['Judgement of Light',         [[2, '', 'Judgement of Light']]],
+                    ['Improved Leader of the Pack', [[11, 'feral', 'Improved Leader of the Pack']]],
+                    ['Healing Stream Totem',       [[7, '', 'Healing Stream Totem']]]
+                ]],
+                ['Utility', [
+                    ['Battle Resurrection',        [[11, '', 'Rebirth'], [6, '', 'Raise Ally'], [9, '', 'Soulstone Resurrection']]],
+                    ['Divine Hymn',                [[5, '', 'Divine Hymn']]],
+                    ['Pain Suppression',           [[5, 'disc', 'Pain Suppression']]],
+                    ['Guardian Spirit',            [[5, 'holy', 'Guardian Spirit']]],
+                    ['Mass Dispel',                [[5, '', 'Mass Dispel']]],
+                    ['Hand of Sacrifice',          [[2, '', 'Hand of Sacrifice']]],
+                    ['Hand of Protection',         [[2, '', 'Hand of Protection']]],
+                    ['Divine Sacrifice',           [[2, 'prot', 'Divine Sacrifice']]],
+                    ['Aura Mastery',               [[2, 'holy', 'Aura Mastery']]],
+                    ['Lay on Hands',               [[2, '', 'Lay on Hands']]],
+                    ['Anti-Magic Zone',            [[6, 'unholy', 'Anti-Magic Zone']]],
+                    ['Misdirection',               [[3, '', 'Misdirection']]],
+                    ['Shattering Throw',           [[1, '', 'Shattering Throw']]],
+                    ['Ritual of Summoning',        [[9, '', 'Ritual of Summoning']]]
+                ]]
             ]
         },
         t: {
@@ -219,7 +367,7 @@ var AoRaidComp = (function () {
         }
     };
 
-    var el, exp = 'w', size = 25, faction = 'a', layout = 'r', slots = [], names = {}, hash = '', askDelete = false, benchOpen = false;
+    var el, exp = 'w', size = 25, faction = 'a', layout = 'r', slots = [], names = {}, hash = '', askDelete = false, benchOpen = false, tab = 'c';
 
     function esc(t) {
         return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; });
@@ -334,8 +482,7 @@ var AoRaidComp = (function () {
         html += summary(mem);
 
         // buffs and debuffs below
-        var D = DATA[exp];
-        html += '<div class="rc-lists"><div class="rc-lcol">' + list('Buffs', D.buffs, mem) + list('Debuffs', D.debuffs, mem) + '</div>' + spells(mem) + '</div>';
+        html += bottom(mem);
 
         el.innerHTML = html;
         bind(mem);
@@ -401,38 +548,70 @@ var AoRaidComp = (function () {
         f.onmousedown = f.onclick = f.ondblclick = function (e) { e.stopPropagation(); };
     }
 
-    function list(title, defs, mem) {
-        var have = 0, rows = defs.map(function (d, i) {
-            var avail = d[1].filter(function (p) { return classOk(p[0]); });
-            var got = avail.filter(function (p) { return mem.some(function (m) { return provides(m, p); }); });
-            if (got.length) have++;
-            return '<div class="rc-buff' + (got.length ? ' on' : '') + (avail.length ? '' : ' na') + '" data-def="' + title + ':' + i + '">'
-                 + '<span class="rc-check">' + (got.length ? '&#10003;' : '') + '</span><span class="rc-bname">' + esc(d[0]) + '</span>'
-                 + '<span class="rc-bsrc">' + avail.map(function (p) {
-                     return '<img src="' + classIcon(p[0]) + '" class="' + (got.indexOf(p) != -1 ? 'on' : '') + '" alt="" />';
-                 }).join('') + '</span></div>';
-        });
-        return '<div class="rc-list"><div class="rc-lhead">' + title + ' <span>' + have + ' / ' + defs.length + '</span></div><div class="rc-lgrid">' + rows.join('') + '</div></div>';
+    // the sections shown at the bottom: Wrath has its own; Classic and TBC use buffs, debuffs and the utility spells they have
+    function sections() {
+        var D = DATA[exp];
+        if (D.sections) return D.sections;
+        return [['Buffs', D.buffs], ['Debuffs', D.debuffs], ['Utility', SPELLS.filter(function (sp) { return sp[4].indexOf(exp) != -1; }).map(function (sp) { return [sp[0], sp[3].map(function (src) { return [src[0], src[1], sp[0]]; })]; })]];
     }
 
-    // utility spells: how many in the raid can cast each, with the classes that have it
-    function spells(mem) {
-        var host = g_host.replace(/\/?$/, '/'), list = SPELLS.filter(function (sp) { return sp[4].indexOf(exp) != -1 && sp[3].some(function (src) { return classOk(src[0]); }); });
-        var have = 0, rows = list.map(function (sp) {
-            var n = mem.filter(function (m) { return sp[3].some(function (src) { return provides(m, src); }); }).length;
-            if (n) have++;
-            return '<a href="' + host + '?spell=' + sp[1] + '" class="rc-spell' + (n ? ' on' : '') + '"><img src="' + g_staticUrl + '/images/wow/icons/small/' + sp[2] + '.jpg" alt="" />'
-                 + '<span class="rc-bname">' + esc(sp[0]) + '</span><b>' + (n ? n + 'x' : '') + '</b>'
-                 + '<span class="rc-bsrc">' + sp[3].map(function (src) { return '<img src="' + classIcon(src[0]) + '" class="' + (n ? 'on' : '') + '" alt="" />'; }).join('') + '</span></a>';
-        });
-        return '<div class="rc-list"><div class="rc-lhead">Spells <span>' + have + ' / ' + list.length + '</span></div>' + rows.join('') + '</div>';
+    function count(mem, srcs) {
+        return mem.filter(function (m) { return srcs.some(function (src) { return provides(m, src); }); }).length;
+    }
+
+    function abilityIcon(name) {
+        var i = SPELL_INFO[name];
+        return i ? '<img src="' + g_staticUrl + '/images/wow/icons/tiny/' + i[1] + '.gif" alt="" />' : '';
+    }
+
+    // bottom panel: Categories (what the raid has) and Spells (who brings it)
+    function bottom(mem) {
+        var html = '<div class="rc-bottom"><div class="rc-tabs"><a href="javascript:;" data-tab="c"' + (tab == 'c' ? ' class="on"' : '') + '>Categories</a><a href="javascript:;" data-tab="s"' + (tab == 's' ? ' class="on"' : '') + '>Spells</a></div><div class="rc-tbody">';
+        if (tab == 'c') {
+            html += '<div class="rc-sect"><div class="rc-shead">Roles</div><div class="rc-sgrid">' + ['M', 'T', 'H', 'R'].map(function (r) {
+                return '<span class="rc-item' + (mem.some(function (m) { return m[4] == r; }) ? '' : ' none') + '"><b>' + mem.filter(function (m) { return m[4] == r; }).length + '</b> ' + { M: 'Melee', T: 'Tanks', H: 'Healers', R: 'Ranged' }[r] + '</span>';
+            }).join('') + '</div></div>';
+            sections().forEach(function (S, si) {
+                var defs = S[1].filter(function (d) { return d[1].some(function (src) { return classOk(src[0]); }); });
+                if (!defs.length) return;
+                html += '<div class="rc-sect"><div class="rc-shead">' + esc(S[0]) + '</div><div class="rc-sgrid">' + defs.map(function (d) {
+                    var n = count(mem, d[1]);
+                    return '<span class="rc-item rc-cat' + (n ? '' : ' none') + '" data-def="' + si + ':' + S[1].indexOf(d) + '"><b>' + n + '</b> ' + esc(d[0]) + '</span>';
+                }).join('') + '</div></div>';
+            });
+        }
+        else {
+            var host = g_host.replace(/\/?$/, '/'), any = false;
+            sections().forEach(function (S) {
+                var seen = {}, items = [];
+                S[1].forEach(function (d) {
+                    d[1].forEach(function (src) {
+                        var key = src[0] + ':' + src[2];
+                        if (seen[key] || !classOk(src[0])) return;
+                        seen[key] = 1;
+                        var n = count(mem, d[1].filter(function (x) { return x[0] == src[0] && x[2] == src[2]; }));
+                        if (n) items.push([src, n]);
+                    });
+                });
+                if (!items.length) return;
+                any = true;
+                items.sort(function (a, b) { return a[0][0] - b[0][0] || (a[0][2] < b[0][2] ? -1 : 1); });
+                html += '<div class="rc-sect"><div class="rc-shead">' + esc(S[0]) + '</div><div class="rc-scols">' + items.map(function (it) {
+                    var src = it[0], i = SPELL_INFO[src[2]], mark = i && i[2] == 't' ? '<i class="rc-talent" title="Talent"></i>' : i && i[2] == 'p' ? '<i class="rc-pet" title="Pet">' + ICON_PAW + '</i>' : '';
+                    var label = '<b>' + it[1] + '</b> ' + mark + '<span class="c' + src[0] + '">' + esc(src[2]) + '</span>';
+                    return i ? '<a href="' + host + '?spell=' + i[0] + '" class="rc-item rc-sp">' + label + '</a>' : '<span class="rc-item rc-sp">' + label + '</span>';
+                }).join('') + '</div></div>';
+            });
+            if (!any) html += '<div class="q0" style="padding: 10px">Add players to see their spells.</div>';
+        }
+        return html + '</div></div>';
     }
 
     // what a spec brings, for its tooltip
     function specTip(s) {
         // yellow section header, then "<count>x <buff>" lines in white
-        var D = DATA[exp], out = '';
-        [['Buffs', D.buffs], ['Debuffs', D.debuffs]].forEach(function (L) {
+        var out = '';
+        sections().forEach(function (L) {
             var lines = L[1].map(function (d) {
                 var n = d[1].filter(function (p) { return provides(s, p); }).length;
                 return n ? '<span class="q1">' + n + 'x ' + esc(d[0]) + '</span>' : '';
@@ -531,12 +710,14 @@ var AoRaidComp = (function () {
             if (v[0] == 'm') { e.preventDefault(); var i = +v.substr(1); slots[i] = null; delete names[i]; save(); render(); }
         };
 
-        el.querySelectorAll('.rc-buff').forEach(function (r) {
-            var p = r.getAttribute('data-def').split(':'), d = DATA[exp][p[0] == 'Buffs' ? 'buffs' : 'debuffs'][+p[1]];
+        $$('.rc-tabs a').forEach(function (a) { a.onclick = function () { $WH.Tooltip.hide(); tab = a.getAttribute('data-tab'); try { localStorage.setItem('aowow_rc_tab', tab); } catch (e) {} render(); }; });
+        // category: its name, then each ability with how many in the raid bring it
+        $$('.rc-cat').forEach(function (r) {
+            var p = r.getAttribute('data-def').split(':'), d = sections()[+p[0]][1][+p[1]];
             r.onmouseover = function () {
                 $WH.Tooltip.show(r, '<b>' + esc(d[0]) + '</b>' + d[1].filter(function (src) { return classOk(src[0]); }).map(function (src) {
-                    var on = mem.some(function (m) { return provides(m, src); }), who = SPECS.filter(function (s) { return provides(s, src); });
-                    return '<br /><span class="' + (on ? 'q2' : 'q0') + '">' + esc(src[2]) + '</span> <span class="c' + src[0] + '">' + esc(src[1] ? who.map(specLabel).join(', ') : g_chr_classes[src[0]]) + '</span>';
+                    var n = count(mem, [src]);
+                    return '<br /><span class="' + (n ? 'q1' : 'q0') + '">' + n + '</span> ' + abilityIcon(src[2]) + ' <span class="c' + src[0] + '">' + esc(src[2]) + '</span>' + (src[1] ? ' <span class="q0">(' + esc(SPECS.filter(function (s) { return provides(s, src); }).map(function (s) { return s[2]; }).join(', ')) + ')</span>' : '');
                 }).join(''));
             };
             r.onmouseout = $WH.Tooltip.hide;
@@ -546,7 +727,7 @@ var AoRaidComp = (function () {
     return {
         init: function (container) {
             el = container;
-            try { askDelete = !!localStorage.getItem('aowow_rc_ask'); benchOpen = !!localStorage.getItem('aowow_rc_bench'); } catch (e) {}
+            try { askDelete = !!localStorage.getItem('aowow_rc_ask'); benchOpen = !!localStorage.getItem('aowow_rc_bench'); tab = localStorage.getItem('aowow_rc_tab') == 's' ? 's' : 'c'; } catch (e) {}
             load();
             render();
             if (!location.hash) save();
