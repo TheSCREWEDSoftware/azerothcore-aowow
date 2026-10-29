@@ -206,3 +206,28 @@ a.dr-find-row ins { flex: none; width: 22px; height: 22px; background-size: cove
 .dr-find-target b { color: #ffd100; }
 .dr-find-any { margin-left: auto; }
 .dr-find-off { color: #ff7a7a !important; }
+
+/* ammo: the small slot after the ranged one, an arrow pointing at the bow (as in game) */
+.dr-bottom { align-items: flex-end; }
+.dr-slot[data-slot=ammo] { width: 30px; height: 30px; margin-left: 20px; }
+.dr-slot[data-slot=ammo] .dr-icon { width: 30px; height: 30px; border-width: 1px; }
+.dr-slot[data-slot=ammo]::before,
+.dr-slot[data-slot=ammo]::after { content: ""; position: absolute; top: 50%; pointer-events: none; }
+.dr-slot[data-slot=ammo]::before {                           /* the shaft */
+    left: -17px;
+    width: 10px;
+    height: 4px;
+    margin-top: -2px;
+    background: #c9c9c9;
+    border-radius: 0 1px 1px 0;
+}
+.dr-slot[data-slot=ammo]::after {                            /* the head, pointing left */
+    left: -23px;
+    margin-top: -6px;
+    border: 6px solid transparent;
+    border-left: 0;
+    border-right: 7px solid #c9c9c9;
+}
+@media (max-width: 480px) {
+    .dr-slot[data-slot=ammo], .dr-slot[data-slot=ammo] .dr-icon { width: 26px; height: 26px; }
+}
