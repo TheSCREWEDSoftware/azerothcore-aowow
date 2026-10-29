@@ -1413,6 +1413,8 @@ function ma_DrawPois(mapper, force) {
             return;
         try { ma_poiCache[zone] = JSON.parse(xhr.responseText); } catch (e) { return; }
         render(ma_poiCache[zone]);
+        if (mapper._zsRouteList && mapper._zsRouteZone === zone)
+            ma_DrawRouteStops(mapper);                      // the docks know where routes without stop data wait
     };
     xhr.send();
 }
@@ -1491,7 +1493,8 @@ function ma_BindRoute(g, rt, zone, all) {
 }
 
 function ma_DrawRoutes(mapper) {
-    ['_zsRoutes', '_zsRouteArrows'].forEach(function (k) {
+    mapper._zsRouteList = null;
+    ['_zsRoutes', '_zsRouteArrows', '_zsRouteStops'].forEach(function (k) {
         if (mapper[k] && mapper[k].parentNode)
             mapper[k].parentNode.removeChild(mapper[k]);
         mapper[k] = null;
@@ -1556,6 +1559,7 @@ function ma_DrawRoutes(mapper) {
             var side = rt.r && rt.r[0] > 0 && rt.r[1] < 0 ? 'a' : (rt.r && rt.r[1] > 0 && rt.r[0] < 0 ? 'h' : 'n');
             var g = document.createElementNS(MA_ZS_SVGNS, 'g');
             svg.appendChild(g);
+            rt._g = g;
             ma_BindRoute(g, rt, zone, list);
             rt.l.forEach(function (l) {
                 var d = 'M' + l[0] + ' ' + l[1];
@@ -1650,6 +1654,10 @@ function ma_DrawRoutes(mapper) {
         ma_InsertLayer(mapper, arrows, 2.5);
         mapper._zsRoutes      = svg;
         mapper._zsRouteArrows = arrows;
+        mapper._zsRouteList   = list;
+        mapper._zsRouteZone   = zone;
+        mapper._zsRoutePlaced = placed;
+        ma_DrawRouteStops(mapper);
     };
 
     if (ma_routeCache[zone]) {
@@ -1666,6 +1674,129 @@ function ma_DrawRoutes(mapper) {
         render(ma_routeCache[zone]);
     };
     xhr.send();
+}
+
+/*  transport stops: a bar across the route where the transport waits, in the route's colour, with the waiting time
+ *  next to it. Stops come with the route (s: [[x, y, wait], ..]); older route data falls back to the dock markers of
+ *  the same ship.
+ */
+function ma_WaitText(sec) {
+    if (sec < 60)
+        return sec + ' sec';
+    var m = Math.round(sec / 6) / 10;
+    return m + ' min';
+}
+
+// nearest point of a route to a point, in screen pixels: {x, y (%), a (deg, direction of travel), d (px)}
+function ma_RouteNearest(rt, px, py, W, H) {
+    var best = null;
+    rt.l.forEach(function (l) {
+        for (var i = 2; i < l.length; i += 2) {
+            var ax = l[i - 2] * W / 100, ay = l[i - 1] * H / 100;
+            var dx = l[i] * W / 100 - ax, dy = l[i + 1] * H / 100 - ay;
+            var x = px * W / 100, y = py * H / 100;
+            var f = dx || dy ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy))) : 0;
+            var qx = ax + f * dx, qy = ay + f * dy, d = Math.hypot(x - qx, y - qy);
+            if (!best || d < best.d)
+                best = { x: qx * 100 / W, y: qy * 100 / H, a: Math.atan2(dy, dx) * 180 / Math.PI, d: d };
+        }
+    });
+    return best;
+}
+
+// screen box of a (rotated) label: [left, top, right, bottom] px
+function ma_BoxBounds(b) {
+    var c = Math.abs(Math.cos(b.a || 0)), s = Math.abs(Math.sin(b.a || 0));
+    var hw = (b.w * c + b.h * s) / 2, hh = (b.w * s + b.h * c) / 2;
+    return [b.x - hw, b.y - hh, b.x + hw, b.y + hh];
+}
+
+function ma_DrawRouteStops(mapper) {
+    if (mapper._zsRouteStops && mapper._zsRouteStops.parentNode)
+        mapper._zsRouteStops.parentNode.removeChild(mapper._zsRouteStops);
+    mapper._zsRouteStops = null;
+
+    var zone = parseInt(mapper.zone), list = mapper._zsRouteList;
+    if (!list || mapper._zsRouteZone !== zone)
+        return;
+
+    var W = mapper.span.offsetWidth || 772, H = mapper.span.offsetHeight || 515;
+    var layer = document.createElement('div');
+    layer.className = 'zs-route-stops';
+
+    var taken = (mapper._zsRoutePlaced || []).map(ma_BoxBounds);   // route numbers placed before
+    var free = function (b) {
+        return b[0] >= 2 && b[1] >= 2 && b[2] <= W - 2 && b[3] <= H - 2 && !taken.some(function (t) {
+            return b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1];
+        });
+    };
+
+    list.forEach(function (rt) {
+        if (ma_poiOn[rt.t] === false || !rt._g)
+            return;
+
+        var stops = rt.s ? rt.s.map(function (s) { return { x: s[0], y: s[1], w: s[2] }; })
+                         : (ma_poiCache[zone] || []).filter(function (p) { return p.t == rt.t && p.n && p.n == rt.n && p.w; });
+        var side = rt.r && rt.r[0] > 0 && rt.r[1] < 0 ? 'a' : (rt.r && rt.r[1] > 0 && rt.r[0] < 0 ? 'h' : 'n');
+        var done = [];
+
+        stops.forEach(function (st) {
+            var p = ma_RouteNearest(rt, st.x, st.y, W, H);
+            if (!p || p.d > (zone < 0 ? 10 : 24))           // dock of another line of the same ship (or off this map)
+                return;
+            if (done.some(function (q) { return Math.hypot((q.x - p.x) * W / 100, (q.y - p.y) * H / 100) < 8; }))
+                return;
+            done.push(p);
+
+            var hover = function (el) {
+                el.addEventListener('mouseover', function (e) { rt._g.dispatchEvent(new MouseEvent('mouseover', e)); });
+                el.addEventListener('mousemove', function (e) { $WH.Tooltip.cursorUpdate(e); });
+                el.addEventListener('mouseout',  function () { rt._g.dispatchEvent(new MouseEvent('mouseout')); });
+            };
+
+            // the bar: across the line
+            var bar = document.createElement('i');
+            bar.className = 'zs-route-stop zs-route-stop-' + side;
+            bar.style.left = p.x + '%';
+            bar.style.top  = p.y + '%';
+            bar.style.setProperty('--a', p.a.toFixed(1) + 'deg');
+            hover(bar);
+            layer.appendChild(bar);
+            taken.push([p.x * W / 100 - 9, p.y * H / 100 - 9, p.x * W / 100 + 9, p.y * H / 100 + 9]);
+
+            // the waiting time: beside the bar, on whichever side of the line is clear
+            var text = 'Wait ' + ma_WaitText(st.w);
+            var bw = text.length * 5.6 + 12, bh = 15;
+            var a = p.a * Math.PI / 180, nx = -Math.sin(a), ny = Math.cos(a);   // perpendicular to the line
+            var cx = p.x * W / 100, cy = p.y * H / 100, pos = null;
+            [[1, 0], [-1, 0], [1, 1], [-1, 1], [1, -1], [-1, -1], [2, 0], [-2, 0]].some(function (o) {
+                var dist = Math.abs(o[0]) * (Math.abs(nx) * bw / 2 + Math.abs(ny) * bh / 2 + 10);
+                var x = cx + nx * dist * Math.sign(o[0]) + Math.cos(a) * o[1] * 14;
+                var y = cy + ny * dist * Math.sign(o[0]) + Math.sin(a) * o[1] * 14;
+                var b = [x - bw / 2, y - bh / 2, x + bw / 2, y + bh / 2];
+                if (!free(b))
+                    return false;
+                pos = [x, y, b];
+                return true;
+            });
+            if (!pos)
+                return;                                     // no room (busy continent harbours): the bar and the tooltip still tell
+
+            taken.push(pos[2]);
+            var lbl = document.createElement('span');
+            lbl.className = 'zs-route-wait zs-route-wait-' + side;
+            lbl.textContent = text;
+            lbl.style.left = p.x + '%';                    // at the bar, pushed aside in screen pixels: stays next to it when zoomed
+            lbl.style.top  = p.y + '%';
+            lbl.style.setProperty('--dx', (pos[0] - cx).toFixed(1) + 'px');
+            lbl.style.setProperty('--dy', (pos[1] - cy).toFixed(1) + 'px');
+            hover(lbl);
+            layer.appendChild(lbl);
+        });
+    });
+
+    ma_InsertLayer(mapper, layer, 2.6);
+    mapper._zsRouteStops = layer;
 }
 
 // small Alliance / Horde icons above a marker: who can use it (npc reaction, transport faction, graveyard faction)

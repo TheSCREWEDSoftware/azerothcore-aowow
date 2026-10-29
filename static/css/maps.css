@@ -1097,6 +1097,52 @@ i.zs-poi-swatch.zs-spell {
 .zs-route-arrows .zs-route-no-n, .zs-route-no-tip.zs-route-no-n { color: #ffd100; }
 .zs-route-no.zs-route-no-tip { position: static; display: inline-block; transform: none; vertical-align: 1px; color: inherit; }
 
+/* transport stops: a bar across the route where it waits, and the waiting time next to it */
+.zs-route-stops {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.zs-route-stop {
+    position: absolute;
+    width: 5px;
+    height: 16px;
+    background: #ffd100;
+    border: 1px solid #000;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.35);
+    transform: translate(-50%, -50%) rotate(var(--a, 0deg)) scale(calc(1 / var(--zs-k, 1)));
+    pointer-events: auto;
+    cursor: help;
+    z-index: 2;
+}
+.zs-route-stop-a { background: #4da6ff; }
+.zs-route-stop-h { background: #ff4d4d; }
+
+.zs-route-wait {
+    position: absolute;
+    padding: 0 5px;
+    height: 15px;
+    box-sizing: border-box;
+    transform: translate(-50%, -50%) scale(calc(1 / var(--zs-k, 1))) translate(var(--dx, 0px), var(--dy, 0px));
+    white-space: nowrap;
+    border-radius: 3px;
+    border: 1px solid currentColor;
+    background: rgba(17,17,17,.88);
+    color: #ffd100;
+    font: bold 9px/13px Verdana, sans-serif;
+    text-shadow: none;
+    pointer-events: auto;
+    cursor: help;
+    z-index: 2;
+}
+.zs-route-wait-a { color: #4da6ff; }
+.zs-route-wait-h { color: #ff4d4d; }
+
 /* ── light mode: the panels and their text follow the light palette ── */
 html[data-mode="light"] #mapper-controls,
 html[data-mode="light"] #zs-poi {
