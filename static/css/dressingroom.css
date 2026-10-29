@@ -200,3 +200,19 @@
 .set-pieces ins { display: block; width: 22px; height: 22px; background-size: cover; border-radius: 2px; border: 1px solid #444; }
 .set-more { font-size: 11px; color: var(--th-muted, #8b929b); }
 .set-links { margin-top: auto; display: flex; gap: 12px; font-size: 12px; }
+
+/* find items tab */
+.dr-tab-find input[type=search], .dr-tab-find select { box-sizing: border-box; background: var(--th-surface-1, #18191c); color: inherit; border: 1px solid var(--th-border-2, #3c4148); border-radius: 4px; padding: 5px 8px; }
+.dr-find-q { width: 100%; font-size: 14px; }
+.dr-find-opts { display: grid; grid-template-columns: 1fr 1fr 1.4fr 70px; gap: 6px; margin-top: 6px; }
+.dr-find-qual { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 8px 0 4px; font-size: 12px; }
+.dr-find-qual label { cursor: pointer; white-space: nowrap; }
+.dr-find-list { max-height: 420px; overflow-y: auto; margin-top: 6px; border-top: 1px solid var(--th-border-2, #3c4148); }
+a.dr-find-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 4px; text-decoration: none; }
+a.dr-find-row:hover { background: rgba(255, 255, 255, .06); }
+a.dr-find-row.worn { background: rgba(255, 209, 0, .08); box-shadow: inset 2px 0 0 #ffd100; }
+a.dr-find-row ins { flex: none; width: 22px; height: 22px; background-size: cover; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
+.dr-find-main { display: flex; flex-direction: column; min-width: 0; }
+.dr-find-name { font-weight: bold; }
+.dr-find-main .dr-find-name, .dr-find-main small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 700px) { .dr-find-opts { grid-template-columns: 1fr 1fr; } }

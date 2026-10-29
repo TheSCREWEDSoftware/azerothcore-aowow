@@ -5,6 +5,8 @@ if (!defined('AOWOW_REVISION'))
 
 // data for the dressing room (static/js/modelviewer/dressingroom.js)
 //   ?dressing-room=search&slot=1,5,20&q=helm   wearable items for a slot, by name
+//        optional: &quality=3,4 &src=<SRC_*> (how it is obtained) &from=<npc, object or zone name> &limit=10-100
+//        without slot: every item that shows on a character
 //   ?dressing-room=items&ids=30987,30991        items by id (shared links, outfits)
 //   ?dressing-room=set&id=627                   the pieces of an item set
 class AjaxDressingroom extends AjaxHandler
@@ -16,7 +18,11 @@ class AjaxDressingroom extends AjaxHandler
         'q'    => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkTextLine'       ],
         'slot' => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkIdListUnsigned'],
         'ids'  => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkIdListUnsigned'],
-        'id'   => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkInt'           ]
+        'id'   => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkInt'           ],
+        'quality' => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkIdListUnsigned'],
+        'src'     => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkInt'           ],
+        'from'    => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkTextLine'       ],
+        'limit'   => ['filter' => FILTER_CALLBACK, 'options' => 'AjaxHandler::checkInt'           ]
     );
 
     public function __construct(array $params)
@@ -68,25 +74,54 @@ class AjaxDressingroom extends AjaxHandler
 
     protected function search() : string
     {
-        $slots = array_values(array_intersect($this->_get['slot'] ?: [], self::VISIBLE_SLOTS));
+        $slots = $this->_get['slot'] ? array_values(array_intersect($this->_get['slot'], self::VISIBLE_SLOTS)) : self::VISIBLE_SLOTS;
         $q     = trim((string)$this->_get['q']);
+        $from  = trim((string)$this->_get['from']);
+        $qual  = array_values(array_filter($this->_get['quality'] ?: [], fn($x) => $x <= 7));
+        $src   = (int)$this->_get['src'];
+        $limit = max(10, min(100, (int)$this->_get['limit'] ?: 60));
         if (!$slots)
             return '[]';
 
+        $esc   = fn($s) => '%'.strtr($s, ['\\' => '\\\\', '%' => '\\%', '_' => '\\_']).'%';
         $loc   = Lang::getLocale()->value;
-        $like  = $q !== '' ? '%'.strtr($q, ['\\' => '\\\\', '%' => '\\%', '_' => '\\_']).'%' : DBSIMPLE_SKIP;
+        $like  = $q    !== '' ? $esc($q)    : DBSIMPLE_SKIP;
+        $fLike = $from !== '' ? $esc($from) : DBSIMPLE_SKIP;
         $rows  = DB::Aowow()->select(
-           'SELECT i.`id`, IF(i.`name_loc'.$loc.'` <> "", i.`name_loc'.$loc.'`, i.`name_loc0`) AS "name", i.`quality`, i.`displayId`, i.`slot`, i.`itemLevel` AS "level", ic.`name` AS "icon"
+           'SELECT i.`id`, IF(i.`name_loc'.$loc.'` <> "", i.`name_loc'.$loc.'`, i.`name_loc0`) AS "name", i.`quality`, i.`displayId`, i.`slot`, i.`itemLevel` AS "level", ic.`name` AS "icon",
+                   src.`src1`, src.`src2`, src.`src3`, src.`src4`, src.`src5`, src.`src10`, src.`src12`,
+                   IFNULL(c.`name_loc0`, o.`name_loc0`) AS "fromName", z.`name_loc0` AS "zoneName"
             FROM   ?_items i
-            LEFT   JOIN ?_icons ic ON ic.`id` = i.`iconId`
-            WHERE  i.`slot` IN (?a) AND i.`displayId` > 0 AND (i.`cuFlags` & ?d) = 0
+            LEFT   JOIN ?_icons ic   ON ic.`id` = i.`iconId`
+            LEFT   JOIN ?_source src ON src.`type` = ?d AND src.`typeId` = i.`id`
+            LEFT   JOIN ?_creature c ON src.`moreType` = ?d AND c.`id` = src.`moreTypeId`
+            LEFT   JOIN ?_objects o  ON src.`moreType` = ?d AND o.`id` = src.`moreTypeId`
+            LEFT   JOIN ?_zones z    ON z.`id` = src.`moreZoneId`
+            WHERE  i.`slot` IN (?a) AND i.`class` IN (?a) AND i.`displayId` > 0 AND (i.`cuFlags` & ?d) = 0
             { AND (i.`name_loc0` LIKE ? OR i.`name_loc'.$loc.'` LIKE ?) }
+            { AND i.`quality` IN (?a) }
+            { AND src.`src'.$src.'` IS NOT NULL AND ?d }
+            { AND (c.`name_loc0` LIKE ? OR o.`name_loc0` LIKE ? OR z.`name_loc0` LIKE ?) }
             ORDER  BY i.`quality` DESC, i.`itemLevel` DESC, i.`id` DESC
-            LIMIT  60',
-            $slots, CUSTOM_EXCLUDE_FOR_LISTVIEW, $like, $like
+            LIMIT  ?d',
+            Type::ITEM, Type::NPC, Type::OBJECT,
+            $slots, [ITEM_CLASS_WEAPON, ITEM_CLASS_ARMOR], CUSTOM_EXCLUDE_FOR_LISTVIEW,
+            $like, $like,
+            $qual ?: DBSIMPLE_SKIP,
+            $src >= 1 && $src <= 24 ? 1 : DBSIMPLE_SKIP,
+            $fLike, $fLike, $fLike,
+            $limit
         );
 
-        return Util::toJSON(array_map([self::class, 'castRow'], $rows));
+        // how it is obtained: the source types found, and the npc / object and zone of the main source
+        $names = [SRC_CRAFTED => 'Crafted', SRC_DROP => 'Drop', SRC_PVP => 'PvP', SRC_QUEST => 'Quest', SRC_VENDOR => 'Vendor', SRC_STARTER => 'Starter', SRC_ACHIEVEMENT => 'Achievement'];
+        return Util::toJSON(array_map(function ($r) use ($names) {
+            $row = self::castRow($r);
+            $row['source'] = array_values(array_filter(array_map(fn($k) => $r['src'.$k] !== null ? $names[$k] : null, array_keys($names))));
+            $row['from']   = $r['fromName'] ?: '';
+            $row['zone']   = $r['zoneName'] ?: '';
+            return $row;
+        }, $rows));
     }
 
     protected function byId() : string

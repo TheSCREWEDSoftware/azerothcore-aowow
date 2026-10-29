@@ -138,11 +138,12 @@ var AoDressing = (function () {
                 '<div class="dr-slots dr-right"></div>' +
             '</div>' +
             '<div class="dr-side">' +
-                '<div class="dr-tabs"><a data-tab="look" class="selected">Character</a><a data-tab="outfit">Outfit</a><a data-tab="help">Help</a></div>' +
+                '<div class="dr-tabs"><a data-tab="look" class="selected">Character</a><a data-tab="find">Find Items</a><a data-tab="outfit">Outfit</a><a data-tab="help">Help</a></div>' +
                 '<div class="dr-tab dr-tab-look"></div>' +
+                '<div class="dr-tab dr-tab-find" style="display:none"></div>' +
                 '<div class="dr-tab dr-tab-outfit" style="display:none"></div>' +
                 '<div class="dr-tab dr-tab-help" style="display:none">' +
-                    '<p><b>Items:</b> click a slot to search for anything that can be worn there; the &times; takes it off again.</p>' +
+                    '<p><b>Items:</b> click a slot to search for anything that can be worn there; the &times; takes it off again. Find Items searches every slot at once, by quality and by how or where an item is obtained.</p>' +
                     '<p><b>Character:</b> pick the race and body below the model, then skin, face and hair on the Character tab.</p>' +
                     '<p><b>Model:</b> drag to rotate, right-drag to pan, scroll to zoom; Background changes the backdrop.</p>' +
                     '<p><b>Share:</b> the address of this page always holds the current outfit &ndash; copy it from the Outfit tab.</p>' +
@@ -180,6 +181,7 @@ var AoDressing = (function () {
         });
 
         this.buildOutfitTab();
+        this.buildFindTab();
 
         document.addEventListener('mousedown', function (e) {
             if (self.picker && !self.picker.contains(e.target) && !e.target.closest('.dr-icon')) self.closePicker();
@@ -393,6 +395,66 @@ var AoDressing = (function () {
         };
         run();
         setTimeout(function () { input.focus(); }, 0);
+    };
+
+    // ---------------------------------------------------------------- find items: every slot, filtered by quality and source
+    var QUALITIES = [[0, 'Poor'], [1, 'Common'], [2, 'Uncommon'], [3, 'Rare'], [4, 'Epic'], [5, 'Legendary'], [6, 'Artifact'], [7, 'Heirloom']];
+    var SOURCES   = [[0, 'Any source'], [2, 'Drop'], [4, 'Quest'], [5, 'Vendor'], [1, 'Crafted'], [3, 'PvP'], [12, 'Achievement'], [10, 'Starter']];
+
+    DressingRoom.prototype.buildFindTab = function () {
+        var self = this, box = this.$('.dr-tab-find');
+        box.innerHTML =
+            '<input class="dr-find-q" type="search" placeholder="Item name&hellip;" autocomplete="off">' +
+            '<div class="dr-find-opts">' +
+                '<select class="dr-find-slot"><option value="">Any slot</option>' + SLOTS.map(function (s) { return '<option value="' + s[2].join(',') + '">' + s[1] + '</option>'; }).join('') + '</select>' +
+                '<select class="dr-find-src">' + SOURCES.map(function (s) { return '<option value="' + s[0] + '">' + s[1] + '</option>'; }).join('') + '</select>' +
+                '<input class="dr-find-from" type="search" placeholder="Dropped by / found in&hellip;" autocomplete="off">' +
+                '<select class="dr-find-limit"><option>10</option><option selected>25</option><option>50</option><option>100</option></select>' +
+            '</div>' +
+            '<div class="dr-find-qual">' + QUALITIES.map(function (q) {
+                return '<label class="q' + q[0] + '"><input type="checkbox" value="' + q[0] + '"' + (q[0] >= 2 && q[0] <= 5 ? ' checked' : '') + '> ' + q[1] + '</label>';
+            }).join('') + '</div>' +
+            '<div class="dr-find-list"><div class="q0 dr-hint">Loading&hellip;</div></div>';
+
+        var timer = 0, seq = 0, list = box.querySelector('.dr-find-list');
+        function run() {
+            var my = ++seq;
+            var quals = [].map.call(box.querySelectorAll('.dr-find-qual input:checked'), function (c) { return c.value; });
+            var url = '?dressing-room=search&q=' + encodeURIComponent(box.querySelector('.dr-find-q').value.trim()) +
+                      '&slot=' + box.querySelector('.dr-find-slot').value +
+                      '&quality=' + quals.join(',') +
+                      '&src=' + box.querySelector('.dr-find-src').value +
+                      '&from=' + encodeURIComponent(box.querySelector('.dr-find-from').value.trim()) +
+                      '&limit=' + box.querySelector('.dr-find-limit').value;
+            list.innerHTML = '<div class="q0 dr-hint">Searching&hellip;</div>';
+            getJSON(url).then(function (rows) {
+                if (my != seq) return;
+                list.innerHTML = rows.length ? '' : '<div class="q0 dr-hint">Nothing found.</div>';
+                rows.forEach(function (it) {
+                    var slot = slotFor(it.slot, {}), def = SLOTS.filter(function (s) { return s[0] == slot; })[0];
+                    var where = it.from && it.zone ? it.from + ' (' + it.zone + ')' : (it.from || it.zone);
+                    var a = el('a', 'dr-find-row' + (slot && self.items[slot] && self.items[slot].id == it.id ? ' worn' : ''),
+                        '<ins style="background-image:url(' + icon(it.icon, 'small') + ')"></ins>' +
+                        '<span class="dr-find-main"><span class="dr-find-name q' + it.quality + '">' + esc(it.name) + '</span>' +
+                        '<small class="q0">' + (def ? def[1] : '') + ' &middot; ' + it.level + (it.source.length ? ' &middot; ' + esc(it.source.join(', ')) : '') + (where ? ' &middot; ' + esc(where) : '') + '</small></span>');
+                    a.href = host() + '?item=' + it.id;                 // hover: the item tooltip
+                    a.onclick = function (e) {
+                        e.preventDefault();
+                        var s = slotFor(it.slot, self.items) || slot;
+                        if (!s) return;
+                        self.setItem(s, it);
+                        list.querySelectorAll('.dr-find-row').forEach(function (x) { x.classList.remove('worn'); });
+                        a.classList.add('worn');
+                    };
+                    list.appendChild(a);
+                });
+            }).catch(function () { if (my == seq) list.innerHTML = '<div class="q10 dr-hint">Search failed.</div>'; });
+        }
+        var later = function () { clearTimeout(timer); timer = setTimeout(run, 250); };
+        box.querySelectorAll('input[type=search]').forEach(function (i) { i.oninput = later; });
+        box.querySelectorAll('select, .dr-find-qual input').forEach(function (i) { i.onchange = run; });
+        this.runFind = run;
+        run();
     };
 
     // ---------------------------------------------------------------- share, save
