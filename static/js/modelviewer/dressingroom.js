@@ -397,7 +397,7 @@ var AoDressing = (function () {
                 '<input class="dr-find-from" type="search" placeholder="Dropped by / found in&hellip;" autocomplete="off">' +
             '</div>' +
             '<div class="dr-find-qual">' + QUALITIES.map(function (q) {
-                return '<label class="q' + q[0] + '"><input type="checkbox" value="' + q[0] + '"' + (q[0] >= 2 && q[0] <= 5 ? ' checked' : '') + '> ' + q[1] + '</label>';
+                return '<label class="q' + q[0] + '"><input type="checkbox" value="' + q[0] + '"' + ' checked' + '> ' + q[1] + '</label>';
             }).join('') + '</div>' +
             '<div class="dr-find-more">' +
                 '<label><input type="checkbox" class="dr-find-avail" checked> Hide items not available to players</label>' +
